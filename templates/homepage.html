@@ -1,0 +1,13 @@
+{% extends "_base.html" %}
+{% block title %}List of Words{% endblock %}
+
+{% block content %}
+<body>
+{% for word in db.list1.find() %} 
+    <h1> {{word.word}} </h1>
+    <ln><blockquote> {{word.transliteration}} </blockquote></ln>
+    <ln><blockquote> {{word.definition}} </blockquote></ln>
+    <ln><blockquote> {{word.quote_ggs}} </blockquote></ln>
+{% endfor %}   
+</body>
+{% endblock %}
