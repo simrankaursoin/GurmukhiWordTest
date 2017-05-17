@@ -1,13 +1,13 @@
 {% extends "_base.html" %}
-{% block title %}List of Words{% endblock %}
+{% block title %}Question{% endblock %}
 
 {% block content %}
 <body>
-{% for word in db.list1.find() %} 
-    <h1> {{word.word}} </h1>
-    <ln><blockquote> {{word.transliteration}} </blockquote></ln>
-    <ln><blockquote> {{word.definition}} </blockquote></ln>
-    <ln><blockquote> {{word.quote_ggs}} </blockquote></ln>
-{% endfor %}   
+<h3> What is the definition of {{word}}? </h3>
+    <ln><h5><INPUT TYPE="radio" NAME="bev" VALUE="no" CHECKED>    {{option1}}    </BR> </h5> </ln>
+    <ln><h5><INPUT TYPE="radio" NAME="bev" VALUE="no" CHECKED>    {{all_words[word]["definition"]}}    </BR> </h5></ln>
+   <form action="/" method="POST">
+    <button style="height:25px;width:60px" name="enter" type="submit" value="Enter">Submit</button>
+    </form>
 </body>
 {% endblock %}
