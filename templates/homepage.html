@@ -3,10 +3,10 @@
 
 {% block content %}
 <body>
+<form action="/" method="POST">
 <h3> What is the definition of {{word}}? </h3>
-    <ln><h5><INPUT TYPE="radio" NAME="bev" VALUE="no" CHECKED>    {{option1}}    </BR> </h5> </ln>
-    <ln><h5><INPUT TYPE="radio" NAME="bev" VALUE="no" CHECKED>    {{all_words[word]["definition"]}}    </BR> </h5></ln>
-   <form action="/" method="POST">
+    <ln><h5><INPUT TYPE="radio" NAME="option1" VALUE="yes" >    {{option1}}    </BR> </h5> </ln>
+    <ln><h5><INPUT TYPE="radio" NAME="correct" VALUE="yes" >    {{all_words[word]["definition"]}}    </BR> </h5></ln>
     <button style="height:25px;width:60px" name="enter" type="submit" value="Enter">Submit</button>
     </form>
 </body>

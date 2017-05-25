@@ -1,7 +1,7 @@
 #app.py
 
 from mongo_interface import db, list1
-from flask import flash, request, Flask, render_template
+from flask import flash, request, Flask, render_template, url_for, redirect
 from multiple_choice import all_words, option1, word
 
 app = Flask(__name__)
@@ -13,8 +13,12 @@ def main():
         return render_template("homepage.html", all_words=all_words, word=word, option1=option1)
     if request.method == "POST":
         #to submit the answer
-        return render_template("correct_or_not.html", all_words=all_words, word=word, option1=option1)
-    
+        if request.form.get("correct") == "yes":
+            return render_template("correct.html", all_words=all_words, word=word, option1=option1)
+        else:
+            return render_template("incorrect.html", all_words=all_words, word=word, option1=option1)
+        
+     
 if __name__ == "__main__":
     #turn off this debugging stuff before production
     app.config['PROPAGATE_EXCEPTIONS'] = True
