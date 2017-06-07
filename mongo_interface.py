@@ -4,6 +4,7 @@ from pymongo import MongoClient
 client = MongoClient("localhost", 27017)
 db = client["words"]
 list1 = client["list1"]
-lis1={}
+list2 = client["list2"]
+
 #db name is words
-#collection name is list1
+#collection names are list1, list2, userlists

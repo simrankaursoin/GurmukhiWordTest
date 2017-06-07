@@ -1,13 +1,13 @@
 {% extends "_base.html" %}
-{% block title %}Question{% endblock %}
+{% block title %}Homepage{% endblock %}
 
 {% block content %}
 <body>
-<form action="/" method="POST">
-<h3> What is the definition of {{word}}? </h3>
-    <ln><h5><INPUT TYPE="radio" NAME="option1" VALUE="yes" >    {{option1}}    </BR> </h5> </ln>
-    <ln><h5><INPUT TYPE="radio" NAME="correct" VALUE="yes" >    {{all_words[word]["definition"]}}    </BR> </h5></ln>
-    <button style="height:25px;width:60px" name="enter" type="submit" value="Enter">Submit</button>
-    </form>
+<center><h1> Welcome to the Gurmukhi Quiz App! </h1> </center>
+<h3> Which list would you like to access? </h2>
+<form action="/list1" method="POST">
+<blockquote><button style="height:30px;width:60px" name="list1" type="submit" value="Enter">List1</button></blockquote>
+</form>
 </body>
+
 {% endblock %}
