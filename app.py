@@ -7,9 +7,8 @@ import secure, random
 app = Flask(__name__)
 app.secret_key = secure.APP_SECRET_KEY
 
-
 #######TODO ITEM: make it so that the user can only click one multiple choice option
-#######TODO ITEM: (for way in the future) is it possible to have the user login through google or something so that I don't have to store all of the usernames and passwords?
+#######TODO ITEM:(for way in the future)have the user login through google or something so that I don't have to store all of the data
 
 @app.route("/",methods=["GET","POST"])
 def main():
@@ -17,7 +16,7 @@ def main():
         return render_template("homepage.html" )        
     if request.method == "POST":
         if request.form["list1"] == "enter":
-            return redirect("/list1", code=303)
+            return redirect("/list",303)
  
  
  
@@ -35,13 +34,7 @@ def list1():
                 continue
         #set session["current_list"] equal to list1
         return render_template("question.html", correct_word = correct_word, correct_definition=correct_definition, wrong_one = wrong_one)
-    
-    if request.method == "POST":
-        if request.form.get("correct") == "yes":
-            was_correct = True
-        else:
-            was_correct = False
-        return "HEYO"
+
      
 @app.route("/progress",methods=["GET"])
 def progress():
