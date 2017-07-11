@@ -1,8 +1,18 @@
 {% extends "_base.html" %}
-{% block title %}List1 Question{% endblock %}
+{% block title %}Quiz Me!{% endblock %}
 
 {% block content %}
 <body>
-<h5>Which of these words is the correct definition for the word?</h5>
+
+<h3>Which of these words is the correct definition for {{correct_word}}?</h3>
+
+<form action="" method="post">
+{% for item in list_of_options %}
+  <INPUT TYPE="radio" name="options" value={{item}}> {{item}}<br>
+
+{%endfor%}
+<input type="submit" value="Submit Answer">
+</form>
 </body>
 {% endblock %}
+
