@@ -1,0 +1,18 @@
+{% extends "_base.html" %}
+{% block title %}Choose your list{% endblock %}
+
+{% block content %}
+<body>
+
+<h3> Which list would you like to be tested on? </h3>
+<form action="/setsession" method="post">
+<select name="current_list">
+  <option value="List1">List1</option>
+  <option value= "List2"> List2</option>
+</select>
+
+<br>
+<input type="submit" value="Submit">
+</form>
+</body>
+{% endblock %}
