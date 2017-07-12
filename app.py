@@ -10,12 +10,13 @@ word_index= 0
 wrong_one=""
 wrong_two=""
 wrong_three=""
-
+name_of_collection =''
 app = Flask(__name__)
 app.secret_key = secure.APP_SECRET_KEY
 
 #function to make the list_of_words and list_of_definitions based on the session["current_list"]
 def make_lists(list_of_words, list_of_definitions):
+    global name_of_collection
     #name_of_collection is a variable based on the session[current_list]
     name_of_collection = str(session["current_list"]).lower()
     for item in db[name_of_collection].find():
@@ -50,7 +51,7 @@ def set_session():
         
 @app.route("/quiz", methods=["GET", "POST"])
 def quiz():
-    global correct_definition, list_of_words, list_of_definitions, correct_word, wrong_one, wrong_two, wrong_three, word_index
+    global correct_definition, name_of_collection, list_of_words, list_of_definitions, correct_word, wrong_one, wrong_two, wrong_three, word_index
     if request.method == "GET":
         #a word_index is generated to make the word choice random but also ensure that it corresponds to the same item in list_of_words and list_of_definitions
         word_index= random.randint(0, len(list_of_words)-1)
@@ -98,11 +99,22 @@ def quiz():
         return render_template("question.html", correct_word = correct_word, list_of_options = list_of_options)
     else: 
         if request.form.get("options") == correct_definition:
+            print(request.form.get("options"))
+            print(correct_definition)
             list_of_words.pop(word_index)
             list_of_definitions.pop(word_index)
-            return "CORRECT"   
+            full_document = db[name_of_collection].find_one({"word":correct_word})
+            quote_ggs= full_document["quote_ggs"]
+            correct_transliteration= full_document["transliteration"]
+            return render_template("correct.html", correct_word=correct_word, correct_definition = correct_definition, quote_ggs=quote_ggs, correct_transliteration = correct_transliteration)
         else:
-            return "NOPE"
+            print(request.form.get("options"))
+            print(correct_definition)
+            full_document = db[name_of_collection].find_one({"word":correct_word})
+            quote_ggs= full_document["quote_ggs"]
+            correct_transliteration= full_document["transliteration"]
+            return render_template("incorrect.html", correct_word=correct_word, correct_definition = correct_definition, quote_ggs=quote_ggs, correct_transliteration = correct_transliteration)
+
           
                  
 '''
