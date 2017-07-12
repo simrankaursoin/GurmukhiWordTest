@@ -46,26 +46,12 @@ def set_session():
         make_lists(list_of_words, list_of_definitions)
         #makes list_of_words and list_of_definitions according to the list the user has selected
         #these lists allow for easier access and editing based on user progress
-        return redirect("/quiz", 303)
+        return redirect(url_for("quiz"), 303)
         
-@app.route("/quiz", methods=["GET"])
+@app.route("/quiz", methods=["GET", "POST"])
 def quiz():
-    #user is directed here to actually be asked questions
     global correct_definition, list_of_words, list_of_definitions, correct_word, wrong_one, wrong_two, wrong_three, word_index
-    #there are 2 possible scenarios for why there is a GET request being made on this app route
-    #scenario one is that the user has already answered the question and needs to get feedback
-    #scenario two is that the user is accessing the page for the first time
-    # 
-    #if the user response == correct_definition, user got the question right
-    #this word can now be removed, so the user is not asked it again
-    #directs the user to a page saying "CORRECT
-    if request.form.get("options") == correct_definition:
-        list_of_words.pop(word_index)
-        list_of_definitions.pop(word_index)
-        return "CORRECT"        
-    # 
-    #if there is no user response, the user is simply accessing the page 
-    elif request.form.get("options") == None:
+    if request.method == "GET":
         #a word_index is generated to make the word choice random but also ensure that it corresponds to the same item in list_of_words and list_of_definitions
         word_index= random.randint(0, len(list_of_words)-1)
         #the correct_word is set
@@ -111,12 +97,13 @@ def quiz():
         random.shuffle(list_of_options)
         return render_template("question.html", correct_word = correct_word, list_of_options = list_of_options)
     else: 
-        #this means that the user HAS responded to a question (is not just accessing the page) and is NOT correct. 
-        #this means the user is incorrect
-        #directs user to a page that simply says "NOPE"
-        return "NOPE"      
-        
-           
+        if request.form.get("options") == correct_definition:
+            list_of_words.pop(word_index)
+            list_of_definitions.pop(word_index)
+            return "CORRECT"   
+        else:
+            return "NOPE"
+          
                  
 '''
 @app.route("/progress",methods=["GET"])

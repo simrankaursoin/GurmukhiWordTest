@@ -9,10 +9,13 @@
 <form action="" method="post">
 {% for item in list_of_options %}
   <INPUT TYPE="radio" name="options" value={{item}}> {{item}}<br>
-
 {%endfor%}
+
 <input type="submit" value="Submit Answer">
+
 </form>
+
+
 </body>
 {% endblock %}
 
