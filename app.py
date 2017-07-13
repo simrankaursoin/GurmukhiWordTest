@@ -107,6 +107,10 @@ def quiz():
             quote_ggs= full_document["quote_ggs"]
             correct_transliteration= full_document["transliteration"]
             return render_template("correct.html", correct_word=correct_word, correct_definition = correct_definition, quote_ggs=quote_ggs, correct_transliteration = correct_transliteration)
+        elif request.form.get("options") == None:
+            flash("Please submit a response")
+            list_of_options = [correct_definition, wrong_one, wrong_two, wrong_three]
+            return render_template("question.html", correct_word = correct_word, list_of_options = list_of_options)
         else:
             print(request.form.get("options"))
             print(correct_definition)
