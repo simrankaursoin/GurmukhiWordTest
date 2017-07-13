@@ -1,0 +1,15 @@
+{% extends "_base.html" %}
+{% block title %}What do you want to do?{% endblock %}
+
+{% block content %}
+<body>
+<h2> Choose How YOU Want to Study </h2>
+<form action="/quiz" method="GET">
+<button style="height:30px;width:180px" name="quiz" type="submit" value="Enter">Multiple Choice Quiz</button>
+</form>
+<br> </br>
+<form action="/study" method="GET">
+<button style="height:30px;width:180px" name="study" type="submit" value="Enter">Study</button>
+</form>
+</body>
+{% endblock %}

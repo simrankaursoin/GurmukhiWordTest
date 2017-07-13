@@ -1,0 +1,31 @@
+{% extends "_base.html" %}
+{% block title %}Study{% endblock %}
+
+{% block content %}
+<body>
+<table style="width:50%" border="1">
+  <tr>
+    <th>Word</th>
+    <th>Transliteration</th> 
+    <th>Definition</th>
+  </tr>
+  {% for item in all_words %}
+  <tr>
+    <td>{{item.word}} </td>
+    <td>{{item.transliteration}} </td>
+    <td>{{item.definition}} </td>
+  </tr>
+  {% endfor %}
+</table>
+<br> </br>
+<form action="/choose_function" method="get">
+<input type="submit" value="Do Something Else">
+</form>
+<br> </br>
+
+<form action="/setsession" method="get">
+<input type="submit" value="Change List">
+</form>
+
+</body>
+{% endblock %}

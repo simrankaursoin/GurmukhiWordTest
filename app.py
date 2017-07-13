@@ -47,8 +47,21 @@ def set_session():
         make_lists(list_of_words, list_of_definitions)
         #makes list_of_words and list_of_definitions according to the list the user has selected
         #these lists allow for easier access and editing based on user progress
-        return redirect(url_for("quiz"), 303)
+        return redirect(url_for("choose_function"), 303)
         
+@app.route("/study", methods=["GET", "POST"])
+def study():
+    global name_of_collection
+    all_words=[]
+    for item in db[name_of_collection].find():
+        all_words.append(item)
+    return render_template("study.html", all_words=all_words)
+
+@app.route("/choose_function", methods=["GET", "POST"])
+def choose_function():
+    if request.method == "GET":
+        return render_template("choose_function.html")
+
 @app.route("/quiz", methods=["GET", "POST"])
 def quiz():
     global correct_definition, name_of_collection, list_of_words, list_of_definitions, correct_word, wrong_one, wrong_two, wrong_three, word_index
