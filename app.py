@@ -99,8 +99,6 @@ def quiz():
         return render_template("question.html", correct_word = correct_word, list_of_options = list_of_options)
     else: 
         if request.form.get("options") == correct_definition:
-            print(request.form.get("options"))
-            print(correct_definition)
             list_of_words.pop(word_index)
             list_of_definitions.pop(word_index)
             full_document = db[name_of_collection].find_one({"word":correct_word})
