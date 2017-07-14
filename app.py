@@ -48,13 +48,16 @@ def set_session():
         #makes list_of_words and list_of_definitions according to the list the user has selected
         #these lists allow for easier access and editing based on user progress
         return redirect(url_for("choose_function"), 303)
-        
+
+                  
 @app.route("/study", methods=["GET", "POST"])
 def study():
     global name_of_collection
     all_words=[]
+    #sets all_words equal to a list that contains each document for the given vocab list
     for item in db[name_of_collection].find():
         all_words.append(item)
+    #study.html then makes a table for the user to study the vocabulary list from.
     return render_template("study.html", all_words=all_words)
 
 @app.route("/choose_function", methods=["GET", "POST"])
@@ -123,8 +126,6 @@ def quiz():
             list_of_options = [correct_definition, wrong_one, wrong_two, wrong_three]
             return render_template("question.html", correct_word = correct_word, list_of_options = list_of_options)
         else:
-            print(request.form.get("options"))
-            print(correct_definition)
             full_document = db[name_of_collection].find_one({"word":correct_word})
             quote_ggs= full_document["quote_ggs"]
             correct_transliteration= full_document["transliteration"]
@@ -136,11 +137,11 @@ def quiz():
 @app.route("/progress",methods=["GET"])
 def progress():
     #check what list they're on using session
-    #if the user has answered less than one word from the list (in userdata), print("Not enough data to provide progress summary)
+    #if the user has answered less than one word from the list (in userdata),("Not enough data to provide progress summary)
     #else: provide percent accuracy for each word in the list
     #alternatively, list the 3 words theyre doing worst on
     return "Get request made" 
-    
+'''    
 @app.route("/login",methods=["GET","POST"])
 def login():
     #some_uuid = ____
@@ -153,7 +154,7 @@ def login():
     #db.userdata.insert_one(new_doc)
     #return render_template("homepage.html")
     return "Get request"        
-'''
+
 if __name__ == "__main__":
     #turn off this debugging stuff before production
     app.config['PROPAGATE_EXCEPTIONS'] = True
