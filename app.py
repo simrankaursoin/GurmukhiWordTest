@@ -47,19 +47,25 @@ def set_session():
         make_lists(list_of_words, list_of_definitions)
         #makes list_of_words and list_of_definitions according to the list the user has selected
         #these lists allow for easier access and editing based on user progress
-        return redirect(url_for("choose_function"), 303)
+        return redirect(url_for("list_selected"),303)
 
                   
 @app.route("/study", methods=["GET", "POST"])
 def study():
     global name_of_collection
     all_words=[]
+    if len(list_of_words)<1:
+            return "ERROR: Please choose a list first"
     #sets all_words equal to a list that contains each document for the given vocab list
     for item in db[name_of_collection].find():
         all_words.append(item)
     #study.html then makes a table for the user to study the vocabulary list from.
     return render_template("study.html", all_words=all_words)
 
+@app.route("/list_selected", methods=["GET"])
+def list_selected():
+    name= session["current_list"]
+    return render_template("list_selected.html", name=name)
 @app.route("/choose_function", methods=["GET", "POST"])
 def choose_function():
     if request.method == "GET":

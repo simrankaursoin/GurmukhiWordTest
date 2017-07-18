@@ -3,6 +3,15 @@
 
 {% block content %}
 <body>
+<style>
+nav   {background-color: #fff;border: 1px solid #dedede;border-radius: 4px;color: #888;display: block;margin: 8px 22px 8px 22px;overflow: hidden;width: 100%; margin: 0;padding: 0;}
+</style>
+<nav class="menu">
+  <a href="/"> Home </a>| 
+  <a href="/setsession"> Choose a List </a>| 
+  <a href="/quiz"> Quiz </a>| 
+  <a href="/study"> Study </a>| 
+</nav>
 <h2> <center> Study </center> </h2>
 <center>
 <table style="width:65%" border="1">
@@ -20,15 +29,6 @@
   {% endfor %}
 </table>
 </center>
-<br> </br>
-<form action="/choose_function" method="get">
-<input type="submit" value="Do Something Else">
-</form>
-<br> </br>
-
-<form action="/setsession" method="get">
-<input type="submit" value="Change List">
-</form>
 
 </body>
 {% endblock %}
