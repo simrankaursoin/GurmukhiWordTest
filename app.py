@@ -59,12 +59,17 @@ def study():
     #sets all_words equal to a list that contains each document for the given vocab list
     for item in db[name_of_collection].find():
         all_words.append(item)
+    name= session["current_list"]
+    name.split()
+    name=name[-1]
     #study.html then makes a table for the user to study the vocabulary list from.
-    return render_template("study.html", all_words=all_words)
+    return render_template("study.html", name=name, all_words=all_words)
 
 @app.route("/list_selected", methods=["GET"])
 def list_selected():
     name= session["current_list"]
+    name.split()
+    name=name[-1]
     return render_template("list_selected.html", name=name)
 @app.route("/choose_function", methods=["GET", "POST"])
 def choose_function():

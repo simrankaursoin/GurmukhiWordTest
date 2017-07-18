@@ -4,15 +4,17 @@
 {% block content %}
 <body>
 <style>
-nav   {background-color: #fff;border: 1px solid #dedede;border-radius: 4px;color: #888;display: block;margin: 8px 22px 8px 22px;overflow: hidden;width: 100%; margin: 0;padding: 0;}
+table {font-size:120%; height:30px; border: 1px solid black; text-align:center;width:100%; }
 </style>
-<nav class="menu">
-  <a href="/"> Home </a>| 
-  <a href="/setsession"> Choose a List </a>| 
-  <a href="/quiz"> Quiz </a>| 
-  <a href="/study"> Study </a>| 
-</nav>
-<h2> <center> Study </center> </h2>
+<table border="1" style="cellpadding:100">
+  <tr>
+    <td><a href="/"> Home </a></td>
+    <td><a href="/setsession"> Choose a List </a></td>
+    <td><a href="/quiz"> Quiz </a></td>
+    <td><a href="/study"> Study </a></td>
+  </tr>
+</table>
+<h2> <center> Study List {{name}}</center> </h2>
 <center>
 <table style="width:65%" border="1">
   <tr>
