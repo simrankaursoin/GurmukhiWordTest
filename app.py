@@ -55,7 +55,7 @@ def study():
     global name_of_collection
     all_words=[]
     if len(list_of_words)<1:
-            return "ERROR: Please choose a list first"
+            return render_template("error_choose_list.html")
     #sets all_words equal to a list that contains each document for the given vocab list
     for item in db[name_of_collection].find():
         all_words.append(item)
@@ -76,7 +76,7 @@ def quiz():
     global correct_definition, name_of_collection, list_of_words, list_of_definitions, correct_word, wrong_one, wrong_two, wrong_three, word_index
     if request.method == "GET":
         if len(list_of_words)<1:
-            return "ERROR: Please choose a list first"
+            return render_template("error_choose_list.html")
         else:
             #a word_index is generated to make the word choice random but also ensure that it corresponds to the same item in list_of_words and list_of_definitions
             word_index= random.randint(0,(len(list_of_words)-1))
