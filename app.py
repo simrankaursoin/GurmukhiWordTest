@@ -69,50 +69,53 @@ def choose_function():
 def quiz():
     global correct_definition, name_of_collection, list_of_words, list_of_definitions, correct_word, wrong_one, wrong_two, wrong_three, word_index
     if request.method == "GET":
-        #a word_index is generated to make the word choice random but also ensure that it corresponds to the same item in list_of_words and list_of_definitions
-        word_index= random.randint(0, len(list_of_words)-1)
-        #the correct_word is set
-        correct_word= list_of_words[word_index]
-        #the correct_definiton is set
-        correct_definition= list_of_definitions[word_index]
-        # a variable called not_the_same is created
-        #a loop is made based on this variable to ensure that wrong_one (one of the incorrect responses) is not the same as correct_definition
-        not_the_same = False
-        while not not_the_same:
-            wrong_one = random.choice(list_of_definitions)
-            if correct_definition != wrong_one:
-                not_the_same = True
-            else:
-                continue
-        #this loop also ensures that wrong_two is not the same as wrong_one or correct_definition
-        not_the_same = False
-        while not not_the_same:
-            wrong_two = random.choice(list_of_definitions)
-            if correct_definition != wrong_two:
-                if wrong_one != wrong_two:
+        if len(list_of_words)<1:
+            return "ERROR: Please choose a list first"
+        else:
+            #a word_index is generated to make the word choice random but also ensure that it corresponds to the same item in list_of_words and list_of_definitions
+            word_index= random.randint(0,(len(list_of_words)-1))
+            #the correct_word is set
+            correct_word= list_of_words[word_index]
+            #the correct_definiton is set
+            correct_definition= list_of_definitions[word_index]
+            # a variable called not_the_same is created
+            #a loop is made based on this variable to ensure that wrong_one (one of the incorrect responses) is not the same as correct_definition
+            not_the_same = False
+            while not not_the_same:
+                wrong_one = random.choice(list_of_definitions)
+                if correct_definition != wrong_one:
                     not_the_same = True
                 else:
                     continue
-            else:
-                continue
-        #another loop also ensures that wrong_three is not the same as wrong_two or wrong_one
-        not_the_same = False
-        while not not_the_same:
-            wrong_three = random.choice(list_of_definitions)
-            if correct_definition != wrong_three:
-                if wrong_one != wrong_three:
-                    if wrong_two != wrong_three:
+            #this loop also ensures that wrong_two is not the same as wrong_one or correct_definition
+            not_the_same = False
+            while not not_the_same:
+                wrong_two = random.choice(list_of_definitions)
+                if correct_definition != wrong_two:
+                    if wrong_one != wrong_two:
                         not_the_same = True
                     else:
                         continue
                 else:
                     continue
-            else:
-                continue
-        #list_of_options is created and shuffled to ensure that the responses are presented to the user in a random order
-        list_of_options = [correct_definition, wrong_one, wrong_two, wrong_three]
-        random.shuffle(list_of_options)
-        return render_template("question.html", correct_word = correct_word, list_of_options = list_of_options)
+            #another loop also ensures that wrong_three is not the same as wrong_two or wrong_one
+            not_the_same = False
+            while not not_the_same:
+                wrong_three = random.choice(list_of_definitions)
+                if correct_definition != wrong_three:
+                    if wrong_one != wrong_three:
+                        if wrong_two != wrong_three:
+                            not_the_same = True
+                        else:
+                            continue
+                    else:
+                        continue
+                else:
+                    continue
+            #list_of_options is created and shuffled to ensure that the responses are presented to the user in a random order
+            list_of_options = [correct_definition, wrong_one, wrong_two, wrong_three]
+            random.shuffle(list_of_options)
+            return render_template("question.html", correct_word = correct_word, list_of_options = list_of_options)
     else: 
         if request.form.get("options") == correct_definition:
             list_of_words.pop(word_index)
