@@ -21,7 +21,13 @@ app.secret_key = secure.APP_SECRET_KEY
 @app.route("/", methods=["GET"])
 def main():
     if request.method == "GET":
-        return render_template("homepage.html")
+        if session["username"] is None:
+            return render_template("homepage.html")
+        else:
+            print(session["username"])
+            username = session["username"]
+            return render_template("homepage_2.html", username=username)
+            
 
 # make the list_of_words & list_of_definitions based on session["current_list"]
 
@@ -39,9 +45,10 @@ def make_lists(list_of_words, list_of_definitions):
 @app.route("/setsession", methods=["GET", "POST"])
 def set_session():
     global list_of_words, list_of_definitions
+    username=session["username"]
     if request.method == "GET":
         # directs user to a page to set the session["current_list"]
-        return render_template("set_session.html")
+        return render_template("set_session.html", username=username)
     else:
         # POST request for when user clicks "submit"
         # set_session page has a dropdown menu in which the user selects list
@@ -58,9 +65,10 @@ def set_session():
 @app.route("/study", methods=["GET", "POST"])
 def study():
     global name_of_collection
+    username=session["username"]
     all_words = []
     if len(list_of_words) < 1:
-            return render_template("error_choose_list.html")
+            return render_template("error_choose_list.html", username=username)
     # sets all_words equal to list containing each document
     for item in db[name_of_collection].find():
         all_words.append(item)
@@ -68,21 +76,17 @@ def study():
     name.split()
     name = name[-1]
     # study.html makes a table for the user to study from.
-    return render_template("study.html", name=name, all_words=all_words)
+    return render_template("study.html", name=name, 
+                           username=username, all_words=all_words)
 
 
 @app.route("/list_selected", methods=["GET"])
 def list_selected():
+    username= session["username"]
     name = session["current_list"]
     name.split()
     name = name[-1]
-    return render_template("list_selected.html", name=name)
-
-
-@app.route("/choose_function", methods=["GET", "POST"])
-def choose_function():
-    if request.method == "GET":
-        return render_template("choose_function.html")
+    return render_template("list_selected.html", name=name, username=username)
 
 
 @app.route("/quiz", methods=["GET", "POST"])
@@ -90,9 +94,10 @@ def quiz():
     global correct_definition, name_of_collection, list_of_words
     global list_of_definitions, correct_word, wrong_one, wrong_two
     global wrong_three, word_index
+    username=session["username"]
     if request.method == "GET":
         if len(list_of_words) < 1:
-            return render_template("error_choose_list.html")
+            return render_template("error_choose_list.html", username=username)
         else:
             # a word_index generated to make the word choice random
             word_index = random.randint(0, (len(list_of_words)-1))
@@ -139,7 +144,8 @@ def quiz():
                                wrong_one, wrong_two, wrong_three]
             random.shuffle(list_of_options)
             return render_template("question.html", correct_word=correct_word,
-                                   list_of_options=list_of_options)
+                                   list_of_options=list_of_options,
+                                   username=username)
     else:
         if request.form.get("options") == correct_definition:
             list_of_words.pop(word_index)
@@ -164,7 +170,8 @@ def quiz():
             return render_template("incorrect.html", correct_word=correct_word,
                                    correct_definition=correct_definition,
                                    quote_ggs=quote_ggs,
-                                   correct_translit=correct_translit)
+                                   correct_translit=correct_translit,
+                                   username=username)
 
 
 '''
@@ -175,10 +182,6 @@ def progress():
     #else: provide percent accuracy for each word in the list
     #alternatively, list the 3 words theyre doing worst on
     return "Get request made"
-'''
-
-
-@app.route("/login", methods=["GET", "POST"])
 def login():
     # some_uuid = ____
     # session["uuid/username] = some_uuid
@@ -190,7 +193,90 @@ def login():
     # db.userdata.insert_one(new_doc)
     # return render_template("homepage.html")
     return "Get request"
+'''
 
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "GET":
+        return render_template("login.html")
+    else:
+        doc = db.users.find_one({"username":request.form.get("user").lower().strip()})
+        username= request.form.get("user")
+        if doc is None:
+            flash("Wrong Username")
+            return render_template("login.html")
+        elif doc["password"] == request.form.get("pass"):
+            session["username"]=username
+            flash("Successful login")
+            return redirect("/setsession", 303)
+        else:
+            session["username"]=username
+            # just wrong password
+            flash("Wrong password")
+            return render_template("login.html")
+
+
+@app.route("/security", methods=["GET", "POST"])
+def security():
+    if request.method == "GET":
+        return render_template("wrong_password.html")
+    else:
+        session["username"] = request.form.get("user")
+        security_word = request.form.get("security_word")
+        doc = db.users.find_one({"username":session["username"]})
+        if doc is None:
+            flash("Wrong Username")
+            return render_template("wrong_password.html")
+        elif doc["security_word"].lower() == security_word.lower():
+            return redirect("/", 303)
+        else:
+            flash("Incorrect. Try again")
+            return render_template("wrong_password.html")
+
+
+@app.route("/signup", methods=["GET", "POST"])
+def signup():  
+    if request.method == "GET":
+        return render_template("sign_up.html")
+    else:
+        if request.form.get("user") != request.form.get("c_user"):
+            flash("Re-Type Username or Username Confirmation")
+            return render_template("sign_up.html")
+        if db.users.find_one({"username":request.form.get("user")}) != None:
+            flash("Username already taken")
+            return render_template("sign_up.html")
+        if request.form.get("pass") != request.form.get("c_pass"):
+            flash("Re-Type Password or Password Confirmation")
+            return render_template("sign_up.html")
+        if len(request.form.get("pass")) < 8:
+            flash("Password length less than 8 characters")
+            return render_template("sign_up.html")
+        db.users.insert_one({"username":request.form.get("user"),
+        "password":request.form.get("pass"), "security_word":request.form.get("security_word"),
+        "email":request.form.get("email")})
+        session["username"] = request.form.get("user")
+        session["email"] = request.form.get("email")
+        flash("Profile created")
+        return render_template("homepage.html")
+        
+
+@app.route("/logged_out", methods=["GET"])
+def logged_out():
+    session["username"] = None
+    session["email"] = None
+    return render_template("logged_out.html")
+
+@app.route("/profile", methods=["GET"])
+def profile():
+    username = session["username"]
+    if session["email"] is None:
+        session["email"] = db.users.find_one({"username":username})["email"]
+        email= session["email"]
+    else:
+        email = session["email"]
+    return render_template("profile.html", email=email, username=username)
+        
 
 if __name__ == "__main__":
     # turn off this debugging stuff before production

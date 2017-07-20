@@ -3,8 +3,12 @@
 
 {% block content %}
 <body>
+<div align="right">
+<img src="file:///C:/Users/simransoin/src/Gurmukhi_wordtest/profile.jpg"><a href="/profile">{{username}} </a>
+</div>
 <style>
 table {font-size:120%; height:30px; border: 1px solid black; text-align:center;width:100%; }
+a {font-size:120%;}
 </style>
 <table border="1" style="cellpadding:100">
   <tr>
@@ -15,7 +19,7 @@ table {font-size:120%; height:30px; border: 1px solid black; text-align:center;w
   </tr>
 </table>
 <h2 style="color:teal;"> You Selected List {{name}}! </h2>
-<h4> Now that you've selected a list, you can go get quizzed or choose to study some more </h4>
+<h4> Now that you've selected a list, you can go get quizzed or choose to study </h4>
 
 </body>
 {% endblock %}
