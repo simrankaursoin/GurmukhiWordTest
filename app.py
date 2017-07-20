@@ -147,22 +147,27 @@ def quiz():
                                    username=username)
     else:
         if request.form.get("options") == correct_definition:
+            # if user response correct, take it out of the running
             list_of_words.pop(word_index)
             list_of_definitions.pop(word_index)
             full_doc = db[name_of_collection].find_one({"word": correct_word})
             quote_ggs = full_doc["quote_ggs"]
             correct_translit = full_doc["transliteration"]
+            # go to correct.html and print details about the correct word
             return render_template("correct.html", correct_word=correct_word,
                                    correct_definition=correct_definition,
                                    quote_ggs=quote_ggs,
                                    correct_translit=correct_translit)
         elif request.form.get("options") is None:
+            # if the user clicked submit without submitting a response
             flash("Please submit a response")
             list_of_options = [correct_definition,
                                wrong_one, wrong_two, wrong_three]
             return render_template("question.html", correct_word=correct_word,
                                    list_of_options=list_of_options)
         else:
+            # if the user was incorrect, go to incorrect.html
+            # print details about the correct word
             full_doc = db[name_of_collection].find_one({"word": correct_word})
             quote_ggs = full_doc["quote_ggs"]
             correct_translit = full_doc["transliteration"]
@@ -181,37 +186,34 @@ def progress():
     #else: provide percent accuracy for each word in the list
     #alternatively, list the 3 words theyre doing worst on
     return "Get request made"
-def login():
-    # some_uuid = ____
-    # session["uuid/username] = some_uuid
-    # session["session_start"]  = arrow.utcnow().timestamp
-    # for item in db.collection_names(include_system_collections = False):
-        # new_doc[item] = {}
-    # new_doc["uuid/username"] = session["uuid/username"]
-    # new_doc["session_start"] = session["session_start"]
-    # db.userdata.insert_one(new_doc)
-    # return render_template("homepage.html")
-    return "Get request"
 '''
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
+        # if user is simply accessing the page
         return render_template("login.html")
     else:
+        # if the user tried to login
+        # 1. check if the user exists in database
         doc = db.users.find_one({"username":
                                  request.form.get("user").lower().strip()})
         username = request.form.get("user")
         if doc is None:
+            # if not user in db, the username is wrong
             flash("Wrong Username")
             return render_template("login.html")
         elif doc["password"] == request.form.get("pass"):
+            # the user is in db and the password is correct
             session["username"] = username
             flash("Successful login")
+            # successful login
+            # direct the user to choose a list
             return redirect("/setsession", 303)
         else:
             session["username"] = username
+            session["email"] = db.users.find_one({"username": username})["email"]
             # just wrong password
             flash("Wrong password")
             return render_template("login.html")
@@ -220,37 +222,47 @@ def login():
 @app.route("/security", methods=["GET", "POST"])
 def security():
     if request.method == "GET":
+        # directed here when user clicks "Forgot password" on login page
         return render_template("wrong_password.html")
     else:
+        # check is user in database
         session["username"] = request.form.get("user")
         security_word = request.form.get("security_word")
         doc = db.users.find_one({"username": session["username"]})
         if doc is None:
+            # if user not in db, wrong username
             flash("Wrong Username")
             return render_template("wrong_password.html")
         elif doc["security_word"].lower() == security_word.lower():
-            return redirect("/", 303)
+            # security word is correct, redirect to choose a list
+            return redirect("/setsession", 303)
         else:
-            flash("Incorrect. Try again")
+            # security word is incorrect
+            flash("Security word is incorrect. Try again")
             return render_template("wrong_password.html")
 
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "GET":
+        # user is signing up
         return render_template("sign_up.html")
     else:
         if request.form.get("user") != request.form.get("c_user"):
+            # username ≠ confirmed username
             flash("Re-Type Username or Username Confirmation")
             return render_template("sign_up.html")
         if db.users.find_one({"username":
                               request.form.get("user")}) is not None:
+            # username already exists in database
             flash("Username already taken")
             return render_template("sign_up.html")
         if request.form.get("pass") != request.form.get("c_pass"):
+            # password ≠ confirmed password
             flash("Re-Type Password or Password Confirmation")
             return render_template("sign_up.html")
         if len(request.form.get("pass")) < 8:
+            # password length is less than 8 characters
             flash("Password length less than 8 characters")
             return render_template("sign_up.html")
         db.users.insert_one({"username": request.form.get("user"),
@@ -258,14 +270,18 @@ def signup():
                              "security_word":
                              request.form.get("security_word"),
                              "email": request.form.get("email")})
+        # add user to db and set session[username] and session[email]
         session["username"] = request.form.get("user")
         session["email"] = request.form.get("email")
         flash("Profile created")
-        return render_template("homepage.html")
+        # redirect user to choose a list
+        return redirect("/setsession", 303)
 
 
 @app.route("/logged_out", methods=["GET"])
 def logged_out():
+    # user has logged out
+    # delete session[username] and session[email]
     session["username"] = None
     session["email"] = None
     return render_template("logged_out.html")
@@ -274,11 +290,8 @@ def logged_out():
 @app.route("/profile", methods=["GET"])
 def profile():
     username = session["username"]
-    if session["email"] is None:
-        session["email"] = db.users.find_one({"username": username})["email"]
-        email = session["email"]
-    else:
-        email = session["email"]
+    email = session["email"]
+    # get information about user and print in profile.html
     return render_template("profile.html", email=email, username=username)
 
 
