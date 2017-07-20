@@ -1,0 +1,21 @@
+{% extends "_base.html" %}
+{% block title %}List Selected!{% endblock %}
+
+{% block content %}
+<body>
+<style>
+table {font-size:120%; height:30px; border: 1px solid black; text-align:center;width:100%; }
+</style>
+<table border="1" style="cellpadding:100">
+  <tr>
+    <td><a href="/"> Home </a></td>
+    <td><a href="/setsession"> Choose a List </a></td>
+    <td><a href="/quiz"> Quiz </a></td>
+    <td><a href="/study"> Study </a></td>
+  </tr>
+</table>
+<h2 style="color:teal;"> You Selected List {{name}}! </h2>
+<h4> Now that you've selected a list, you can go get quizzed or choose to study some more </h4>
+
+</body>
+{% endblock %}
