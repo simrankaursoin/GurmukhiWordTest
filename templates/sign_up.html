@@ -1,0 +1,17 @@
+{% extends "_base.html" %}
+{% block title %}Sign-Up{% endblock %}
+
+{% block content %}
+<body>
+<center><h2> Sign-Up </h2> </center>
+<form action="" method="POST">
+  Username: <input type="text" name="user"><br></br>
+  Confirm Username: <input type="text" name="c_user"><br></br>
+  Password: <input type="password" name="pass"><br></br>
+  Confirm Password: <input type="password" name="c_pass"><br></br>
+  Email: <input type="text" name="email"><br></br>
+  Security Word: <input type="text" name="security_word"><br></br>
+  <input type="submit" value="Submit">
+</form>
+</body>
+{% endblock %}

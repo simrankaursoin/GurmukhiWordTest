@@ -1,0 +1,27 @@
+{% extends "_base.html" %}
+{% block title %}Homepage{% endblock %}
+
+{% block content %}
+<body>
+<style>
+table {font-size:120%; height:30px; border: 1px solid black; text-align:center;width:100%; }
+a {font-size:120%;}
+</style>
+<div align="right">
+<img src="file:///C:/Users/simransoin/src/Gurmukhi_wordtest/profile.jpg"><a href="/profile">{{username}} </a>
+</div>
+<table border="1" style="cellpadding:100">
+  <tr>
+    <td><a href="/"> Home </a></td>
+    <td><a href="/setsession"> Choose a List </a></td>
+    <td><a href="/quiz"> Quiz </a></td>
+    <td><a href="/study"> Study </a></td>
+  </tr>
+</table>
+
+<center><h1> Welcome to the Gurmukhi Quiz App! </h1> </center>
+<br> </br>
+<center>What is this all about? Heres a description and reason why this is necessary. I have not yet written it. But there is one. I promise. </center>
+</body>
+
+{% endblock %}

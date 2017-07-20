@@ -1,0 +1,26 @@
+{% extends "_base.html" %}
+{% block title %}Login Page{% endblock %}
+
+{% block content %}
+<body>
+<style>
+table {font-size:120%; height:30px; border: 1px solid black; text-align:center;width:100%; }
+a {font-size:120%;}
+</style>
+<table border="1" style="cellpadding:100">
+  <tr>
+    <td><a href="/"> Home </a></td>
+    <td><a href="/login"> Login </a></td>
+    <td><a href="/signup"> Sign-Up </a></td>
+  </tr>
+</table>
+<center><h2> Login </h2> </center>
+<form action="" method="POST">
+  Username: <input type="text" name="user"><br>
+  Password: <input type="password" name="pass"><br>
+  <input type="submit" value="Submit">
+</form>
+
+<a href="/security"> Forgot Password? </a></td>
+</body>
+{% endblock %}
