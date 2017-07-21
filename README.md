@@ -7,15 +7,14 @@ This project was created for teachers in Sikh Khalsa Schools around the country 
 In order to run the code:
 	•	clone the repo
 	•	create and activate a virtual environment that uses python3
-	⁃	virtualenv -p python3 virtualenv_name
+        ⁃   virtualenv -p python3 virtualenv_name
 	•	install the required packages from requirements.txt using ‘pip install’
-	⁃	pip install -r requirements.txt
-	•	import the example data (the .csv files)
-	⁃	mongoimport --db words --collection name  --type csv --headerline -- filepath_to_csv_files
-	•	run app
-	⁃	python app.py
+        ⁃	pip install -r requirements.txt
+	•	open a mongo instance in one tab (mongod) and import the example data (the .csv files) in another tab
+        ⁃	mongoimport --db words --collection NAME --type csv --headerline --file FILEPATH_TO_.csv
+        ⁃	python app.py
 	•	go to the following address in your browser
-	⁃	 http://127.0.0.1:500/ 
+        ⁃	 http://127.0.0.1:500/ 
 
 
 ----------
