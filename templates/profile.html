@@ -26,9 +26,13 @@
         
         <div style="margin-left:75%;"> 
             <h4>PROGRESS REPORT:</h4>
-            {% for vocab_lis in progress %}
-                <u>{{vocab_lis}}:</u> <i>{{progress[vocab_lis]}}%</i><br></br>
-            {%endfor%}
+            {% if progress|length < 1 -%}
+                no data to display
+            {% else -%}
+                {% for vocab_lis in progress %}
+                    <u>{{vocab_lis}}:</u> <i>{{progress[vocab_lis]}}%</i><br></br>
+                {%endfor%}
+            {%endif%}
                 
         </div>
     </div>
