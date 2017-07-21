@@ -329,7 +329,7 @@ def logged_out():
 @app.route("/profile", methods=["GET"])
 def profile():
     username = session["username"]
-    email = session["email"]
+    email = db.users.find_one({"username": username})["email"]
     doc = db.users.find_one({"username": username})
     stats = {}
     progress = {}
