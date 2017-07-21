@@ -24,13 +24,15 @@
             <br> </br>
         </div>
         
-        <div style="margin-left:75%;"> 
-            <h4>PROGRESS REPORT:</h4>
-            {% if progress|length < 1 -%}
+        <div style="margin-left:65%;"> 
+            <h4><u>PROGRESS REPORT:</u></h4>
+            {% if od|length < 1 -%}
                 no data to display
             {% else -%}
-                {% for vocab_lis in progress %}
-                    <u>{{vocab_lis}}:</u> <i>{{progress[vocab_lis]}}%</i><br></br>
+                {% for vocab_lis in od %}
+                    <b>List {{vocab_lis}}:</b> <br />
+                    <i>Percentage Accuracy: {{od[vocab_lis]["percent_accuracy"]}}%</i> <br />
+                    <i>Questions answered: {{od[vocab_lis]["total_questions"]}}</i><br></br>
                 {%endfor%}
             {%endif%}
                 

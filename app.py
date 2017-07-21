@@ -4,6 +4,7 @@ from mongo_interface import make_database
 from flask import flash, request, Flask, render_template, redirect, session
 import secure
 import random
+import collections
 db = make_database()
 correct_definition = ''
 correct_word = ""
@@ -305,10 +306,12 @@ def profile():
         if name_of_item[0:4] == list("list"):
             stats[item] = doc[item]
     for lis in stats:
-        percent_accuracy= (stats[lis]["correct"] / (stats[lis]["correct"]+stats[lis]["wrong"]))*100
-        progress[lis.title()]= percent_accuracy
+        num_questions = (stats[lis]["correct"]+stats[lis]["wrong"])
+        percent_accuracy= int((stats[lis]["correct"] / num_questions)*100)
+        progress[list(lis)[-1]]= {"percent_accuracy":percent_accuracy, "total_questions": num_questions}
+    od = collections.OrderedDict(sorted(progress.items()))
     # get information about user and print in profile.html
-    return render_template("profile.html", email=email, username=username, progress=progress)
+    return render_template("profile.html", email=email, username=username, od=od)
 
 
 if __name__ == "__main__":
