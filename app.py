@@ -24,7 +24,7 @@ def main():
             username = session["username"]
             session["email"] = db.users.find_one({"username": username})["email"]
             return render_template("homepage_2.html", username=username)
-        except KeyError: 
+        except: 
             return render_template("homepage.html")
             
 
