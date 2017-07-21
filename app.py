@@ -6,7 +6,7 @@ import secure
 import random
 import collections
 db = make_database()
-correct_definition = ''
+correct_def = ''
 correct_word = ""
 list_of_words = []
 list_of_definitions = []
@@ -17,17 +17,20 @@ wrong_three = ""
 name_of_collection = ''
 app = Flask(__name__)
 app.secret_key = secure.APP_SECRET_KEY
-user_doc={}
+user_doc = {}
+
+
 @app.route("/", methods=["GET"])
 def main():
     if request.method == "GET":
         try:
             username = session["username"]
-            session["email"] = db.users.find_one({"username": username})["email"]
+            email = db.users.find_one({"username": username})["email"]
+            session["email"] = email
             return render_template("homepage_2.html", username=username)
-        except: 
+        except:
             return render_template("homepage.html")
-            
+
 
 # make the list_of_words & list_of_definitions based on session["current_list"]
 
@@ -89,7 +92,7 @@ def list_selected():
         user_doc[name.lower()]
     except:
         # if the user has never accessed this list before, set everything to 0
-        user_doc[name.lower()]={"correct": 0, "wrong": 0}
+        user_doc[name.lower()] = {"correct": 0, "wrong": 0}
     name.split()
     name = name[-1]
     return render_template("list_selected.html", name=name, username=username)
@@ -97,11 +100,11 @@ def list_selected():
 
 @app.route("/quiz", methods=["GET", "POST"])
 def quiz():
-    global correct_definition, name_of_collection, list_of_words
+    global correct_def, name_of_collection, list_of_words
     global list_of_definitions, correct_word, wrong_one, wrong_two
     global wrong_three, word_index, user_doc
     username = session["username"]
-    name_of_lis= session["current_list"]
+    name_of_lis = session["current_list"]
     if request.method == "GET":
         if len(list_of_words) < 1:
             return render_template("error_choose_list.html", username=username)
@@ -111,32 +114,32 @@ def quiz():
             # the correct_word is set
             correct_word = list_of_words[word_index]
             # the correct_definiton is set
-            correct_definition = list_of_definitions[word_index]
+            correct_def = list_of_definitions[word_index]
             # a variable called not_the_same is created
-            # loop to ensure that wrong_one≠correct_definition
+            # loop to ensure that wrong_one≠correct_def
             not_the_same = False
             while not not_the_same:
                 wrong_one = random.choice(list_of_definitions)
-                if correct_definition != wrong_one:
+                if correct_def != wrong_one:
                     not_the_same = True
                 else:
                     continue
-            # wrong_two≠correct_definition≠wrong_one
+            # wrong_two≠correct_def≠wrong_one
             not_the_same = False
             while not not_the_same:
                 wrong_two = random.choice(list_of_definitions)
-                if correct_definition != wrong_two:
+                if correct_def != wrong_two:
                     if wrong_one != wrong_two:
                         not_the_same = True
                     else:
                         continue
                 else:
                     continue
-            # wrong_three≠correct_definition≠wrong_one≠wrong_two
+            # wrong_three≠correct_def≠wrong_one≠wrong_two
             not_the_same = False
             while not not_the_same:
                 wrong_three = random.choice(list_of_definitions)
-                if correct_definition != wrong_three:
+                if correct_def != wrong_three:
                     if wrong_one != wrong_three:
                         if wrong_two != wrong_three:
                             not_the_same = True
@@ -147,54 +150,61 @@ def quiz():
                 else:
                     continue
             # list_of_options made & shuffled so that responses in random order
-            list_of_options = [correct_definition,
+            list_of_options = [correct_def,
                                wrong_one, wrong_two, wrong_three]
             random.shuffle(list_of_options)
             return render_template("question.html", correct_word=correct_word,
-                                   list_of_options=list_of_options,name_of_lis=name_of_lis,
-                                   username=username)
+                                   list_of_options=list_of_options,
+                                   name_of_lis=name_of_lis, username=username)
     else:
-        name_of_lis= session["current_list"]
-        if request.form.get("options") == correct_definition:
-            #update dictionary
-            user_doc[session["current_list"].lower()]["correct"]+=1
-            #update mongo
-            db.users.update({"username":username},{"$set": {session["current_list"].lower() : user_doc[session["current_list"].lower()]}})
+        name_of_lis = session["current_list"]
+        if request.form.get("options") == correct_def:
+            # update dictionary
+            user_doc[session["current_list"].lower()]["correct"] += 1
+            # update mongo
+            db.users.update({"username": username},
+                            {"$set": {session["current_list"].lower():
+                             user_doc[session["current_list"].lower()]}})
             full_doc = db[name_of_collection].find_one({"word": correct_word})
             quote_ggs = full_doc["quote_ggs"]
             correct_translit = full_doc["transliteration"]
             # go to correct.html and print details about the correct word
             return render_template("correct.html", correct_word=correct_word,
-                                   correct_definition=correct_definition,
-                                   quote_ggs=quote_ggs,name_of_lis=name_of_lis,
+                                   correct_def=correct_def,
+                                   quote_ggs=quote_ggs,
+                                   name_of_lis=name_of_lis,
                                    correct_translit=correct_translit,
                                    username=username)
         elif request.form.get("options") is None:
             # if the user clicked submit without submitting a response
             flash("Please submit a response")
-            list_of_options = [correct_definition,
+            list_of_options = [correct_def,
                                wrong_one, wrong_two, wrong_three]
             return render_template("question.html", correct_word=correct_word,
                                    list_of_options=list_of_options)
         else:
             # if the user was incorrect, go to incorrect.html
             # print details about the correct word
-            #update dictionary
-            user_doc[session["current_list"].lower()]["wrong"]+=1
-            #update mongo
-            db.users.update({"username":username},{"$set": {session["current_list"].lower() : user_doc[session["current_list"].lower()]}})
+            # update dictionary
+            user_doc[session["current_list"].lower()]["wrong"] += 1
+            # update mongo
+            db.users.update({"username": username},
+                            {"$set": {session["current_list"].lower():
+                             user_doc[session["current_list"].lower()]}})
             full_doc = db[name_of_collection].find_one({"word": correct_word})
             quote_ggs = full_doc["quote_ggs"]
             correct_translit = full_doc["transliteration"]
             return render_template("incorrect.html", correct_word=correct_word,
-                                   correct_definition=correct_definition,
-                                   quote_ggs=quote_ggs,name_of_lis=name_of_lis,
+                                   correct_def=correct_def,
+                                   quote_ggs=quote_ggs,
+                                   name_of_lis=name_of_lis,
                                    correct_translit=correct_translit,
                                    username=username)
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    global user_doc
     if request.method == "GET":
         # if user is simply accessing the page
         return render_template("login.html")
@@ -218,7 +228,8 @@ def login():
             return redirect("/setsession", 303)
         else:
             session["username"] = username
-            session["email"] = db.users.find_one({"username": username})["email"]
+            email = db.users.find_one({"username": username})["email"]
+            session["email"] = email
             # just wrong password
             flash("Wrong password")
             return render_template("login.html")
@@ -298,20 +309,22 @@ def logged_out():
 def profile():
     username = session["username"]
     email = session["email"]
-    doc = db.users.find_one({"username":username})
-    stats={}
-    progress={}
+    doc = db.users.find_one({"username": username})
+    stats = {}
+    progress = {}
     for item in doc:
         name_of_item = list(str(item))
         if name_of_item[0:4] == list("list"):
             stats[item] = doc[item]
     for lis in stats:
         num_questions = (stats[lis]["correct"]+stats[lis]["wrong"])
-        percent_accuracy= int((stats[lis]["correct"] / num_questions)*100)
-        progress[list(lis)[-1]]= {"percent_accuracy":percent_accuracy, "total_questions": num_questions}
+        percent_accuracy = int((stats[lis]["correct"] / num_questions)*100)
+        progress[list(lis)[-1]] = {"percent_accuracy": percent_accuracy,
+                                   "total_questions": num_questions}
     od = collections.OrderedDict(sorted(progress.items()))
     # get information about user and print in profile.html
-    return render_template("profile.html", email=email, username=username, od=od)
+    return render_template("profile.html", email=email, username=username,
+                           od=od)
 
 
 if __name__ == "__main__":
