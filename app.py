@@ -16,12 +16,13 @@ wrong_three = ""
 name_of_collection = ''
 app = Flask(__name__)
 app.secret_key = secure.APP_SECRET_KEY
-
+user_doc={}
 @app.route("/", methods=["GET"])
 def main():
     if request.method == "GET":
         try:
             username = session["username"]
+            session["email"] = db.users.find_one({"username": username})["email"]
             return render_template("homepage_2.html", username=username)
         except KeyError: 
             return render_template("homepage.html")
@@ -80,8 +81,14 @@ def study():
 
 @app.route("/list_selected", methods=["GET"])
 def list_selected():
+    global user_doc
     username = session["username"]
     name = session["current_list"]
+    try:
+        user_doc[name.lower()]
+    except:
+        # if the user has never accessed this list before, set everything to 0
+        user_doc[name.lower()]={"correct": 0, "wrong": 0}
     name.split()
     name = name[-1]
     return render_template("list_selected.html", name=name, username=username)
@@ -91,8 +98,9 @@ def list_selected():
 def quiz():
     global correct_definition, name_of_collection, list_of_words
     global list_of_definitions, correct_word, wrong_one, wrong_two
-    global wrong_three, word_index
+    global wrong_three, word_index, user_doc
     username = session["username"]
+    name_of_lis= session["current_list"]
     if request.method == "GET":
         if len(list_of_words) < 1:
             return render_template("error_choose_list.html", username=username)
@@ -142,21 +150,24 @@ def quiz():
                                wrong_one, wrong_two, wrong_three]
             random.shuffle(list_of_options)
             return render_template("question.html", correct_word=correct_word,
-                                   list_of_options=list_of_options,
+                                   list_of_options=list_of_options,name_of_lis=name_of_lis,
                                    username=username)
     else:
+        name_of_lis= session["current_list"]
         if request.form.get("options") == correct_definition:
-            # if user response correct, take it out of the running
-            list_of_words.pop(word_index)
-            list_of_definitions.pop(word_index)
+            #update dictionary
+            user_doc[session["current_list"].lower()]["correct"]+=1
+            #update mongo
+            db.users.update({"username":username},{"$set": {session["current_list"].lower() : user_doc[session["current_list"].lower()]}})
             full_doc = db[name_of_collection].find_one({"word": correct_word})
             quote_ggs = full_doc["quote_ggs"]
             correct_translit = full_doc["transliteration"]
             # go to correct.html and print details about the correct word
             return render_template("correct.html", correct_word=correct_word,
                                    correct_definition=correct_definition,
-                                   quote_ggs=quote_ggs,
-                                   correct_translit=correct_translit)
+                                   quote_ggs=quote_ggs,name_of_lis=name_of_lis,
+                                   correct_translit=correct_translit,
+                                   username=username)
         elif request.form.get("options") is None:
             # if the user clicked submit without submitting a response
             flash("Please submit a response")
@@ -167,25 +178,18 @@ def quiz():
         else:
             # if the user was incorrect, go to incorrect.html
             # print details about the correct word
+            #update dictionary
+            user_doc[session["current_list"].lower()]["wrong"]+=1
+            #update mongo
+            db.users.update({"username":username},{"$set": {session["current_list"].lower() : user_doc[session["current_list"].lower()]}})
             full_doc = db[name_of_collection].find_one({"word": correct_word})
             quote_ggs = full_doc["quote_ggs"]
             correct_translit = full_doc["transliteration"]
             return render_template("incorrect.html", correct_word=correct_word,
                                    correct_definition=correct_definition,
-                                   quote_ggs=quote_ggs,
+                                   quote_ggs=quote_ggs,name_of_lis=name_of_lis,
                                    correct_translit=correct_translit,
                                    username=username)
-
-
-'''
-@app.route("/progress", methods = ["GET"])
-def progress():
-    #check what list they're on using session
-    #if the user has answered < one word from the list, no summary
-    #else: provide percent accuracy for each word in the list
-    #alternatively, list the 3 words theyre doing worst on
-    return "Get request made"
-'''
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -205,6 +209,7 @@ def login():
             return render_template("login.html")
         elif doc["password"] == request.form.get("pass"):
             # the user is in db and the password is correct
+            user_doc = {}
             session["username"] = username
             flash("Successful login")
             # successful login
@@ -279,10 +284,12 @@ def signup():
 
 @app.route("/logged_out", methods=["GET"])
 def logged_out():
+    global user_doc
     # user has logged out
     # delete session[username] and session[email]
     session["username"] = None
     session["email"] = None
+    user_doc = {}
     return render_template("logged_out.html")
 
 
@@ -290,8 +297,18 @@ def logged_out():
 def profile():
     username = session["username"]
     email = session["email"]
+    doc = db.users.find_one({"username":username})
+    stats={}
+    progress={}
+    for item in doc:
+        name_of_item = list(str(item))
+        if name_of_item[0:4] == list("list"):
+            stats[item] = doc[item]
+    for lis in stats:
+        percent_accuracy= (stats[lis]["correct"] / (stats[lis]["correct"]+stats[lis]["wrong"]))*100
+        progress[lis.title()]= percent_accuracy
     # get information about user and print in profile.html
-    return render_template("profile.html", email=email, username=username)
+    return render_template("profile.html", email=email, username=username, progress=progress)
 
 
 if __name__ == "__main__":

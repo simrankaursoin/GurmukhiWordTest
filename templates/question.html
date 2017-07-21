@@ -3,34 +3,37 @@
 
 {% block content %}
 <body>
-<div align="right">
-<img src="file:///C:/Users/simransoin/src/Gurmukhi_wordtest/profile.jpg"><a href="/profile">{{username}} </a>
-a {font-size:120%;}
-</div>
-<style>
-table {font-size:120%; height:30px; border: 1px solid black; text-align:center;width:100%; }
-</style>
-<table border="1" style="cellpadding:100">
-  <tr>
-    <td><a href="/"> Home </a></td>
-    <td><a href="/setsession"> Choose a List </a></td>
-    <td><a href="/quiz"> Quiz </a></td>
-    <td><a href="/study"> Study </a></td>
-  </tr>
-</table>
-<h3>Which of these words is the correct definition for {{correct_word}}?</h3>
-
-<form action="" method="post">
-{% for item in list_of_options %}
-  <INPUT TYPE="radio" name="options" value="{{item}}"> {{item}}
-  <br> </br>
-{%endfor%}
-
-<input type="submit" value="Submit Answer">
-
-</form>
-
-
+    <div align="right">
+        <img src="file:///C:/Users/simransoin/src/Gurmukhi_wordtest/profile.jpg"><a href="/profile">{{username}} </a>
+    </div>
+    
+    <style>
+        table {font-size:120%; height:30px; border: 1px solid black; text-align:center;width:100%; }
+        a {font-size:120%;}
+    </style>
+    
+    <table border="1" style="cellpadding:100">
+    <tr>
+        <td><a href="/"> Home </a></td>
+        <td><a href="/setsession"> Choose a List </a></td>
+        <td><a href="/quiz"> Quiz </a></td>
+        <td><a href="/study"> Study </a></td>
+    </tr>
+    </table>
+    <div align="left">
+        <font size="4"><i>Currently on {{name_of_lis}}</i></font>
+    </div>
+    <h3>Which of these words is the correct definition for {{correct_word}}?</h3>
+    
+    <form action="" method="post">
+        {% for item in list_of_options %}
+            <INPUT TYPE="radio" name="options" value="{{item}}"> {{item}}
+            <br> </br>
+        {%endfor%}
+        
+        <input type="submit" value="Submit Answer">
+    </form>
+    
 </body>
 {% endblock %}
 

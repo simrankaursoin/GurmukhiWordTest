@@ -3,38 +3,43 @@
 
 {% block content %}
 <body>
-<div align="right">
-<img src="file:///C:/Users/simransoin/src/Gurmukhi_wordtest/profile.jpg"><a href="/profile">{{username}} </a>
-</div>
-<style>
-table {font-size:120%; height:30px; border: 1px solid black; text-align:center;width:100%; }
-a {font-size:120%;}
-</style>
-<table border="1" style="cellpadding:100">
-  <tr>
-    <td><a href="/"> Home </a></td>
-    <td><a href="/setsession"> Choose a List </a></td>
-    <td><a href="/quiz"> Quiz </a></td>
-    <td><a href="/study"> Study </a></td>
-  </tr>
-</table>
-<h2> <center> Study List {{name}}</center> </h2>
-<center>
-<table style="width:65%" border="1">
-  <tr>
-    <th>Word</th>
-    <th>Transliteration</th> 
-    <th>Definition</th>
-  </tr>
-  {% for item in all_words %}
-  <tr>
-    <td>{{item.word}} </td>
-    <td>{{item.transliteration}} </td>
-    <td>{{item.definition}} </td>
-  </tr>
-  {% endfor %}
-</table>
-</center>
+    <div align="right">
+        <img src="file:///C:/Users/simransoin/src/Gurmukhi_wordtest/profile.jpg"><a href="/profile">{{username}} </a>
+    </div>
+    
+    <style>
+        table {font-size:120%; height:30px; border: 1px solid black; text-align:center;width:100%; }
+        th {text-align:center;}
+        a {font-size:120%;}
+    </style>
+    
+    <table border="1" style="cellpadding:100">
+    <tr>
+        <td><a href="/"> Home </a></td>
+        <td><a href="/setsession"> Choose a List </a></td>
+        <td><a href="/quiz"> Quiz </a></td>
+        <td><a href="/study"> Study </a></td>
+    </tr>
+    </table>
+    
+    <h2> <center> Study List {{name}}</center> </h2>
+    
+    <center>
+        <table style="width:65%" border="1">
+        <tr>
+            <th>Word</th>
+            <th>Transliteration</th> 
+            <th>Definition</th>
+        </tr>
+        {% for item in all_words %}
+            <tr>
+                <td>{{item.word}} </td>
+                <td>{{item.transliteration}} </td>
+                <td>{{item.definition}} </td>
+            </tr>
+        {% endfor %}
+        </table>
+    </center>
 
 </body>
 {% endblock %}

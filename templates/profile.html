@@ -3,21 +3,36 @@
 
 {% block content %}
 <body>
-<style>
-table {font-size:120%; height:30px; border: 1px solid black; text-align:center;width:100%; }
-</style>
-<table border="1" style="cellpadding:100">
-  <tr>
-    <td><a href="/"> Home </a></td>
-    <td><a href="/setsession"> Choose a List </a></td>
-    <td><a href="/quiz"> Quiz </a></td>
-    <td><a href="/study"> Study </a></td>
-  </tr>
-</table>
-<center><h2> My Profile </h2> </center>
-<h4> Email:   </h4> {{email}}
-<h4> Username:   </h4> {{username}}
-<br> </br>
-<a href="/logged_out"> Log Out </a>
+    <style>
+        table {font-size:120%; height:30px; border: 1px solid black; text-align:center;width:100%; }
+    </style>
+    <table border="1" style="cellpadding:100">
+    <tr>
+        <td><a href="/"> Home </a></td>
+        <td><a href="/setsession"> Choose a List </a></td>
+        <td><a href="/quiz"> Quiz </a></td>
+        <td><a href="/study"> Study </a></td>
+    </tr>
+    </table>
+    
+    <center><h2> My Profile </h2> </center>
+    
+    <div style="width: 100%; overflow: hidden;">
+        <div style="width:50%; float: left;"> 
+            <h4> Email:   </h4> {{email}}
+            <h4> Username:   </h4> {{username}}
+            <br> </br>
+        </div>
+        
+        <div style="margin-left:75%;"> 
+            <h4>PROGRESS REPORT:</h4>
+            {% for vocab_lis in progress %}
+                <u>{{vocab_lis}}:</u> <i>{{progress[vocab_lis]}}%</i><br></br>
+            {%endfor%}
+                
+        </div>
+    </div>
+    
+    <a href="/logged_out"> Log Out </a>
 </body>
 {% endblock %}
