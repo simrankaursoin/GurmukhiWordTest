@@ -251,12 +251,33 @@ def security():
             return render_template("wrong_password.html")
         elif doc["security_word"].lower() == security_word.lower():
             # security word is correct, redirect to choose a list
-            return redirect("/setsession", 303)
+            return redirect("/reset_password", 303)
         else:
             # security word is incorrect
             flash("Security word is incorrect. Try again")
             return render_template("wrong_password.html")
 
+
+@app.route("/reset_password", methods=["GET", "POST"])
+def reset_password():
+    username = session["username"]
+    if request.method == "GET":
+        return render_template("reset_password.html")
+    else:
+        if request.form.get("pass") != request.form.get("c_pass"):
+            # password ≠ confirmed password
+            flash("Re-Type Password or Password Confirmation")
+            return render_template("reset_password.html")
+        elif len(request.form.get("pass")) < 8:
+            # password length is less than 8 characters
+            flash("Password length is less than 8 characters")
+            return render_template("reset_password.html")
+        else:
+            db.users.update({"username": username},
+                            {"$set": {"password":request.form.get("pass")}})
+            flash("Password reset")
+            return redirect("/")
+        
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
@@ -279,7 +300,7 @@ def signup():
             return render_template("sign_up.html")
         if len(request.form.get("pass")) < 8:
             # password length is less than 8 characters
-            flash("Password length less than 8 characters")
+            flash("Password length is less than 8 characters")
             return render_template("sign_up.html")
         db.users.insert_one({"username": request.form.get("user"),
                              "password": request.form.get("pass"),
