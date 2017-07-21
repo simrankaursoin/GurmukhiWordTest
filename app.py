@@ -17,16 +17,15 @@ name_of_collection = ''
 app = Flask(__name__)
 app.secret_key = secure.APP_SECRET_KEY
 
-
 @app.route("/", methods=["GET"])
 def main():
     if request.method == "GET":
-        if session["username"] is None:
-            return render_template("homepage.html")
-        else:
+        try:
             username = session["username"]
             return render_template("homepage_2.html", username=username)
-
+        except KeyError: 
+            return render_template("homepage.html")
+            
 
 # make the list_of_words & list_of_definitions based on session["current_list"]
 
