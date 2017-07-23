@@ -106,8 +106,61 @@ def quiz():
     username = session["username"]
     name_of_lis = session["current_list"]
     if request.method == "GET":
-        if len(list_of_words) < 1:
+        if len(list_of_words) == 0:
             return render_template("error_choose_list.html", username=username)
+        elif list_of_words[0] == "Nothing":
+            name = session["current_list"]
+            name.split()
+            name = name[-1]
+            return render_template("finished.html", name=name)
+        elif len(list_of_words) < 4:
+             word_index = random.randint(0, (len(list_of_words)-1))
+             # a word_index generated to make the word choice random
+             word_index = random.randint(0, (len(list_of_words)-1))
+             # the correct_word is set
+             x = False
+             while not x:
+                correct_word = list_of_words[word_index]
+                if correct_word == "Nothing":
+                    continue
+                else:
+                    x = True
+             
+             # the correct_definiton is set
+             correct_def = list_of_definitions[word_index]
+             list_of_words.append("Nothing")
+             # list2 made of other random definitions
+             lis2=[]
+             for item in db[name_of_collection].find():
+                 if item in list_of_definitions:
+                     continue
+                 else:
+                     lis2.append(item["definition"])
+             wrong_one= random.choice(lis2)
+             not_the_same = False
+             while not not_the_same:
+                 wrong_two= random.choice(lis2)
+                 if wrong_two != wrong_one:
+                     not_the_same = True
+                 else:
+                     continue
+             not_the_same = False
+             while not not_the_same:
+                 wrong_three = random.choice(lis2)
+                 if wrong_three != wrong_one:
+                     if wrong_three != wrong_two:
+                         not_the_same = True
+                     else:
+                         continue
+                 else:
+                     continue
+             list_of_options = [correct_def,
+                               wrong_one, wrong_two, wrong_three]
+             random.shuffle(list_of_options)
+             return render_template("question.html", correct_word=correct_word,
+                                    list_of_options=list_of_options,
+                                    name_of_lis=name_of_lis, username=username)     
+            
         else:
             # a word_index generated to make the word choice random
             word_index = random.randint(0, (len(list_of_words)-1))
@@ -159,6 +212,7 @@ def quiz():
     else:
         name_of_lis = session["current_list"]
         if request.form.get("options") == correct_def:
+            # user was correct
             # update dictionary
             user_doc[session["current_list"].lower()]["correct"] += 1
             # update mongo
@@ -167,6 +221,9 @@ def quiz():
                              user_doc[session["current_list"].lower()]}})
             full_doc = db[name_of_collection].find_one({"word": correct_word})
             quote_ggs = full_doc["quote_ggs"]
+            # since user got word right, take it out of list of words
+            list_of_words.pop(word_index)
+            list_of_definitions.pop(word_index)
             correct_translit = full_doc["transliteration"]
             # go to correct.html and print details about the correct word
             return render_template("correct.html", correct_word=correct_word,

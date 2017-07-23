@@ -1,0 +1,24 @@
+{% extends "_base.html" %}
+{% block title %}You finished!{% endblock %}
+
+{% block content %}
+<body>
+    <style>
+table {background-color:#ffedc4; font-size:120%; height:30px; border: 1px solid black; text-align:center;width:100%; font-family: Verdana;}
+a {font-size:120%; color: #035a9e; font-family: Verdana;}
+h1,h2 {color: #035a9e; font-family: Verdana; }
+body {font-family: Verdana;}
+</style>
+    <table border="1" style="cellpadding:100">
+    <tr>
+        <td><a href="/"> Home </a></td>
+        <td><a href="/setsession"> Choose a List </a></td>
+        <td><a href="/quiz"> Quiz </a></td>
+        <td><a href="/study"> Study </a></td>
+    </tr>
+    </table>
+    
+<center> <h2> YOU FINISHED LIST {{name}}!! </h2> </center>
+<center>You got each word correctly at least one time! <br />If you wish to do this list again, please <a href="/setsession">choose</a> list {{name}} again  </center>
+</body>
+{% endblock %}
