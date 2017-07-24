@@ -3,6 +3,10 @@
 
 {% block content %}
 <body>
+<div align="right">
+ <a href="/profile">{{full_name}} </a> |
+        <a href="/logged_out">Log Out </a>
+</div>
     <table border="1" style="cellpadding:100">
     <tr>
         <td><a href="/"> Home </a></td>
@@ -36,8 +40,5 @@
                 
         </div>
     </div>
-    <form action="/logged_out" method="get">
-        <input class="btn btn-info" type="submit" value="Log Out">
-    </form>
 </body>
 {% endblock %}

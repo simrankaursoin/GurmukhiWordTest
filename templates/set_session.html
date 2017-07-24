@@ -3,8 +3,8 @@
 
 {% block content %}
 <body>
-<div align="right">
-<img src="{{url_for('static', filename='profile.gif')}}" height="30" width="40"><a href="/profile">{{username}} </a>
+<div align="right"><a href="/profile">{{full_name}} </a> |
+        <a href="/logged_out">Log Out </a>
 </div>
 <table border="1" style="cellpadding:100">
   <tr>
@@ -15,7 +15,7 @@
   </tr>
 </table>
 <h3> Which list would you like to be tested on? </h3>
-<form class= "form-control" action="/setsession" method="post">
+<form class= "well" action="/setsession" method="post">
 <select name="current_list">
   <option value= "List1"> List 1</option>
   <option value= "List2"> List 2</option>

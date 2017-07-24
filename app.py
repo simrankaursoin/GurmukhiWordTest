@@ -24,9 +24,10 @@ user_doc = {}
 def main():
     try:
         username = session["username"]
+        full_name = session["first_name"].title()+" "+session["last_name"].title()
         email = db.users.find_one({"username": username})["email"]
         session["email"] = email
-        return render_template("homepage_2.html", username=username)
+        return render_template("homepage_2.html", full_name=full_name)
     except:
         return render_template("homepage.html")
 
@@ -47,10 +48,10 @@ def make_lists(list_of_words, list_of_definitions):
 @app.route("/setsession", methods=["GET", "POST"])
 def set_session():
     global list_of_words, list_of_definitions
-    username = session["username"]
+    full_name = session["first_name"].title()+" "+session["last_name"].title()
     if request.method == "GET":
         # directs user to a page to set the session["current_list"]
-        return render_template("set_session.html", username=username)
+        return render_template("set_session.html", full_name=full_name)
     else:
         # POST request for when user clicks "submit"
         # set_session page has a dropdown menu in which the user selects list
@@ -67,10 +68,10 @@ def set_session():
 @app.route("/study", methods=["GET", "POST"])
 def study():
     global name_of_collection
-    username = session["username"]
+    full_name = session["first_name"].title()+" "+session["last_name"].title()
     all_words = []
     if len(list_of_words) < 1:
-            return render_template("error_choose_list.html", username=username)
+            return render_template("error_choose_list.html", full_name=full_name)
     # sets all_words equal to list containing each document
     for item in db[name_of_collection].find():
         all_words.append(item)
@@ -79,13 +80,13 @@ def study():
     name = name[-1]
     # study.html makes a table for the user to study from.
     return render_template("study.html", name=name,
-                           username=username, all_words=all_words)
+                           full_name=full_name, all_words=all_words)
 
 
 @app.route("/list_selected", methods=["GET"])
 def list_selected():
     global user_doc
-    username = session["username"]
+    full_name = session["first_name"].title()+" "+session["last_name"].title()
     name = session["current_list"]
     try:
         user_doc[name.lower()]
@@ -94,7 +95,7 @@ def list_selected():
         user_doc[name.lower()] = {"correct": 0, "wrong": 0}
     name.split()
     name = name[-1]
-    return render_template("list_selected.html", name=name, username=username)
+    return render_template("list_selected.html", name=name, full_name=full_name)
 
 
 @app.route("/quiz", methods=["GET", "POST"])
@@ -102,11 +103,11 @@ def quiz():
     global correct_def, name_of_collection, list_of_words
     global list_of_definitions, correct_word, wrong_one, wrong_two
     global wrong_three, word_index, user_doc
-    username = session["username"]
+    full_name = session["first_name"].title()+" "+session["last_name"].title()
     name_of_lis = session["current_list"]
     if request.method == "GET":
         if len(list_of_words) == 0:
-            return render_template("error_choose_list.html", username=username)
+            return render_template("error_choose_list.html", full_name=full_name)
         elif list_of_words[0] == "Nothing":
             name = session["current_list"]
             name.split()
@@ -156,7 +157,7 @@ def quiz():
             random.shuffle(list_of_options)
             return render_template("question.html", correct_word=correct_word,
                                    list_of_options=list_of_options,
-                                   name_of_lis=name_of_lis, username=username)
+                                   name_of_lis=name_of_lis, full_name=full_name)
 
         else:
             # a word_index generated to make the word choice random
@@ -205,8 +206,9 @@ def quiz():
             random.shuffle(list_of_options)
             return render_template("question.html", correct_word=correct_word,
                                    list_of_options=list_of_options,
-                                   name_of_lis=name_of_lis, username=username)
+                                   name_of_lis=name_of_lis, full_name=full_name)
     else:
+        username = session["username"]
         name_of_lis = session["current_list"]
         if request.form.get("options") == correct_def:
             # user was correct
@@ -228,7 +230,7 @@ def quiz():
                                    quote_ggs=quote_ggs,
                                    name_of_lis=name_of_lis,
                                    correct_translit=correct_translit,
-                                   username=username)
+                                   username=username, full_name=full_name)
         elif request.form.get("options") is None:
             # if the user clicked submit without submitting a response
             flash("Please submit a response")
@@ -253,7 +255,7 @@ def quiz():
                                    quote_ggs=quote_ggs,
                                    name_of_lis=name_of_lis,
                                    correct_translit=correct_translit,
-                                   username=username)
+                                   full_name=full_name)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -284,6 +286,10 @@ def login():
             session["username"] = username
             email = db.users.find_one({"username": username})["email"]
             session["email"] = email
+            f_name = db.users.find_one({"username": username})["first_name"]
+            l_name = db.users.find_one({"username": username})["last_name"]
+            session["first_name"] = f_name
+            session["last_name"] = l_name
             # just wrong password
             flash("Wrong password")
             return render_template("login.html")
@@ -360,10 +366,14 @@ def signup():
                              "password": request.form.get("pass"),
                              "security_word":
                              request.form.get("security_word"),
-                             "email": request.form.get("email")})
+                             "email": request.form.get("email"),
+                             "first_name": request.form.get("f_name"),
+                             "last_name": request.form.get("l_name")})
         # add user to db and set session[username] and session[email]
         session["username"] = request.form.get("user")
         session["email"] = request.form.get("email")
+        session["first_name"] = request.form.get("f_name")
+        session["last_name"] = request.form.get("l_name")
         flash("Profile created")
         # redirect user to choose a list
         return redirect("/setsession", 303)
@@ -376,6 +386,8 @@ def logged_out():
     # delete session[username] and session[email]
     session["username"] = None
     session["email"] = None
+    session["first_name"] = None
+    session["last_name"] = None
     user_doc = {}
     return render_template("logged_out.html")
 
@@ -385,6 +397,7 @@ def profile():
     username = session["username"]
     email = db.users.find_one({"username": username})["email"]
     doc = db.users.find_one({"username": username})
+    full_name = session["first_name"].title()+" "+session["last_name"].title()
     stats = {}
     progress = {}
     for item in doc:
@@ -399,7 +412,7 @@ def profile():
     od = collections.OrderedDict(sorted(progress.items()))
     # get information about user and print in profile.html
     return render_template("profile.html", email=email, username=username,
-                           od=od)
+                           od=od, full_name=full_name)
 
 
 if __name__ == "__main__":
