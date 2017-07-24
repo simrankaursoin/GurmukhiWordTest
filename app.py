@@ -113,8 +113,8 @@ def quiz():
             name = name[-1]
             return render_template("finished.html", name=name)
         elif len(list_of_words) < 4:
-             x = False
-             while not x:
+            x = False
+            while not x:
                 word_index = random.randint(0, (len(list_of_words)-1))
                 correct_word = list_of_words[word_index]
                 if correct_word == "Nothing":
@@ -122,42 +122,42 @@ def quiz():
                     word_index
                 else:
                     x = True
-             
-             # the correct_definiton is set
-             correct_def = list_of_definitions[word_index]
-             list_of_words.append("Nothing")
-             # list2 made of other random definitions
-             lis2=[]
-             for item in db[name_of_collection].find():
-                 if item in list_of_definitions:
-                     continue
-                 else:
-                     lis2.append(item["definition"])
-             wrong_one= random.choice(lis2)
-             not_the_same = False
-             while not not_the_same:
-                 wrong_two= random.choice(lis2)
-                 if wrong_two != wrong_one:
-                     not_the_same = True
-                 else:
-                     continue
-             not_the_same = False
-             while not not_the_same:
-                 wrong_three = random.choice(lis2)
-                 if wrong_three != wrong_one:
-                     if wrong_three != wrong_two:
-                         not_the_same = True
-                     else:
-                         continue
-                 else:
-                     continue
-             list_of_options = [correct_def,
+
+            # the correct_definiton is set
+            correct_def = list_of_definitions[word_index]
+            list_of_words.append("Nothing")
+            # list2 made of other random definitions
+            lis2 = []
+            for item in db[name_of_collection].find():
+                if item in list_of_definitions:
+                    continue
+                else:
+                    lis2.append(item["definition"])
+            wrong_one = random.choice(lis2)
+            not_the_same = False
+            while not not_the_same:
+                wrong_two = random.choice(lis2)
+                if wrong_two != wrong_one:
+                    not_the_same = True
+                else:
+                    continue
+            not_the_same = False
+            while not not_the_same:
+                wrong_three = random.choice(lis2)
+                if wrong_three != wrong_one:
+                    if wrong_three != wrong_two:
+                        not_the_same = True
+                    else:
+                        continue
+                else:
+                    continue
+            list_of_options = [correct_def,
                                wrong_one, wrong_two, wrong_three]
-             random.shuffle(list_of_options)
-             return render_template("question.html", correct_word=correct_word,
-                                    list_of_options=list_of_options,
-                                    name_of_lis=name_of_lis, username=username)     
-            
+            random.shuffle(list_of_options)
+            return render_template("question.html", correct_word=correct_word,
+                                   list_of_options=list_of_options,
+                                   name_of_lis=name_of_lis, username=username)
+
         else:
             # a word_index generated to make the word choice random
             word_index = random.randint(0, (len(list_of_words)-1))
@@ -328,10 +328,10 @@ def reset_password():
             return render_template("reset_password.html")
         else:
             db.users.update({"username": username},
-                            {"$set": {"password":request.form.get("pass")}})
+                            {"$set": {"password": request.form.get("pass")}})
             flash("Password reset")
             return redirect("/")
-        
+
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
