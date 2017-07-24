@@ -24,9 +24,13 @@ user_doc = {}
 def main():
     try:
         username = session["username"]
-        full_name = session["first_name"].title()+" "+session["last_name"].title()
+        f_name = db.users.find_one({"username": username})["first_name"]
+        l_name = db.users.find_one({"username": username})["last_name"]
+        session["first_name"] = f_name
+        session["last_name"] = l_name
         email = db.users.find_one({"username": username})["email"]
         session["email"] = email
+        full_name = f_name + " " + l_name
         if len(list_of_words)>0:
             return render_template("homepage_2.html", full_name=full_name)
         else:
@@ -51,10 +55,18 @@ def make_lists(list_of_words, list_of_definitions):
 @app.route("/setsession", methods=["GET", "POST"])
 def set_session():
     global list_of_words, list_of_definitions
-    full_name = session["first_name"].title()+" "+session["last_name"].title()
     if request.method == "GET":
-        # directs user to a page to set the session["current_list"]
-        return render_template("set_session.html", full_name=full_name)
+        username = session["username"]
+        f_name = db.users.find_one({"username": username})["first_name"]
+        l_name = db.users.find_one({"username": username})["last_name"]
+        session["first_name"] = f_name
+        session["last_name"] = l_name
+        full_name = f_name + " " + l_name
+        if len(list_of_words) > 0:
+            return render_template("set_session2.html", full_name=full_name)
+        else:
+            # directs user to a page to set the session["current_list"]
+            return render_template("set_session.html", full_name=full_name)
     else:
         # POST request for when user clicks "submit"
         # set_session page has a dropdown menu in which the user selects list
