@@ -4,7 +4,7 @@
 {% block content %}
 <body>
 <div align="right">
-<img src="{{url_for('static', filename='profile.gif')}}" height="25" width="40"><a href="/profile">{{username}} </a>
+<img src="{{url_for('static', filename='profile.gif')}}" height="30" width="40"><a href="/profile">{{username}} </a>
 </div>
 <table border="1" style="cellpadding:100">
   <tr>
@@ -14,7 +14,7 @@
     <td><a href="/study"> Study </a></td>
   </tr>
 </table>
-<h2 style="color:teal;"> You Selected List {{name}}! </h2>
+<h2> You Selected List {{name}}! </h2>
 <h4> Now that you've selected a list, you can go get quizzed or choose to study </h4>
 
 </body>

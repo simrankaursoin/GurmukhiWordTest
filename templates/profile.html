@@ -3,7 +3,6 @@
 
 {% block content %}
 <body>
-    
     <table border="1" style="cellpadding:100">
     <tr>
         <td><a href="/"> Home </a></td>
@@ -37,7 +36,8 @@
                 
         </div>
     </div>
-    
-    <a href="/logged_out"> Log Out </a>
+    <form action="/logged_out" method="get">
+        <input class="btn btn-info" type="submit" value="Log Out">
+    </form>
 </body>
 {% endblock %}
