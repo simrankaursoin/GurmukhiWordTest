@@ -27,7 +27,10 @@ def main():
         full_name = session["first_name"].title()+" "+session["last_name"].title()
         email = db.users.find_one({"username": username})["email"]
         session["email"] = email
-        return render_template("homepage_2.html", full_name=full_name)
+        if len(list_of_words)>0:
+            return render_template("homepage_2.html", full_name=full_name)
+        else:
+            return render_template("homepage_3.html", full_name=full_name)
     except:
         return render_template("homepage.html")
 
