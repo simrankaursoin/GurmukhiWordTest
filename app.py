@@ -114,15 +114,13 @@ def quiz():
             name = name[-1]
             return render_template("finished.html", name=name)
         elif len(list_of_words) < 4:
-             word_index = random.randint(0, (len(list_of_words)-1))
-             # a word_index generated to make the word choice random
-             word_index = random.randint(0, (len(list_of_words)-1))
-             # the correct_word is set
              x = False
              while not x:
+                word_index = random.randint(0, (len(list_of_words)-1))
                 correct_word = list_of_words[word_index]
                 if correct_word == "Nothing":
-                    continue
+                    print(list_of_words)
+                    word_index
                 else:
                     x = True
              

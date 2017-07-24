@@ -18,7 +18,15 @@
     {% endblock %}
 </head>
 <body>
-
+<style>
+table {background-color:#ffedc4; font-size:120%; height:30px; border: 1px solid black; text-align:center;width:100%; font-family: Verdana;}
+th,td {height:30px; border: 1px solid black; text-align:center; font-family: Verdana;}
+a {font-size:120%; color: #035a9e; font-family: Verdana;}
+h1{text-align:center; color: #035a9e; font-family: Verdana; }
+h2 {color: #035a9e; font-family: Verdana; }
+body {font-family: Verdana;}
+</style>
+<link rel="shortcut icon" href="{{url_for('static', filename='khanda.jpg')}}" type="image/x-icon" />
 
 {% with messages = get_flashed_messages() %}
   {% if messages %}
@@ -41,7 +49,7 @@
         {% block footer %}
         <br><br>
 <div align="center">
-        Khalsa School App by Simran Kaur Soin</div>
+        Flask App by Simran Kaur Soin</div>
         {% endblock %}
     </div>
     
