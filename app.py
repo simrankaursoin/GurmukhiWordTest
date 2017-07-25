@@ -423,25 +423,46 @@ def logged_out():
 
 @app.route("/profile", methods=["GET"])
 def profile():
-    username = session["username"]
-    email = db.users.find_one({"username": username})["email"]
-    doc = db.users.find_one({"username": username})
-    full_name = session["first_name"].title()+" "+session["last_name"].title()
-    stats = {}
-    progress = {}
-    for item in doc:
-        name_of_item = list(str(item))
-        if name_of_item[0:4] == list("list"):
-            stats[item] = doc[item]
-    for lis in stats:
-        num_questions = (stats[lis]["correct"]+stats[lis]["wrong"])
-        percent_accuracy = int((stats[lis]["correct"] / num_questions)*100)
-        progress[list(lis)[-1]] = {"percent_accuracy": percent_accuracy,
-                                   "total_questions": num_questions}
-    od = collections.OrderedDict(sorted(progress.items()))
-    # get information about user and print in profile.html
-    return render_template("profile.html", email=email, username=username,
-                           od=od, full_name=full_name)
+    if len(list_of_words) < 1:
+        username = session["username"]
+        email = db.users.find_one({"username": username})["email"]
+        doc = db.users.find_one({"username": username})
+        full_name = session["first_name"].title()+" "+session["last_name"].title()
+        stats = {}
+        progress = {}
+        for item in doc:
+            name_of_item = list(str(item))
+            if name_of_item[0:4] == list("list"):
+                stats[item] = doc[item]
+        for lis in stats:
+            num_questions = (stats[lis]["correct"]+stats[lis]["wrong"])
+            percent_accuracy = int((stats[lis]["correct"] / num_questions)*100)
+            progress[list(lis)[-1]] = {"percent_accuracy": percent_accuracy,
+                                    "total_questions": num_questions}
+        od = collections.OrderedDict(sorted(progress.items()))
+        # get information about user and print in profile.html
+        return render_template("profile_2.html", email=email, username=username,
+                            od=od, full_name=full_name)
+    else:
+        username = session["username"]
+        email = db.users.find_one({"username": username})["email"]
+        doc = db.users.find_one({"username": username})
+        full_name = session["first_name"].title()+" "+session["last_name"].title()
+        stats = {}
+        progress = {}
+        for item in doc:
+            name_of_item = list(str(item))
+            if name_of_item[0:4] == list("list"):
+                stats[item] = doc[item]
+        for lis in stats:
+            num_questions = (stats[lis]["correct"]+stats[lis]["wrong"])
+            percent_accuracy = int((stats[lis]["correct"] / num_questions)*100)
+            progress[list(lis)[-1]] = {"percent_accuracy": percent_accuracy,
+                                    "total_questions": num_questions}
+        od = collections.OrderedDict(sorted(progress.items()))
+        # get information about user and print in profile.html
+        return render_template("profile.html", email=email, username=username,
+                            od=od, full_name=full_name)
 
 
 if __name__ == "__main__":
