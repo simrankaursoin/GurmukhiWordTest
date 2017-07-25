@@ -31,7 +31,7 @@ def main():
         email = db.users.find_one({"username": username})["email"]
         session["email"] = email
         full_name = f_name + " " + l_name
-        if len(list_of_words)>0:
+        if len(list_of_words) > 0:
             return render_template("homepage_2.html", full_name=full_name)
         else:
             return render_template("homepage_3.html", full_name=full_name)
@@ -86,7 +86,8 @@ def study():
     full_name = session["first_name"].title()+" "+session["last_name"].title()
     all_words = []
     if len(list_of_words) < 1:
-            return render_template("error_choose_list.html", full_name=full_name)
+            return render_template("error_choose_list.html",
+                                   full_name=full_name)
     # sets all_words equal to list containing each document
     for item in db[name_of_collection].find():
         all_words.append(item)
@@ -110,7 +111,8 @@ def list_selected():
         user_doc[name.lower()] = {"correct": 0, "wrong": 0}
     name.split()
     name = name[-1]
-    return render_template("list_selected.html", name=name, full_name=full_name)
+    return render_template("list_selected.html",
+                           name=name, full_name=full_name)
 
 
 @app.route("/quiz", methods=["GET", "POST"])
@@ -122,7 +124,8 @@ def quiz():
     name_of_lis = session["current_list"]
     if request.method == "GET":
         if len(list_of_words) == 0:
-            return render_template("error_choose_list.html", full_name=full_name)
+            return render_template("error_choose_list.html",
+                                   full_name=full_name)
         elif list_of_words[0] == "Nothing":
             name = session["current_list"]
             name.split()
@@ -172,7 +175,8 @@ def quiz():
             random.shuffle(list_of_options)
             return render_template("question.html", correct_word=correct_word,
                                    list_of_options=list_of_options,
-                                   name_of_lis=name_of_lis, full_name=full_name)
+                                   name_of_lis=name_of_lis,
+                                   full_name=full_name)
 
         else:
             # a word_index generated to make the word choice random
@@ -221,7 +225,8 @@ def quiz():
             random.shuffle(list_of_options)
             return render_template("question.html", correct_word=correct_word,
                                    list_of_options=list_of_options,
-                                   name_of_lis=name_of_lis, full_name=full_name)
+                                   name_of_lis=name_of_lis,
+                                   full_name=full_name)
     else:
         username = session["username"]
         name_of_lis = session["current_list"]
