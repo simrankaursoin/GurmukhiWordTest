@@ -24,38 +24,54 @@ user_doc = {}
 def main():
     try:
         username = session["username"]
+        # get username from session (added when they logged/signed in)
+        # get first/last name or email from mongo database
+        # set first name/last name/email in session for accessing later
         f_name = db.users.find_one({"username": username})["first_name"]
         l_name = db.users.find_one({"username": username})["last_name"]
         session["first_name"] = f_name
         session["last_name"] = l_name
         email = db.users.find_one({"username": username})["email"]
         session["email"] = email
+        # full_name is the first name + last name (to display in top R corner)
         full_name = f_name + " " + l_name
         if len(list_of_words) > 0:
+            # number 1 is that they logged in and chose list 
+            # > homepage_2.html
             return render_template("homepage_2.html", full_name=full_name)
         else:
+            # number 2 is that they logged in but didnt choose list 
+            # > homepage_3.html
             return render_template("homepage_3.html", full_name=full_name)
     except:
+        # number 3 is that they are not yet logged in 
+        # > homepage.html
         return render_template("homepage.html")
 
-
-# make the list_of_words & list_of_definitions based on session["current_list"]
 
 
 def make_lists(list_of_words, list_of_definitions):
     global name_of_collection
     # name_of_collection is a variable based on the session[current_list]
+    # corresponds to the name of the collection in the mongo db
     name_of_collection = str(session["current_list"]).lower()
     for item in db[name_of_collection].find():
         list_of_words.append(item["word"])
         list_of_definitions.append(item["definition"])
+    # create a list called list_of_words based on db words from list
+    # create a list called list_of_definitions based on db defs from list
+    # allows appending/deleting/easy-access (unlike the db)
     return list_of_words, list_of_definitions
 
 
 @app.route("/setsession", methods=["GET", "POST"])
 def set_session():
+    # choose list
     global list_of_words, list_of_definitions
     if request.method == "GET":
+        # username, f_name, l_name variables not actually necessary
+        # just added for easier formatting/readability
+        # all in order to create full_name (concatenation of first + last name)
         username = session["username"]
         f_name = db.users.find_one({"username": username})["first_name"]
         l_name = db.users.find_one({"username": username})["last_name"]
@@ -63,37 +79,45 @@ def set_session():
         session["last_name"] = l_name
         full_name = f_name + " " + l_name
         if len(list_of_words) > 0:
+            # if the user has chosen a list before 
+            # directs user to a page to set the session["current_list"]
+            # don't display quiz/study options in topnav until list selected
             return render_template("set_session2.html", full_name=full_name)
         else:
+            # if the user is choosing a list for the first time
             # directs user to a page to set the session["current_list"]
             return render_template("set_session.html", full_name=full_name)
     else:
-        # POST request for when user clicks "submit"
-        # set_session page has a dropdown menu in which the user selects list
+        # POST request for when user clicks "submit" (chooses list)
         # the session["current_list"] is set accordingly
         session["current_list"] = request.form.get("current_list")
         list_of_words = []
         list_of_definitions = []
+        # make lists function makes list_of_words and list_of_definitions
         make_lists(list_of_words, list_of_definitions)
-        # list_of_words & list_of_definitions according to list
-        # lists allow for easier access and editing
+        # directs user to "list selected" page
         return redirect("/list_selected", 303)
 
 
 @app.route("/study", methods=["GET", "POST"])
 def study():
     global name_of_collection
+    # full_name created to display in top right corner
     full_name = session["first_name"].title()+" "+session["last_name"].title()
     all_words = []
+    # if list_of_words has no words, means that user is yet to choose a list
+    # direct to error page
     if len(list_of_words) < 1:
             return render_template("error_choose_list.html",
                                    full_name=full_name)
-    # sets all_words equal to list containing each document
+    # for each word in the db vocab list, add the entire document to all_words
+    # all_words is a list of dictionaries with the word, definition, etc.
     for item in db[name_of_collection].find():
         all_words.append(item)
     name = session["current_list"]
     name.split()
     name = name[-1]
+    # name is the number of the list (so the user can see what list they're on)
     # study.html makes a table for the user to study from.
     return render_template("study.html", name=name,
                            full_name=full_name, all_words=all_words)
@@ -102,13 +126,21 @@ def study():
 @app.route("/list_selected", methods=["GET"])
 def list_selected():
     global user_doc
+    # list selected is a confirmation page for once the user has selected a list
     full_name = session["first_name"].title()+" "+session["last_name"].title()
     name = session["current_list"]
+    # name is the name of the current list (for user confirmation)
+    # full name is first+last names for display in top right corner
     try:
+        # check if the user has accessed this list before by checking user_doc
+        # user_doc is dict that contains lists the user has accessed in session
+        # user_doc makes it easier to update mongo on user progress
+        # if user has accessed list before, do nothing
         user_doc[name.lower()]
     except:
-        # if the user has never accessed this list before, set everything to 0
+        # if the user has never accessed this list before, initialize
         user_doc[name.lower()] = {"correct": 0, "wrong": 0}
+    # set name to just the number of the current list (for user display)
     name.split()
     name = name[-1]
     return render_template("list_selected.html",
@@ -120,40 +152,52 @@ def quiz():
     global correct_def, name_of_collection, list_of_words
     global list_of_definitions, correct_word, wrong_one, wrong_two
     global wrong_three, word_index, user_doc
+    # full_name is first+last names
     full_name = session["first_name"].title()+" "+session["last_name"].title()
+    # name_of_lis is the name of the current list based on session
     name_of_lis = session["current_list"]
     if request.method == "GET":
+        # if the user has not yet chosen list, list_of_words is empty
+        # redirect user to error page
         if len(list_of_words) == 0:
             return render_template("error_choose_list.html",
                                    full_name=full_name)
+        # if the first item in list is "Nothing", the user finished the list
+        # redirect to "You finished!" page
         elif list_of_words[0] == "Nothing":
             name = session["current_list"]
             name.split()
             name = name[-1]
             return render_template("finished.html", name=name)
         elif len(list_of_words) < 4:
+            # if the len of list_of_words <4, the user only has 4 words left
+            # can't get wrong answers from current_list, so must get elsewhere
             x = False
             while not x:
+                # check if correct_word set to "Nothing using loop
+                # if so, try another word from the list
                 word_index = random.randint(0, (len(list_of_words)-1))
                 correct_word = list_of_words[word_index]
                 if correct_word == "Nothing":
-                    print(list_of_words)
-                    word_index
+                    continue
                 else:
                     x = True
 
             # the correct_definiton is set
             correct_def = list_of_definitions[word_index]
             list_of_words.append("Nothing")
-            # list2 made of other random definitions
+            # lis2 made of other defs (that aren't in the list of defs left)
             lis2 = []
             for item in db[name_of_collection].find():
                 if item in list_of_definitions:
                     continue
                 else:
                     lis2.append(item["definition"])
+            # wrong_one is a random word from lis2
             wrong_one = random.choice(lis2)
             not_the_same = False
+            # wrong_two is any word from lis_2 that is not wrong_one 
+            # check that wrong_two ≠ wrong_one using loop
             while not not_the_same:
                 wrong_two = random.choice(lis2)
                 if wrong_two != wrong_one:
@@ -161,6 +205,8 @@ def quiz():
                 else:
                     continue
             not_the_same = False
+            # wrong_three is any word from lis_2 that is not wrong_one/wrong_two 
+            # check that wrong_three ≠ wrong_two ≠ wrong_one using loop
             while not not_the_same:
                 wrong_three = random.choice(lis2)
                 if wrong_three != wrong_one:
@@ -170,6 +216,7 @@ def quiz():
                         continue
                 else:
                     continue
+            # create and shuffle the list of answers to ensure random order
             list_of_options = [correct_def,
                                wrong_one, wrong_two, wrong_three]
             random.shuffle(list_of_options)
@@ -179,6 +226,7 @@ def quiz():
                                    full_name=full_name)
 
         else:
+            # more than 4 words left to answer
             # a word_index generated to make the word choice random
             word_index = random.randint(0, (len(list_of_words)-1))
             # the correct_word is set
@@ -228,19 +276,21 @@ def quiz():
                                    name_of_lis=name_of_lis,
                                    full_name=full_name)
     else:
+        # user has submitted an answer
         username = session["username"]
         name_of_lis = session["current_list"]
+        # set the username and the name of the current list for later access
         if request.form.get("options") == correct_def:
             # user was correct
-            # update dictionary
+            # update dictionary (user_doc)
             user_doc[session["current_list"].lower()]["correct"] += 1
-            # update mongo
+            # update mongo according to user_doc
             db.users.update({"username": username},
                             {"$set": {session["current_list"].lower():
                              user_doc[session["current_list"].lower()]}})
             full_doc = db[name_of_collection].find_one({"word": correct_word})
             quote_ggs = full_doc["quote_ggs"]
-            # since user got word right, take it out of list of words
+            # since correct, take out of list so user doesn't answer again
             list_of_words.pop(word_index)
             list_of_definitions.pop(word_index)
             correct_translit = full_doc["transliteration"]
@@ -252,8 +302,9 @@ def quiz():
                                    correct_translit=correct_translit,
                                    username=username, full_name=full_name)
         elif request.form.get("options") is None:
-            # if the user clicked submit without submitting a response
+            # if no response, the user clicked submit without selecting option
             flash("Please submit a response")
+            # render page again
             list_of_options = [correct_def,
                                wrong_one, wrong_two, wrong_three]
             return render_template("question.html", correct_word=correct_word,
@@ -353,6 +404,8 @@ def reset_password():
             flash("Password length is less than 8 characters")
             return render_template("reset_password.html")
         else:
+            # everything is fine, so reset password in database
+            # print confirmation message and redirect to homepage
             db.users.update({"username": username},
                             {"$set": {"password": request.form.get("pass")}})
             flash("Password reset")
@@ -424,43 +477,66 @@ def logged_out():
 @app.route("/profile", methods=["GET"])
 def profile():
     if len(list_of_words) < 1:
+        # if the list_of_words is empty, the user has notchosen a list yet
+        # do not display quiz/study options in topnav bar
+        # profile.html
         username = session["username"]
         email = db.users.find_one({"username": username})["email"]
         doc = db.users.find_one({"username": username})
         full_name = session["first_name"].title()+" "+session["last_name"].title()
+        # create full_name, email, username based on session and db
         stats = {}
+        # stats contains  all the lists the user has & the corresponding data
+        # stats = {"list_name: {"wrong":#, "correct":#}}
         progress = {}
+        # progress contains list_nums with corresponding % accuracy and num ?'s
+        # progress = {"list_number": {percent accuracy: %, num_questions: #}}
         for item in doc:
             name_of_item = list(str(item))
             if name_of_item[0:4] == list("list"):
+                # if item in the db.users is data of a list (not username, etc)
+                # add to stats
                 stats[item] = doc[item]
         for lis in stats:
+            # for item in stats, get the number of questions (wrong+correct)
+            # for item in stats, get percent accuracy (correct/num_questions)
             num_questions = (stats[lis]["correct"]+stats[lis]["wrong"])
             percent_accuracy = int((stats[lis]["correct"] / num_questions)*100)
             progress[list(lis)[-1]] = {"percent_accuracy": percent_accuracy,
                                     "total_questions": num_questions}
+        # od is the sorted version of progress (sorted by list number)
         od = collections.OrderedDict(sorted(progress.items()))
-        # get information about user and print in profile.html
         return render_template("profile_2.html", email=email, username=username,
                             od=od, full_name=full_name)
     else:
+        # user has chosen a list, quiz/study options displayed in topnav bar
+        # profile.html
         username = session["username"]
         email = db.users.find_one({"username": username})["email"]
         doc = db.users.find_one({"username": username})
         full_name = session["first_name"].title()+" "+session["last_name"].title()
+        # create full_name, email, username based on session and db
         stats = {}
+        # stats contains  all the lists the user has & the corresponding data
+        # stats = {"list_name: {"wrong":#, "correct":#}}
         progress = {}
+        # progress contains list_nums with corresponding % accuracy and num ?'s
+        # progress = {"list_number": {percent accuracy: %, num_questions: #}}
         for item in doc:
             name_of_item = list(str(item))
             if name_of_item[0:4] == list("list"):
+                # if item in the db.users is data of a list (not username, etc)
+                # add to stats
                 stats[item] = doc[item]
         for lis in stats:
+            # for item in stats, get the number of questions (wrong+correct)
+            # for item in stats, get percent accuracy (correct/num_questions)
             num_questions = (stats[lis]["correct"]+stats[lis]["wrong"])
             percent_accuracy = int((stats[lis]["correct"] / num_questions)*100)
             progress[list(lis)[-1]] = {"percent_accuracy": percent_accuracy,
                                     "total_questions": num_questions}
+        # od is the sorted version of progress (sorted by list number)
         od = collections.OrderedDict(sorted(progress.items()))
-        # get information about user and print in profile.html
         return render_template("profile.html", email=email, username=username,
                             od=od, full_name=full_name)
 
