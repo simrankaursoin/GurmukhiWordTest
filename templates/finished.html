@@ -3,14 +3,15 @@
 
 {% block content %}
 <body>
-    <table border="1" style="cellpadding:100">
-    <tr>
-        <td><a href="/"> Home </a></td>
-        <td><a href="/setsession"> Choose a List </a></td>
-        <td><a href="/quiz"> Quiz </a></td>
-        <td><a href="/study"> Study </a></td>
-    </tr>
-    </table>
+<style>
+.topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:25%;}
+</style>
+    <div class="topnav" id="myTopnav" border="1" style="background-color:#ffedc4;">
+    <a href="/"> Home </a>
+    <a href="/setsession"> Choose a List </a>
+    <a href="/quiz"> Quiz </a>
+    <a href="/study"> Study </a>
+</div>
     
 <center> <h2> YOU FINISHED LIST {{name}}!! </h2> </center>
 <center>You got each word correctly at least one time! <br />If you wish to do this list again, please <a href="/setsession">choose</a> list {{name}} again  </center>

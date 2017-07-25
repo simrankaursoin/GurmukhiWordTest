@@ -4,17 +4,18 @@
 {% block content %}
 <body>
 <br></br>
+<style>
+.topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:25%;}
+</style>
 <div align="right"><a href="/profile">{{full_name}} </a> |
         <a href="/logged_out">Log Out </a>
 </div>
-<table border="1" style="cellpadding:100">
-  <tr>
-    <td><a href="/"> Home </a></td>
-    <td><a href="/setsession"> Choose a List </a></td>
-    <td><a href="/quiz"> Quiz </a></td>
-    <td><a href="/study"> Study </a></td>
-  </tr>
-</table>
+<div class="topnav" id="myTopnav" border="1" style="background-color:#ffedc4;">
+    <a href="/"> Home </a>
+    <a href="/setsession"> Choose a List </a>
+    <a href="/quiz"> Quiz </a>
+    <a href="/study"> Study </a>
+</div>
 <h3> Which list would you like to be tested on? </h3>
 <form class= "well" action="/setsession" method="post">
 <select name="current_list">

@@ -8,32 +8,33 @@
  <a href="/profile">{{full_name}} </a> |
         <a href="/logged_out">Log Out </a>
 </div>
-    <table border="1" style="cellpadding:100">
-    <tr>
-        <td><a href="/"> Home </a></td>
-        <td><a href="/setsession"> Choose a List </a></td>
-        <td><a href="/quiz"> Quiz </a></td>
-        <td><a href="/study"> Study </a></td>
-    </tr>
-    </table>
+<style>
+.topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:25%;}
+</style>
+    <div class="topnav" id="myTopnav" border="1" style="background-color:#ffedc4;">
+    <a href="/"> Home </a>
+    <a href="/setsession"> Choose a List </a>
+    <a href="/quiz"> Quiz </a>
+    <a href="/study"> Study </a>
+</div>
     
-    <center><h2> My Profile </h2> </center>
+    <center><h2><strong> My Profile </strong></h2> </center>
     
     <div style="width: 100%; overflow: hidden;">
         <div style="width:50%; float: left;"> 
-            <h4> Email:   </h4> {{email}}
-            <h4> Username:   </h4> {{username}}
+            <h4> <strong>Email:</strong></h4> {{email}}
+            <h4> <strong>Username:</strong></h4> {{username}}
             <br> </br>
         </div>
         
         
         <div style="margin-left:65%;"> 
-            <h4><u>PROGRESS REPORT:</u></h4>
+            <h4><strong>PROGRESS REPORT:</strong></h4>
             {% if od|length < 1 -%}
                 no data to display
             {% else -%}
                 {% for vocab_lis in od %}
-                    <b>List {{vocab_lis}}:</b> <br />
+                    <u>List {{vocab_lis}}:</u> <br />
                     <i>Percentage Accuracy: {{od[vocab_lis]["percent_accuracy"]}}%</i> <br />
                     <i>Questions answered: {{od[vocab_lis]["total_questions"]}}</i><br></br>
                 {%endfor%}
