@@ -373,6 +373,15 @@ def signup():
             # password ≠ confirmed password
             flash("Re-Type Password or Password Confirmation")
             return render_template("sign_up.html")
+        if len(request.form.get("f_name")) < 1:
+            flash("Please Enter Valid First Name")
+            return render_template("sign_up.html")
+        if len(request.form.get("l_name")) < 1:
+            flash("Please Enter Valid Last Name")
+            return render_template("sign_up.html")
+        if "@" not in list(request.form.get("email")):
+            flash("Please Enter Valid Email")
+            return render_template("sign_up.html")
         if len(request.form.get("pass")) < 8:
             # password length is less than 8 characters
             flash("Password length is less than 8 characters")
