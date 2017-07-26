@@ -8,6 +8,10 @@
 <a href="/logged_out" style="float:right"> Log Out </a><a href="/profile" style="float:right">{{full_name}} |</a>
 <style>
 .topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:25%;}
+mark {
+    background-color: yellow;
+    color: black;
+}
 </style>
 <div class="topnav" id="myTopnav" border="1" style="background-color:#ffedc4;">
     <a href="/"> Home </a>
@@ -20,9 +24,25 @@
 </div>
 <h1 style="color:red;"><strong> Incorrect </strong></h1>
 <div class="well">
-<h2><strong>{{correct_word}}</strong><i> ({{correct_translit}})</i></h2>
-<h4><u> Definition:</u> {{correct_def}}</h4>
-<H4>"{{quote_ggs}}"</H4><br />
+    <h2>
+        <strong>
+            {{correct_word}}
+        </strong>
+        <i>
+            ({{correct_translit}})
+        </i>
+    </h2>
+        <font style="font-size:120%;"><u>Definition:</u>
+        {{correct_def}}</font><br />
+    <h4>"
+    {% for word in quote_ggs %}
+    {% if word == correct_word %}
+        <mark>{{word}}</mark>
+    {% else %}
+        {{word}}
+    {% endif %}
+    {% endfor %}
+    "</h4>
 </div>
 <br> 
 <form action="/quiz" method="get">

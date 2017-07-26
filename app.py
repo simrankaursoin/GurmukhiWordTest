@@ -159,17 +159,17 @@ def quiz():
     if request.method == "GET":
         # if the user has not yet chosen list, list_of_words is empty
         # redirect user to error page
-        if len(list_of_words) == 0:
-            return render_template("error_choose_list.html",
-                                   full_name=full_name)
-        # if the first item in list is "Nothing", the user finished the list
-        # redirect to "You finished!" page
-        elif list_of_words[0] == "Nothing":
-            name = session["current_list"]
-            name.split()
-            name = name[-1]
-            return render_template("finished.html", name=name)
-        elif len(list_of_words) < 4:
+        if len(list_of_definitions) == 0:
+            try:
+                list_of_words[0]
+                name = session["current_list"]
+                name.split()
+                name = name[-1]
+                return render_template("finished.html", name=name, full_name=full_name)
+            except:
+                return render_template("error_choose_list.html",
+                                    full_name=full_name)
+        elif len(list_of_definitions) < 4:
             # if the len of list_of_words <4, the user only has 4 words left
             # can't get wrong answers from current_list, so must get elsewhere
             x = False
@@ -182,7 +182,6 @@ def quiz():
                     continue
                 else:
                     x = True
-
             # the correct_definiton is set
             correct_def = list_of_definitions[word_index]
             list_of_words.append("Nothing")
@@ -289,7 +288,7 @@ def quiz():
                             {"$set": {session["current_list"].lower():
                              user_doc[session["current_list"].lower()]}})
             full_doc = db[name_of_collection].find_one({"word": correct_word})
-            quote_ggs = full_doc["quote_ggs"]
+            quote_ggs = full_doc["quote_ggs"].split()
             # since correct, take out of list so user doesn't answer again
             list_of_words.pop(word_index)
             list_of_definitions.pop(word_index)
@@ -319,7 +318,7 @@ def quiz():
                             {"$set": {session["current_list"].lower():
                              user_doc[session["current_list"].lower()]}})
             full_doc = db[name_of_collection].find_one({"word": correct_word})
-            quote_ggs = full_doc["quote_ggs"]
+            quote_ggs = full_doc["quote_ggs"].split()
             correct_translit = full_doc["transliteration"]
             return render_template("incorrect.html", correct_word=correct_word,
                                    correct_def=correct_def,
@@ -418,32 +417,79 @@ def signup():
         # user is signing up
         return render_template("sign_up.html")
     else:
+        user = request.form.get("user")
+        c_user = request.form.get("c_user")
+        pass_word = request.form.get("pass")
+        c_pass = request.form.get("c_pass")
+        security_word = request.form.get("security_word")
+        email = request.form.get("email")
+        f_name = request.form.get("f_name")
+        l_name = request.form.get("l_name")
         if request.form.get("user") != request.form.get("c_user"):
             # username ≠ confirmed username
-            flash("Re-Type Username or Username Confirmation")
-            return render_template("sign_up.html")
+            flash("Please retype the username/confirmed username")
+            user = ""
+            c_user = ""
+            return render_template("sign_up2.html", user=user,
+                                   pass_word=pass_word, email=email,
+                                   security_word=security_word,
+                                   f_name=f_name, l_name=l_name,
+                                   c_pass=c_pass, c_user=c_user)
         if db.users.find_one({"username":
                               request.form.get("user")}) is not None:
             # username already exists in database
             flash("Username already taken")
-            return render_template("sign_up.html")
+            user = ""
+            c_user = ""
+            return render_template("sign_up2.html", user=user,
+                                   pass_word=pass_word, email=email,
+                                   security_word=security_word,
+                                   f_name=f_name, l_name=l_name,
+                                   c_pass=c_pass, c_user=c_user)
         if request.form.get("pass") != request.form.get("c_pass"):
             # password ≠ confirmed password
-            flash("Re-Type Password or Password Confirmation")
-            return render_template("sign_up.html")
+            flash("Please retype the password/confirmed password")
+            pass_word = ""
+            c_pass = ""
+            return render_template("sign_up2.html", user=user,
+                                   pass_word=pass_word, email=email,
+                                   security_word=security_word,
+                                   f_name=f_name, l_name=l_name,
+                                   c_pass=c_pass, c_user=c_user)
         if len(request.form.get("f_name")) < 1:
-            flash("Please Enter Valid First Name")
-            return render_template("sign_up.html")
+            flash("Please enter a first name")
+            f_name = ""
+            return render_template("sign_up2.html", user=user,
+                                   pass_word=pass_word, email=email,
+                                   security_word=security_word,
+                                   f_name=f_name, l_name=l_name,
+                                   c_pass=c_pass, c_user=c_user)
         if len(request.form.get("l_name")) < 1:
-            flash("Please Enter Valid Last Name")
-            return render_template("sign_up.html")
+            flash("Please enter a last name")
+            l_name = ""
+            return render_template("sign_up2.html", user=user,
+                                   pass_word=pass_word, email=email,
+                                   security_word=security_word,
+                                   f_name=f_name, l_name=l_name,
+                                   c_pass=c_pass, c_user=c_user)
         if "@" not in list(request.form.get("email")):
-            flash("Please Enter Valid Email")
-            return render_template("sign_up.html")
+            flash("Please enter a valid email")
+            email = ""
+            return render_template("sign_up2.html", user=user,
+                                   pass_word=pass_word, email=email,
+                                   security_word=security_word,
+                                   f_name=f_name, l_name=l_name,
+                                   c_pass=c_pass, c_user=c_user)
         if len(request.form.get("pass")) < 8:
             # password length is less than 8 characters
-            flash("Password length is less than 8 characters")
-            return render_template("sign_up.html")
+            flash("Please enter a valid password greater than 8 characters")
+            pass_word = ""
+            c_pass = ""
+            return render_template("sign_up2.html", user=user,
+                                   pass_word=pass_word, email=email,
+                                   security_word=security_word,
+                                   f_name=f_name, l_name=l_name,
+                                   c_pass=c_pass, c_user=c_user)
         db.users.insert_one({"username": request.form.get("user"),
                              "password": request.form.get("pass"),
                              "security_word":

@@ -1,0 +1,22 @@
+{% extends "_base.html" %}
+{% block title %}Sign-Up{% endblock %}
+
+{% block content %}
+<body>
+<br></br>
+<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#035a9e;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
+<a href="/signup" style="float:right"> Sign-Up </a><a href="/login" style="float:right"> Login |</a>
+<center><h2> Sign-Up </h2> </center>
+<form action="" method="POST">
+  First Name: <input type="text" name="f_name" value="{{f_name}}"><br></br>
+  Last Name: <input type="text" name="l_name" value="{{l_name}}"><br></br>
+  Username: <input type="text" name="user" value="{{user}}"><br></br>
+  Confirm Username: <input type="text" name="c_user" value="{{c_user}}"><br></br>
+  Password: <input type="password" name="pass" value="{{pass_word}}"><br></br>
+  Confirm Password: <input type="password" name="c_pass" value="{{c_pass}}"><br></br>
+  Email: <input type="text" name="email" value="{{email}}"><br></br>
+  Security Word: <input type="text" name="security_word" value="{{security_word}}"><br></br>
+  <input class="btn btn-info" type="submit" value="Submit">
+</form>
+</body>
+{% endblock %}

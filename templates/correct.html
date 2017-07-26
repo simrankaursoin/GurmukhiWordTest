@@ -7,6 +7,10 @@
 <img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#035a9e;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
 <a href="/logged_out" style="float:right"> Log Out </a><a href="/profile" style="float:right">{{full_name}} |</a>
 <style>
+mark {
+    background-color: yellow;
+    color: black;
+}
 .topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:25%;}
 </style>
 <div class="topnav" id="myTopnav" border="1" style="background-color:#ffedc4;">
@@ -18,11 +22,27 @@
 <div align="left">
 <font size="4"><i>Currently on {{name_of_lis}}</i></font>
 </div>
-<h1 style="color:green;"><strong> Correct! <strong></h1>
+<h1 style="color:green;"><strong> Correct! </strong></h1>
 <div class="well">
-<h2><strong>{{correct_word}}</strong><i>({{correct_translit}})</i></h2>
- <H4><u>Definition:</u> {{correct_def}}</h4>
-<H4>"{{quote_ggs}}"</H4><br />
+    <h2>
+        <strong>
+            {{correct_word}}
+        </strong>
+        <i>
+            ({{correct_translit}})
+        </i>
+    </h2>
+        <font style="font-size:120%;"><u>Definition:</u>
+        {{correct_def}}</font><br />
+    <h4>"
+    {% for word in quote_ggs %}
+    {% if word == correct_word %}
+        <mark>{{word}}</mark>
+    {% else %}
+        {{word}}
+    {% endif %}
+    {% endfor %}
+    "</h4>
 </div>
 <br> 
 <form action="/quiz" method="get">
