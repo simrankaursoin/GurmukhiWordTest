@@ -1,5 +1,5 @@
 {% extends "_base.html" %}
-{% block title %}Quiz Me!{% endblock %}
+{% block title %}Progress Report{% endblock %}
 
 {% block content %}
 <body>
@@ -16,18 +16,18 @@
     <a href="/study"> Study </a>
     <a href="/progress"> Progress </a>
 </div>
-    <div align="left">
-        <font size="4"><i>Currently on {{name_of_lis}}</i></font>
-    </div>
-    <h3><u>Which of these words is the correct definition for {{correct_word}}?</u></h3>
-    <form action="" method="post">
-        {% for item in list_of_options %}
-            <INPUT TYPE="radio" name="options" value="{{item}}"> {{item}}
-            <br> </br>
-        {%endfor%}
-        <br> </br>
-        <input class="btn btn-info" type="submit" value="Submit Answer">
-    </form>
+    <center><h1> Progress for {{current_list}}: </center></h1>
+{% if no_questions %}
+    <font style="font-size:160%;"><u> Not Enough Data to compile Progress Report.</u></font>
+{% else %}
+     <font style="font-size:250%;"><u>Percent Accuracy:</u> {{percent_accuracy}}% </font><br />
+     <blockquote><font style="font-size:120%;"><u>Number Correct :</u> {{right}}</font><br />
+     <font style="font-size:120%;"><u>Number Wrong:</u> {{wrong}}</font><br /></blockquote>
+<br></br>
+<br></br>
+Go to <a href="/profile"> Profile </a> to see full progress report of all vocab lists
+  
+{% endif %}
 </body>
 {% endblock %}
 

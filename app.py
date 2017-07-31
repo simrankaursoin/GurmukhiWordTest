@@ -90,7 +90,7 @@ def set_session():
     else:
         # POST request for when user clicks "submit" (chooses list)
         # the session["current_list"] is set accordingly
-        session["current_list"] = request.form.get("current_list")
+        session["current_list"] = request.form.get("current_list").strip()
         list_of_words = []
         list_of_definitions = []
         # make lists function makes list_of_words and list_of_definitions
@@ -145,6 +145,32 @@ def list_selected():
     name = name[-1]
     return render_template("list_selected.html",
                            name=name, full_name=full_name)
+
+
+@app.route("/progress", methods=["GET"])
+def progress():
+        no_questions = False
+        right = None
+        wrong = None
+        percent_accuracy = None
+        current_list = session["current_list"]
+        username = session["username"]
+        full_name = session["first_name"].title()+" "+session["last_name"].title()
+        full_doc = db.users.find_one({"username": username})
+        for item in db.users.find_one({"username": username}):
+            if item == session["current_list"].lower():
+                if item in full_doc:
+                    print("YES")
+                    right = full_doc[item]["correct"]
+                    wrong = full_doc[item]["wrong"]
+                    percent_accuracy = (right/(right+wrong))*100
+        if right is None and wrong is None:
+            no_questions = True
+        return render_template("progress.html", username=username,
+                               full_name=full_name,
+                               percent_accuracy=percent_accuracy,
+                               no_questions = no_questions, right=right,
+                               wrong=wrong, current_list=current_list)
 
 
 @app.route("/quiz", methods=["GET", "POST"])
@@ -339,12 +365,12 @@ def login():
         # 1. check if the user exists in database
         doc = db.users.find_one({"username":
                                  request.form.get("user").lower().strip()})
-        username = request.form.get("user")
+        username = request.form.get("user").strip()
         if doc is None:
             # if not user in db, the username is wrong
             flash("Wrong Username")
             return render_template("login.html")
-        elif doc["password"] == request.form.get("pass"):
+        elif doc["password"] == request.form.get("pass").strip():
             # the user is in db and the password is correct
             user_doc = {}
             session["username"] = username
@@ -372,14 +398,14 @@ def security():
         return render_template("wrong_password.html")
     else:
         # check is user in database
-        session["username"] = request.form.get("user")
-        security_word = request.form.get("security_word")
+        session["username"] = request.form.get("user").strip()
+        security_word = request.form.get("security_word").strip()
         doc = db.users.find_one({"username": session["username"]})
         if doc is None:
             # if user not in db, wrong username
             flash("Wrong Username")
             return render_template("wrong_password.html")
-        elif doc["security_word"].lower() == security_word.lower():
+        elif doc["security_word"].lower() == security_word.lower().strip():
             # security word is correct, redirect to choose a list
             return redirect("/reset_password", 303)
         else:
@@ -394,11 +420,11 @@ def reset_password():
     if request.method == "GET":
         return render_template("reset_password.html")
     else:
-        if request.form.get("pass") != request.form.get("c_pass"):
+        if request.form.get("pass").strip() != request.form.get("c_pass").strip():
             # password ≠ confirmed password
             flash("Re-Type Password or Password Confirmation")
             return render_template("reset_password.html")
-        elif len(request.form.get("pass")) < 8:
+        elif len(request.form.get("pass").strip()) < 8:
             # password length is less than 8 characters
             flash("Password length is less than 8 characters")
             return render_template("reset_password.html")
@@ -406,7 +432,7 @@ def reset_password():
             # everything is fine, so reset password in database
             # print confirmation message and redirect to homepage
             db.users.update({"username": username},
-                            {"$set": {"password": request.form.get("pass")}})
+                            {"$set": {"password": request.form.get("pass").strip()}})
             flash("Password reset")
             return redirect("/")
 
@@ -417,15 +443,15 @@ def signup():
         # user is signing up
         return render_template("sign_up.html")
     else:
-        user = request.form.get("user")
-        c_user = request.form.get("c_user")
-        pass_word = request.form.get("pass")
-        c_pass = request.form.get("c_pass")
-        security_word = request.form.get("security_word")
-        email = request.form.get("email")
-        f_name = request.form.get("f_name")
-        l_name = request.form.get("l_name")
-        if request.form.get("user") != request.form.get("c_user"):
+        user = request.form.get("user").strip()
+        c_user = request.form.get("c_user").strip()
+        pass_word = request.form.get("pass").strip()
+        c_pass = request.form.get("c_pass").strip()
+        security_word = request.form.get("security_word").strip()
+        email = request.form.get("email").strip()
+        f_name = request.form.get("f_name").strip()
+        l_name = request.form.get("l_name").strip()
+        if request.form.get("user").strip() != request.form.get("c_user").strip():
             # username ≠ confirmed username
             flash("Please retype the username/confirmed username")
             user = ""
@@ -436,7 +462,7 @@ def signup():
                                    f_name=f_name, l_name=l_name,
                                    c_pass=c_pass, c_user=c_user)
         if db.users.find_one({"username":
-                              request.form.get("user")}) is not None:
+                              request.form.get("user").strip()}) is not None:
             # username already exists in database
             flash("Username already taken")
             user = ""
@@ -446,7 +472,7 @@ def signup():
                                    security_word=security_word,
                                    f_name=f_name, l_name=l_name,
                                    c_pass=c_pass, c_user=c_user)
-        if request.form.get("pass") != request.form.get("c_pass"):
+        if request.form.get("pass").strip() != request.form.get("c_pass").strip():
             # password ≠ confirmed password
             flash("Please retype the password/confirmed password")
             pass_word = ""
@@ -456,7 +482,7 @@ def signup():
                                    security_word=security_word,
                                    f_name=f_name, l_name=l_name,
                                    c_pass=c_pass, c_user=c_user)
-        if len(request.form.get("f_name")) < 1:
+        if len(request.form.get("f_name").strip()) < 1:
             flash("Please enter a first name")
             f_name = ""
             return render_template("sign_up2.html", user=user,
@@ -464,7 +490,7 @@ def signup():
                                    security_word=security_word,
                                    f_name=f_name, l_name=l_name,
                                    c_pass=c_pass, c_user=c_user)
-        if len(request.form.get("l_name")) < 1:
+        if len(request.form.get("l_name").strip()) < 1:
             flash("Please enter a last name")
             l_name = ""
             return render_template("sign_up2.html", user=user,
@@ -472,7 +498,7 @@ def signup():
                                    security_word=security_word,
                                    f_name=f_name, l_name=l_name,
                                    c_pass=c_pass, c_user=c_user)
-        if "@" not in list(request.form.get("email")):
+        if "@" not in list(request.form.get("email").strip()):
             flash("Please enter a valid email")
             email = ""
             return render_template("sign_up2.html", user=user,
@@ -480,7 +506,7 @@ def signup():
                                    security_word=security_word,
                                    f_name=f_name, l_name=l_name,
                                    c_pass=c_pass, c_user=c_user)
-        if len(request.form.get("pass")) < 8:
+        if len(request.form.get("pass").strip()) < 8:
             # password length is less than 8 characters
             flash("Please enter a valid password greater than 8 characters")
             pass_word = ""
@@ -490,18 +516,18 @@ def signup():
                                    security_word=security_word,
                                    f_name=f_name, l_name=l_name,
                                    c_pass=c_pass, c_user=c_user)
-        db.users.insert_one({"username": request.form.get("user"),
-                             "password": request.form.get("pass"),
+        db.users.insert_one({"username": request.form.get("user").strip(),
+                             "password": request.form.get("pass").strip(),
                              "security_word":
-                             request.form.get("security_word"),
-                             "email": request.form.get("email"),
-                             "first_name": request.form.get("f_name"),
-                             "last_name": request.form.get("l_name")})
+                             request.form.get("security_word").strip(),
+                             "email": request.form.get("email").strip(),
+                             "first_name": request.form.get("f_name").strip(),
+                             "last_name": request.form.get("l_name").strip()})
         # add user to db and set session[username] and session[email]
-        session["username"] = request.form.get("user")
-        session["email"] = request.form.get("email")
-        session["first_name"] = request.form.get("f_name")
-        session["last_name"] = request.form.get("l_name")
+        session["username"] = request.form.get("user").strip()
+        session["email"] = request.form.get("email").strip()
+        session["first_name"] = request.form.get("f_name").strip()
+        session["last_name"] = request.form.get("l_name").strip()
         flash("Profile created")
         # redirect user to choose a list
         return redirect("/setsession", 303)

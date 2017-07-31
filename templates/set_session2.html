@@ -5,8 +5,9 @@
 <body>
 <br></br>
 <style>
-.topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:25%;}
+.topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:20%;}
 </style>
+ 
 <img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#035a9e;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
 <a href="/logged_out" style="float:right"> Log Out </a><a href="/profile" style="float:right">{{full_name}} |</a>
 <div class="topnav" id="myTopnav" border="1" style="background-color:#ffedc4;">
@@ -14,6 +15,7 @@
     <a href="/setsession"> Choose a List </a>
     <a href="/quiz"> Quiz </a>
     <a href="/study"> Study </a>
+    <a href="/progress"> Progress </a>
 </div>
 <h3> Which vocabulary list would you like to be tested on? </h3>
 <form class= "well" action="/setsession" method="post">
