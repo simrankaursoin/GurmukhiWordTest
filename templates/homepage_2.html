@@ -6,20 +6,21 @@
 
 <body>
 <br></br>
+
+<ul class="nav nav-pills" style="float:right;"> <li><a href="/profile"> {{full_name}} </a></li><li><a href="/logged_out"> Log Out</a></li></ul>
+<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#033784;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
+<br></br>
 <style>
 .topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:20%;}
 </style>
- 
-<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#035a9e;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
-<a href="/logged_out" style="float:right"> Log Out </a><a href="/profile" style="float:right">{{full_name}} |</a>
-<div class="topnav" id="myTopnav" border="1" style="background-color:#ffedc4;">
-    <a href="/"> Home </a>
-    <a href="/setsession"> Choose a List </a>
-    <a href="/quiz"> Quiz </a>
-    <a href="/study"> Study </a>
-    <a href="/progress"> Progress </a>
+<div class="topnav" id="myTopnav" border="1" style="background-color:#f7cd6a;">
+    <a href="/"><b> Home </b></a>
+    <a href="/setsession"><b> Choose a List </b></a>
+    <a href="/quiz"><b> Quiz </b></a>
+    <a href="/study"><b> Study </b></a>
+    <a href="/progress"><b> Progress </b></a>
 </div>
-<center><h1 style="color:#035a9e;"><u>Welcome to Gurbani Vocab!</u></h1> </center>
+<center><h1 style="color:#033784;font-family:Geneva;font-size:420%;">Welcome to Gurbani Vocab!</h1> </center>
 
 
 <br> </br>
@@ -63,21 +64,21 @@
 </div>
 <br></br>
 <div class="panel panel-default">
-<div class="panel-body" style="background-color:#ffedc4;">
-<h2 style="color:#035a9e;"><u>Evaluate</u></h2>
+<div class="panel-body" style="background-color:#f7cd6a;">
+<h2 style="color:#033784;"><u>Evaluate</u></h2>
 <br />The <a href="/quiz">Quiz</a> feature of Gurbani Vocab allows you to evaluate yourself by asking you multiple choice questions based on the vocabulary list you selected. 
 The immediate results help you to immediately see the areas in which you need to improve, giving you the most efficient way to study!
 </div>
 </div>
 <div class="panel panel-default">
-<div class="panel-body"style="background-color:#ffedc4;">
-<h2 style="color:#035a9e;"><u>Progress</u></h2>
+<div class="panel-body"style="background-color:#f7cd6a;">
+<h2 style="color:#033784;"><u>Progress</u></h2>
 <br />Track your progress per vocabulary list under the <a href="/progress">Progress</a> tab. Email the results to your teacher or just watch as your grades improve!
 </div>
 </div>
 <div class="panel panel-default">
-<div class="panel-body"style="background-color:#ffedc4;">
-<h2 style="color:#035a9e;"><u>Learn</u></h2>
+<div class="panel-body"style="background-color:#f7cd6a;">
+<h2 style="color:#033784;"><u>Learn</u></h2>
 <br />Go to the <a href="/study">Study</a> tab to look at the entire vocabulary list and review before you evaluate yourself!
 </div>
 </div>

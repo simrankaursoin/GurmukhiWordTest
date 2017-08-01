@@ -36,18 +36,17 @@ def main():
         # full_name is the first name + last name (to display in top R corner)
         full_name = f_name + " " + l_name
         if len(list_of_words) > 0:
-            # number 1 is that they logged in and chose list 
+            # number 1 is that they logged in and chose list
             # > homepage_2.html
             return render_template("homepage_2.html", full_name=full_name)
         else:
-            # number 2 is that they logged in but didnt choose list 
+            # number 2 is that they logged in but didnt choose list
             # > homepage_3.html
             return render_template("homepage_3.html", full_name=full_name)
     except:
-        # number 3 is that they are not yet logged in 
+        # number 3 is that they are not yet logged in
         # > homepage.html
         return render_template("homepage.html")
-
 
 
 def make_lists(list_of_words, list_of_definitions):
@@ -79,7 +78,7 @@ def set_session():
         session["last_name"] = l_name
         full_name = f_name + " " + l_name
         if len(list_of_words) > 0:
-            # if the user has chosen a list before 
+            # if the user has chosen a list before
             # directs user to a page to set the session["current_list"]
             # don't display quiz/study options in topnav until list selected
             return render_template("set_session2.html", full_name=full_name)
@@ -126,7 +125,7 @@ def study():
 @app.route("/list_selected", methods=["GET"])
 def list_selected():
     global user_doc
-    # list selected is a confirmation page for once the user has selected a list
+    # list selected is confirmation page for once the user has selected a list
     full_name = session["first_name"].title()+" "+session["last_name"].title()
     name = session["current_list"]
     # name is the name of the current list (for user confirmation)
@@ -139,7 +138,8 @@ def list_selected():
         user_doc[name.lower()]
     except:
         # if the user has never accessed this list before, initialize
-        user_doc[name.lower()] = {"correct": 0, "wrong": 0}
+        user_doc[name.lower()] = {"correct": 0, "wrong": 0,
+                                  "correct_words": [], "wrong_words": []}
     # set name to just the number of the current list (for user display)
     name.split()
     name = name[-1]
@@ -153,24 +153,35 @@ def progress():
         right = None
         wrong = None
         percent_accuracy = None
-        current_list = session["current_list"]
+        percent_inaccuracy = None
+        current_list = session["current_list"].lower()
         username = session["username"]
-        full_name = session["first_name"].title()+" "+session["last_name"].title()
+        correct_words = 0
+        wrong_words = 0
+        f_name = session["first_name"].title()
+        l_name = session["last_name"].title()
+        full_name = f_name + " " + l_name
         full_doc = db.users.find_one({"username": username})
         for item in db.users.find_one({"username": username}):
-            if item == session["current_list"].lower():
+            if item == current_list:
                 if item in full_doc:
-                    print("YES")
                     right = full_doc[item]["correct"]
                     wrong = full_doc[item]["wrong"]
-                    percent_accuracy = (right/(right+wrong))*100
+                    correct_words = full_doc[current_list]["correct_words"]
+                    wrong_words = full_doc[current_list]["wrong_words"]
+                    percent_accuracy = int((right/(right+wrong))*100)
+                    percent_inaccuracy = 100 - int((right/(right+wrong))*100)
         if right is None and wrong is None:
             no_questions = True
+        current_list = list(session["current_list"])[-1]
         return render_template("progress.html", username=username,
                                full_name=full_name,
                                percent_accuracy=percent_accuracy,
-                               no_questions = no_questions, right=right,
-                               wrong=wrong, current_list=current_list)
+                               no_questions=no_questions, right=right,
+                               wrong=wrong, current_list=current_list,
+                               correct_words=correct_words,
+                               wrong_words=wrong_words,
+                               percent_inaccuracy=percent_inaccuracy)
 
 
 @app.route("/quiz", methods=["GET", "POST"])
@@ -181,20 +192,26 @@ def quiz():
     # full_name is first+last names
     full_name = session["first_name"].title()+" "+session["last_name"].title()
     # name_of_lis is the name of the current list based on session
-    name_of_lis = session["current_list"]
+    name_of_lis = list(session["current_list"])[-1]
     if request.method == "GET":
         # if the user has not yet chosen list, list_of_words is empty
-        # redirect user to error page
-        if len(list_of_definitions) == 0:
+        # redirect user to error pages
+        if len(list_of_definitions) < 1:
             try:
                 list_of_words[0]
-                name = session["current_list"]
+                name = session["current_list"].lower()
+                full_doc = db.users.find_one({"username": session["username"]})
+                right = full_doc[name]["correct"]
+                wrong = full_doc[name]["wrong"]
                 name.split()
                 name = name[-1]
-                return render_template("finished.html", name=name, full_name=full_name)
-            except:
+                percent_accuracy = int((right/(right+wrong))*100)
+                return render_template("finished.html", name=name,
+                                       full_name=full_name,
+                                       percent_accuracy=percent_accuracy)
+            except IndexError:
                 return render_template("error_choose_list.html",
-                                    full_name=full_name)
+                                       full_name=full_name)
         elif len(list_of_definitions) < 4:
             # if the len of list_of_words <4, the user only has 4 words left
             # can't get wrong answers from current_list, so must get elsewhere
@@ -221,7 +238,7 @@ def quiz():
             # wrong_one is a random word from lis2
             wrong_one = random.choice(lis2)
             not_the_same = False
-            # wrong_two is any word from lis_2 that is not wrong_one 
+            # wrong_two is any word from lis_2 that is not wrong_one
             # check that wrong_two ≠ wrong_one using loop
             while not not_the_same:
                 wrong_two = random.choice(lis2)
@@ -230,7 +247,7 @@ def quiz():
                 else:
                     continue
             not_the_same = False
-            # wrong_three is any word from lis_2 that is not wrong_one/wrong_two 
+            # wrong_three is any word from lis_2 that isn't wrong_one/wrong_two
             # check that wrong_three ≠ wrong_two ≠ wrong_one using loop
             while not not_the_same:
                 wrong_three = random.choice(lis2)
@@ -303,16 +320,18 @@ def quiz():
     else:
         # user has submitted an answer
         username = session["username"]
-        name_of_lis = session["current_list"]
+        name_of_lis = list(session["current_list"])[-1]
+        current_list = session["current_list"].lower()
         # set the username and the name of the current list for later access
         if request.form.get("options") == correct_def:
             # user was correct
             # update dictionary (user_doc)
-            user_doc[session["current_list"].lower()]["correct"] += 1
+            user_doc[current_list]["correct"] += 1
+            user_doc[current_list]["correct_words"].append(correct_word)
             # update mongo according to user_doc
             db.users.update({"username": username},
-                            {"$set": {session["current_list"].lower():
-                             user_doc[session["current_list"].lower()]}})
+                            {"$set": {current_list:
+                             user_doc[current_list]}})
             full_doc = db[name_of_collection].find_one({"word": correct_word})
             quote_ggs = full_doc["quote_ggs"].split()
             # since correct, take out of list so user doesn't answer again
@@ -338,7 +357,8 @@ def quiz():
             # if the user was incorrect, go to incorrect.html
             # print details about the correct word
             # update dictionary
-            user_doc[session["current_list"].lower()]["wrong"] += 1
+            user_doc[current_list]["wrong"] += 1
+            user_doc[current_list]["wrong_words"].append(correct_word)
             # update mongo
             db.users.update({"username": username},
                             {"$set": {session["current_list"].lower():
@@ -420,7 +440,8 @@ def reset_password():
     if request.method == "GET":
         return render_template("reset_password.html")
     else:
-        if request.form.get("pass").strip() != request.form.get("c_pass").strip():
+        if (request.form.get("pass").strip() !=
+           request.form.get("c_pass").strip()):
             # password ≠ confirmed password
             flash("Re-Type Password or Password Confirmation")
             return render_template("reset_password.html")
@@ -432,7 +453,8 @@ def reset_password():
             # everything is fine, so reset password in database
             # print confirmation message and redirect to homepage
             db.users.update({"username": username},
-                            {"$set": {"password": request.form.get("pass").strip()}})
+                            {"$set": {"password":
+                             request.form.get("pass").strip()}})
             flash("Password reset")
             return redirect("/")
 
@@ -451,7 +473,8 @@ def signup():
         email = request.form.get("email").strip()
         f_name = request.form.get("f_name").strip()
         l_name = request.form.get("l_name").strip()
-        if request.form.get("user").strip() != request.form.get("c_user").strip():
+        if (request.form.get("user").strip() !=
+           request.form.get("c_user").strip()):
             # username ≠ confirmed username
             flash("Please retype the username/confirmed username")
             user = ""
@@ -472,7 +495,8 @@ def signup():
                                    security_word=security_word,
                                    f_name=f_name, l_name=l_name,
                                    c_pass=c_pass, c_user=c_user)
-        if request.form.get("pass").strip() != request.form.get("c_pass").strip():
+        if (request.form.get("pass").strip() !=
+           request.form.get("c_pass").strip()):
             # password ≠ confirmed password
             flash("Please retype the password/confirmed password")
             pass_word = ""
@@ -555,7 +579,9 @@ def profile():
         username = session["username"]
         email = db.users.find_one({"username": username})["email"]
         doc = db.users.find_one({"username": username})
-        full_name = session["first_name"].title()+" "+session["last_name"].title()
+        f_name = session["first_name"].title()
+        l_name = session["last_name"].title()
+        full_name = f_name+" "+l_name
         # create full_name, email, username based on session and db
         stats = {}
         # stats contains  all the lists the user has & the corresponding data
@@ -574,19 +600,29 @@ def profile():
             # for item in stats, get percent accuracy (correct/num_questions)
             num_questions = (stats[lis]["correct"]+stats[lis]["wrong"])
             percent_accuracy = int((stats[lis]["correct"] / num_questions)*100)
+            percent_inaccuracy = 100 - percent_accuracy
+            correct_words = stats[lis]["correct_words"]
+            wrong_words = stats[lis]["wrong_words"]
             progress[list(lis)[-1]] = {"percent_accuracy": percent_accuracy,
-                                    "total_questions": num_questions}
+                                       "percent_inaccuracy":
+                                           percent_inaccuracy,
+                                       "total_questions": num_questions,
+                                       "correct_words": correct_words,
+                                       "wrong_words": wrong_words}
         # od is the sorted version of progress (sorted by list number)
         od = collections.OrderedDict(sorted(progress.items()))
-        return render_template("profile_2.html", email=email, username=username,
-                            od=od, full_name=full_name)
+        return render_template("profile_2.html", email=email,
+                               username=username,
+                               od=od, full_name=full_name)
     else:
         # user has chosen a list, quiz/study options displayed in topnav bar
         # profile.html
         username = session["username"]
         email = db.users.find_one({"username": username})["email"]
         doc = db.users.find_one({"username": username})
-        full_name = session["first_name"].title()+" "+session["last_name"].title()
+        f_name = session["first_name"].title()
+        l_name = session["last_name"].title()
+        full_name = f_name+" "+l_name
         # create full_name, email, username based on session and db
         stats = {}
         # stats contains  all the lists the user has & the corresponding data
@@ -605,12 +641,19 @@ def profile():
             # for item in stats, get percent accuracy (correct/num_questions)
             num_questions = (stats[lis]["correct"]+stats[lis]["wrong"])
             percent_accuracy = int((stats[lis]["correct"] / num_questions)*100)
+            percent_inaccuracy = 100 - percent_accuracy
+            correct_words = stats[lis]["correct_words"]
+            wrong_words = stats[lis]["wrong_words"]
             progress[list(lis)[-1]] = {"percent_accuracy": percent_accuracy,
-                                    "total_questions": num_questions}
+                                       "percent_inaccuracy":
+                                           percent_inaccuracy,
+                                       "total_questions": num_questions,
+                                       "correct_words": correct_words,
+                                       "wrong_words": wrong_words}
         # od is the sorted version of progress (sorted by list number)
         od = collections.OrderedDict(sorted(progress.items()))
         return render_template("profile.html", email=email, username=username,
-                            od=od, full_name=full_name)
+                               od=od, full_name=full_name)
 
 
 if __name__ == "__main__":

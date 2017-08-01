@@ -4,25 +4,51 @@
 {% block content %}
 <body>
 <br></br>
-<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#035a9e;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
-<a href="/logged_out" style="float:right"> Log Out </a><a href="/profile" style="float:right">{{full_name}} |</a>
+<ul class="nav nav-pills" style="float:right;"> <li><a href="/profile"> {{full_name}} </a></li><li><a href="/logged_out"> Log Out</a></li></ul>
+<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#033784;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
+<br></br>
 <style>
 .topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:20%;}
 </style>
-<div class="topnav" id="myTopnav" border="1" style="background-color:#ffedc4;">
-    <a href="/"> Home </a>
-    <a href="/setsession"> Choose a List </a>
-    <a href="/quiz"> Quiz </a>
-    <a href="/study"> Study </a>
-    <a href="/progress"> Progress </a>
+<div class="topnav" id="myTopnav" border="1" style="background-color:#f7cd6a;">
+    <a href="/"><b> Home </b></a>
+    <a href="/setsession"><b> Choose a List </b></a>
+    <a href="/quiz"><b> Quiz </b></a>
+    <a href="/study"><b> Study </b></a>
+    <a href="/progress"><b> Progress </b></a>
 </div>
-    <center><h1> Progress for {{current_list}}: </center></h1>
+    <center><h1> Progress for List {{current_list}}: </center></h1>
 {% if no_questions %}
-    <font style="font-size:160%;"><u> Not Enough Data to compile Progress Report.</u></font>
+    <font style="font-size:160%;"><center> Not Enough Data to compile Progress Report </center></font>
 {% else %}
-     <font style="font-size:250%;"><u>Percent Accuracy:</u> {{percent_accuracy}}% </font><br />
-     <blockquote><font style="font-size:120%;"><u>Number Correct :</u> {{right}}</font><br />
-     <font style="font-size:120%;"><u>Number Wrong:</u> {{wrong}}</font><br /></blockquote>
+     <font style="font-size:200%;"><u>Percent Accuracy:</u> {{percent_accuracy}}% </font><br />
+    <blockquote><font style="font-size:110%;"><u> Correct Words </u></font>
+    <font style="color:#029102;">
+    <ul>
+        {% if correct_words|length < 1 %}
+            <font style="font-size:100%;"> NONE </font>
+        {% else %}
+            {% for word in correct_words %}
+            
+                <li> {{word}} </li>
+            {% endfor %}
+        {% endif %}
+    </ul></font>
+    <font style="font-size:120%;"><u> Incorrect Words </u></font> <font style="color:#d1160c;">
+    <ul>
+        {% if wrong_words|length < 1 %}
+            <font style="font-size:100%;"> NONE </font>
+        {% else %}
+            {% for word in wrong_words %}
+                <li> {{word}} </li>
+            {% endfor %}
+        {% endif %}
+    </ul></font></blockquote>
+    <div class="progress">
+        <div class="progress-bar progress-bar-success" style="width: {{percent_accuracy}}%"></div>
+        <div class="progress-bar progress-bar-danger" style="width: {{percent_inaccuracy}}%"></div>
+    </div>
+    
 <br></br>
 <br></br>
 Go to <a href="/profile"> Profile </a> to see full progress report of all vocab lists

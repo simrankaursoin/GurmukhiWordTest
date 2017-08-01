@@ -4,13 +4,14 @@
 {% block content %}
 <body>
 <br></br>
-<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#035a9e;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
-<a href="/signup" style="float:right"> Sign-Up </a><a href="/login" style="float:right"> Login |</a>
+<ul class="nav nav-pills" style="float:right;"> <li><a href="/profile"> {{full_name}} </a></li><li><a href="/logged_out"> Log Out</a></li></ul>
+<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#033784;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
+<br></br>
 <center><h2> Sign-Up </h2> </center>
 <form action="" method="POST">
   First Name: <input type="text" name="f_name"><br></br>
   Last Name: <input type="text" name="l_name"><br></br>
-  Username: <input type="text" name="user"><br></br>
+  Username:   <input type="text" name="user"><br></br>
   Confirm Username: <input type="text" name="c_user"><br></br>
   Password: <input type="password" name="pass"><br></br>
   Confirm Password: <input type="password" name="c_pass"><br></br>

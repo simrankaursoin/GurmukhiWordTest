@@ -4,22 +4,23 @@
 {% block content %}
 <body>
 <br></br>
-<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#035a9e;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
-<a href="/logged_out" style="float:right"> Log Out </a><a href="/profile" style="float:right">{{full_name}} |</a>
-<style>
+
+<ul class="nav nav-pills" style="float:right;"> <li><a href="/profile"> {{full_name}} </a></li><li><a href="/logged_out"> Log Out</a></li></ul>
+<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#033784;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
+<br></br><style>
 .topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:20%;}
 </style>
-<div class="topnav" id="myTopnav" border="1" style="background-color:#ffedc4;">
-    <a href="/"> Home </a>
-    <a href="/setsession"> Choose a List </a>
-    <a href="/quiz"> Quiz </a>
-    <a href="/study"> Study </a>
-    <a href="/progress"> Progress </a>
+<div class="topnav" id="myTopnav" border="1" style="background-color:#f7cd6a;">
+    <a href="/"><b> Home </b></a>
+    <a href="/setsession"><b> Choose a List </b></a>
+    <a href="/quiz"><b> Quiz </b></a>
+    <a href="/study"><b> Study </b></a>
+    <a href="/progress"><b> Progress </b></a>
 </div>
     <div align="left">
         <font size="4"><i>Currently on List {{name}}</i></font>
     </div>
-    <h2 style="color:#035a9e;"> <center><u><strong> Study</strong></u></center> </h2>
+    <h2 style="color:#033784;"> <center><u><strong> Study</strong></u></center> </h2>
     
     <center>
         <table style="width:93%;background-color:white;" border="1">

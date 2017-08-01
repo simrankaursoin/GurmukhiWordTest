@@ -8,9 +8,11 @@
 .topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:20%;}
 </style>
  
-<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#035a9e;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
-<a href="/logged_out" style="float:right"> Log Out </a><a href="/profile" style="float:right">{{full_name}} |</a>
-<div class="topnav" id="myTopnav" border="1" style="background-color:#ffedc4;">
+
+<ul class="nav nav-pills" style="float:right;"> <li><a href="/profile"> {{full_name}} </a></li><li><a href="/logged_out"> Log Out</a></li></ul>
+<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#033784;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
+<br></br>
+<div class="topnav" id="myTopnav" border="1" style="background-color:#f7cd6a;">
     <a href="/"> Home </a>
     <a href="/setsession"> Choose a List </a>
     <a href="/quiz"> Quiz </a>
@@ -18,9 +20,15 @@
     <a href="/progress"> Progress </a>
 </div>
     
-<center> <h1 style="font-size:350%;"><strong><u> Congratulations!! </u></strong></h1> </center>
+<center> <h1 style="font-size:350%;color:#20a310;"><strong><u> Congratulations!! </u></strong></h1> </center>
 <div class="well">
-<center>You finished list {{name}}! <br />If you wish to do this list again, please <a href="/setsession">choose</a> list {{name}} again  </center>
+<center><font style="font-size:140%;">You finished list {{name}}! </font><br />
+<font style="font-size:230%;">Your Score: </font><font style="font-size:380%; color:#033784;">{{percent_accuracy}}% </font><br />
+If you wish to do this list again, please <a href="/setsession">choose</a> list {{name}} again  </center>
+
+<div style="margin-left:80%;">
+<a href="/quiz" class="btn btn-info">OK</a>
+</div>
 </div>
 </body>
 {% endblock %}
