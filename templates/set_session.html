@@ -13,7 +13,9 @@
     <a href="/setsession"><b> Choose a List </b></a>
 </div>
 <h3 style="color:#033784;font-size:180%; font-family:Geneva;"><strong>Which vocabulary list would you like to be tested on? </strong></h3>
-<form class= "well" action="/setsession" method="post">
+<div class="panel panel-default">
+<div class="panel-body" style="background-color:#ffe5aa;">
+<form action="/setsession" method="post">
 <select name="current_list">
   <option value= "List1"> List 1</option>
   <option value= "List2"> List 2</option>
@@ -23,6 +25,6 @@
 </select>
 <br></br>
 <input class="btn btn-info" type="submit" value="Submit">
-</form>
+</form></div></div>
 </body>
 {% endblock %}
