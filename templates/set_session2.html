@@ -10,8 +10,8 @@
  
 
 <ul class="nav nav-pills" style="float:right;"> <li><a href="/profile"> {{full_name}} </a></li><li><a href="/logged_out"> Log Out</a></li></ul>
-<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#033784;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
-<br></br>
+<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38" style="float:left;"><font style="color:#033784;font-size:120%;"><ul class="nav nav-pills" style="float:left;"> <li><a href="/"> Gurbani Vocab </a></li></ul>
+<br /><br></br>
 <div class="topnav" id="myTopnav" border="1" style="background-color:#f7cd6a;">
     <a href="/"><b> Home </b></a>
     <a href="/setsession"><b> Choose a List </b></a>
@@ -19,8 +19,10 @@
     <a href="/study"><b> Study </b></a>
     <a href="/progress"><b> Progress </b></a>
 </div>
-<h3> Which vocabulary list would you like to be tested on? </h3>
-<form class= "well" action="/setsession" method="post">
+<h3 style="color:#033784;font-size:180%; font-family:Geneva;"><strong>Which vocabulary list would you like to be tested on? </strong></h3>
+<div class="panel panel-default">
+<div class="panel-body" style="background-color:#ffe5aa;">
+<form action="/setsession" method="post">
 <select name="current_list">
   <option value= "List1"> List 1</option>
   <option value= "List2"> List 2</option>
@@ -29,7 +31,7 @@
   <option value= "List5"> List 5</option>
 </select>
 <br></br>
-<input class="btn btn-info" type="submit" value="Submit">
+<input class="btn btn-info" type="submit" value="Submit"></div></div>
 </form>
 </body>
 {% endblock %}

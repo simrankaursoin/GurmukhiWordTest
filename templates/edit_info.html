@@ -1,0 +1,23 @@
+{% extends "_base.html" %}
+{% block title %}Edit Info{% endblock %}
+
+{% block content %}
+<body>
+<ul class="nav nav-pills" style="float:right;"> <li><a href="/profile"> {{full_name}} </a></li><li><a href="/logged_out"> Log Out</a></li></ul>
+<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38" style="float:left;"><font style="color:#033784;font-size:120%;"><ul class="nav nav-pills" style="float:left;"> <li><a href="/"> Gurbani Vocab </a></li></ul>
+<br></br>
+<center><h2> Edit Info </h2> </center>
+<form action="" method="POST">
+  First Name: <input type="text" name="f_name" value="{{f_name}}"><br></br>
+  Last Name: <input type="text" name="l_name" value="{{l_name}}"><br></br>
+  Username: <input type="text" name="user" value="{{user}}"><br></br>
+  Confirm Username: <input type="text" name="c_user" value="{{c_user}}"><br></br>
+  Email: <input type="text" name="email" value="{{email}}"><br></br>
+  Gender:
+    <INPUT TYPE="radio" name="gender" value="female"> Female
+    <INPUT TYPE="radio" name="gender" value="male"> Male
+    <INPUT TYPE="radio" name="gender" value="other"> Other <br></br>
+  <input class="btn btn-info" type="submit" value="Submit">
+</form>
+</body>
+{% endblock %}

@@ -11,8 +11,8 @@
 </head>
 <br></br>
 <ul class="nav nav-pills" style="float:right;"> <li><a href="/profile"> {{full_name}} </a></li><li><a href="/logged_out"> Log Out</a></li></ul>
-<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#033784;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
-<br></br><style>
+<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38" style="float:left;"><font style="color:#033784;font-size:120%;"><ul class="nav nav-pills" style="float:left;"> <li><a href="/"> Gurbani Vocab </a></li></ul><br /><br></br>
+<style>
 .topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:20%;}
 </style>
 
@@ -23,25 +23,27 @@
     <a href="/study"><b> Study </b></a>
     <a href="/progress"><b> Progress </b></a>
 </div>
-    <center><br></br><font style="font-size:150%"><strong>{{full_name}}</strong></font><br />
+    <center><h1 style="color:#033784;font-size:300%; font-family:Geneva;"><strong>{{full_name}} </strong></h1>
   <input style="color:#033784; border: none;background: none;" type="button" data-toggle="collapse" data-target="#demo" value="More info">
     <div id="demo" class="collapse">
     <u>Username</u>: {{username}}<br />
-    <u>Email</u>: {{email}}
+    <u>Email</u>: {{email}}<br />
+    <u>Gender</u>: {{gender}}<br />
+    <a href="/edit_info" class="btn btn-info">Edit Info</a>
   </div></center>
         <div> 
-            <h2><u>PROGRESS REPORT:</u></h2>
+            <h2 style="color:#033784;font-size:180%; font-family:Geneva;"><strong> Progress Report </strong></h2>
             {% if od|length < 1 %}
                 no data to display
             {% else %}
                 {% for vocab_lis in od %}
                     <u><font style="font-size:120%;">List {{vocab_lis}}:</font></u> <br />
-                    <blockquote><i>Percentage Accuracy: {{od[vocab_lis]["percent_accuracy"]}}%</i> <br />
+                    <blockquote>Percentage Accuracy: {{od[vocab_lis]["percent_accuracy"]}}% <br />
                     <div class="progress" style="width:60%;">
                         <div class="progress-bar progress-bar-success" style="width: {{od[vocab_lis]["percent_accuracy"]}}%"></div>
                         <div class="progress-bar progress-bar-danger" style="width: {{od[vocab_lis]["percent_inaccuracy"]}}%"></div>
-                    </div
-                    <i>Correct Words:</i> 
+                    </div>
+                    Correct Words:
                     <font style="color:#029102;">
                                     {% if od[vocab_lis]["correct_words"]|length < 1 %}
                                         <font style="font-size:100%;"> NONE </font>
@@ -52,7 +54,7 @@
                                         {% endfor %}
                                     </ul>
                                     {% endif %}</font>
-                    <br /><i>Incorrect Words:</i> <font style="color:#d1160c;">
+                    <br />Incorrect Words: <font style="color:#d1160c;">
                                     {% if od[vocab_lis]["wrong_words"]|length < 1 %}
                                         <font style="font-size:100%;"> NONE </font>
                                     {% else %}

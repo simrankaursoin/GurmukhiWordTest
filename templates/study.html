@@ -6,9 +6,10 @@
 <br></br>
 
 <ul class="nav nav-pills" style="float:right;"> <li><a href="/profile"> {{full_name}} </a></li><li><a href="/logged_out"> Log Out</a></li></ul>
-<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#033784;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
-<br></br><style>
+<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38" style="float:left;"><font style="color:#033784;font-size:120%;"><ul class="nav nav-pills" style="float:left;"> <li><a href="/"> Gurbani Vocab </a></li></ul><br /><br></br>
+<style>
 .topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:20%;}
+th {text-align: center; font-size: 150%;}
 </style>
 <div class="topnav" id="myTopnav" border="1" style="background-color:#f7cd6a;">
     <a href="/"><b> Home </b></a>
@@ -20,7 +21,7 @@
     <div align="left">
         <font size="4"><i>Currently on List {{name}}</i></font>
     </div>
-    <h2 style="color:#033784;"> <center><u><strong> Study</strong></u></center> </h2>
+    <h1 style="color:#033784;font-size:300%; font-family:Geneva;"><strong> Study </strong></h1>
     
     <center>
         <table style="width:93%;background-color:white;" border="1">

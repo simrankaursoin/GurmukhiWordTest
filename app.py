@@ -394,6 +394,10 @@ def login():
             # the user is in db and the password is correct
             user_doc = {}
             session["username"] = username
+            gender = db.users.find_one({"username": username})["gender"]
+            session["gender"] = gender
+            email = db.users.find_one({"username": username})["email"]
+            session["email"] = email
             flash("Successful login")
             # successful login
             # direct the user to choose a list
@@ -402,6 +406,8 @@ def login():
             session["username"] = username
             email = db.users.find_one({"username": username})["email"]
             session["email"] = email
+            gender = db.users.find_one({"username": username})["gender"]
+            session["gender"] = gender
             f_name = db.users.find_one({"username": username})["first_name"]
             l_name = db.users.find_one({"username": username})["last_name"]
             session["first_name"] = f_name
@@ -410,7 +416,92 @@ def login():
             flash("Wrong password")
             return render_template("login.html")
 
-
+@app.route("/edit_info", methods=["GET", "POST"])
+def edit_info():
+    if request.method == "GET":
+        user = session["username"]
+        c_user = user
+        f_name = db.users.find_one({"username": user})["first_name"]
+        l_name = db.users.find_one({"username": user})["last_name"]
+        email = db.users.find_one({"username": user})["email"]
+        return render_template("edit_info.html", user=user, c_user=c_user,
+                               email=email, f_name=f_name, l_name=l_name)
+    else:
+        user = request.form.get("user")
+        c_user = request.form.get("c_user")
+        f_name = request.form.get("f_name")
+        l_name = request.form.get("l_name")
+        email = request.form.get("email")
+        if (request.form.get("user").strip() !=
+           request.form.get("c_user").strip()):
+            # username ≠ confirmed username
+            flash("Please ensure that username is the same as confirmed username.")
+            user = ""
+            c_user = ""
+            return render_template("edit_info.html", user=user,email=email,
+                                   f_name=f_name, l_name=l_name,
+                                   c_user=c_user)
+                                   
+        if db.users.find_one({"username":
+                              request.form.get("user").strip()}) is not None and user != session["username"]:
+            # username already exists in database
+            flash("Username already taken")
+            user = ""
+            c_user = ""
+            return render_template("edit_info.html", user=user,email=email,
+                                   f_name=f_name, l_name=l_name,
+                                   c_user=c_user)
+        if len(request.form.get("f_name").strip()) < 1:
+            flash("Please enter a first name")
+            f_name = ""
+            return render_template("edit_info.html", user=user,email=email,
+                                   f_name=f_name, l_name=l_name,
+                                   c_user=c_user)
+        if len(request.form.get("l_name").strip()) < 1:
+            flash("Please enter a last name")
+            l_name = ""
+            return render_template("edit_info.html", user=user,email=email,
+                                   f_name=f_name, l_name=l_name,
+                                   c_user=c_user)
+        if "@" not in list(request.form.get("email").strip()):
+            flash("Please enter a valid email")
+            email = ""
+            return render_template("edit_info.html", user=user,email=email,
+                                   f_name=f_name, l_name=l_name,
+                                   c_user=c_user)
+                                   
+        if len(request.form.get("f_name").split()) > 1:
+            flash("Please enter a valid first name (one word)")
+            f_name = ""
+            return render_template("edit_info.html", user=user,email=email,
+                                   f_name=f_name, l_name=l_name,
+                                   c_user=c_user)
+        if len(request.form.get("l_name").split()) > 1:
+            flash("Please enter a valid last name (one word)")
+            l_name = ""
+            return render_template("edit_info.html", user=user,email=email,
+                                   f_name=f_name, l_name=l_name,
+                                   c_user=c_user)
+        if request.form["gender"] == None:
+            flash("Please select gender")
+            return render_template("edit_info.html", user=user,email=email,
+                                   f_name=f_name, l_name=l_name,
+                                   c_user=c_user)
+        db.users.update( {"username": session["username"]} , {'$set': {"email": request.form.get("email").strip()}})
+        db.users.update( {"username": session["username"]} , {'$set': {"username": request.form.get("user").strip()}})
+        db.users.update( {"username": session["username"]} , {'$set': {"first_name": request.form.get("f_name").strip()}})
+        db.users.update( {"username": session["username"]} , {'$set': {"last_name": request.form.get("l_name").strip()}})
+        db.users.update( {"username": session["username"]} , {'$set': {"gender": request.form.get("gender").strip()}})
+        session["username"] = request.form.get("user").strip()
+        session["email"] = request.form.get("email").strip()
+        session["first_name"] = request.form.get("f_name").strip()
+        session["last_name"] = request.form.get("l_name").strip()
+        session["gender"] = request.form["gender"]
+        flash("Profile updated")
+        # redirect user to choose a list
+        return redirect("/profile", 303)
+        
+    
 @app.route("/security", methods=["GET", "POST"])
 def security():
     if request.method == "GET":
@@ -476,7 +567,7 @@ def signup():
         if (request.form.get("user").strip() !=
            request.form.get("c_user").strip()):
             # username ≠ confirmed username
-            flash("Please retype the username/confirmed username")
+            flash("Please ensure that username is the same as confirmed username.")
             user = ""
             c_user = ""
             return render_template("sign_up2.html", user=user,
@@ -530,6 +621,24 @@ def signup():
                                    security_word=security_word,
                                    f_name=f_name, l_name=l_name,
                                    c_pass=c_pass, c_user=c_user)
+                                   
+        if len(request.form.get("f_name").split()) > 1:
+            flash("Please enter a valid first name (one word)")
+            f_name = ""
+            return render_template("sign_up2.html", user=user,
+                                   pass_word=pass_word, email=email,
+                                   security_word=security_word,
+                                   f_name=f_name, l_name=l_name,
+                                   c_pass=c_pass, c_user=c_user)
+        if len(request.form.get("l_name").split()) > 1:
+            flash("Please enter a valid last name (one word)")
+            l_name = ""
+            return render_template("sign_up2.html", user=user,
+                                   pass_word=pass_word, email=email,
+                                   security_word=security_word,
+                                   f_name=f_name, l_name=l_name,
+                                   c_pass=c_pass, c_user=c_user)
+                                   
         if len(request.form.get("pass").strip()) < 8:
             # password length is less than 8 characters
             flash("Please enter a valid password greater than 8 characters")
@@ -540,18 +649,27 @@ def signup():
                                    security_word=security_word,
                                    f_name=f_name, l_name=l_name,
                                    c_pass=c_pass, c_user=c_user)
+        if request.form["gender"] == None:
+            flash("Please select gender")
+            return render_template("sign_up2.html", user=user,
+                                   pass_word=pass_word, email=email,
+                                   security_word=security_word,
+                                   f_name=f_name, l_name=l_name,
+                                   c_pass=c_pass, c_user=c_user) 
         db.users.insert_one({"username": request.form.get("user").strip(),
                              "password": request.form.get("pass").strip(),
                              "security_word":
                              request.form.get("security_word").strip(),
                              "email": request.form.get("email").strip(),
                              "first_name": request.form.get("f_name").strip(),
-                             "last_name": request.form.get("l_name").strip()})
+                             "last_name": request.form.get("l_name").strip(),
+                             "gender": request.form["gender"]})
         # add user to db and set session[username] and session[email]
         session["username"] = request.form.get("user").strip()
         session["email"] = request.form.get("email").strip()
         session["first_name"] = request.form.get("f_name").strip()
         session["last_name"] = request.form.get("l_name").strip()
+        session["gender"] = request.form["gender"]
         flash("Profile created")
         # redirect user to choose a list
         return redirect("/setsession", 303)
@@ -581,6 +699,7 @@ def profile():
         doc = db.users.find_one({"username": username})
         f_name = session["first_name"].title()
         l_name = session["last_name"].title()
+        gender = session["gender"].title()
         full_name = f_name+" "+l_name
         # create full_name, email, username based on session and db
         stats = {}
@@ -613,7 +732,8 @@ def profile():
         od = collections.OrderedDict(sorted(progress.items()))
         return render_template("profile_2.html", email=email,
                                username=username,
-                               od=od, full_name=full_name)
+                               od=od, full_name=full_name,
+                               gender=gender)
     else:
         # user has chosen a list, quiz/study options displayed in topnav bar
         # profile.html
@@ -622,6 +742,7 @@ def profile():
         doc = db.users.find_one({"username": username})
         f_name = session["first_name"].title()
         l_name = session["last_name"].title()
+        gender = session["gender"].title()
         full_name = f_name+" "+l_name
         # create full_name, email, username based on session and db
         stats = {}
@@ -653,7 +774,7 @@ def profile():
         # od is the sorted version of progress (sorted by list number)
         od = collections.OrderedDict(sorted(progress.items()))
         return render_template("profile.html", email=email, username=username,
-                               od=od, full_name=full_name)
+                               od=od, full_name=full_name, gender=gender)
 
 
 if __name__ == "__main__":
