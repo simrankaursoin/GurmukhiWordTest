@@ -24,6 +24,18 @@ def update_session_from_form(session, request):
     session["gender"] = request.form.get("gender")
 
 
+def get_stuff_from_form(request, session):
+    user = request.form.get("user").strip()
+    c_user = request.form.get("c_user").strip()
+    f_name = request.form.get("f_name")
+    l_name = request.form.get("l_name")
+    email = request.form.get("email")
+    username = session["username"]
+    return {"user": user, "username": username,
+            "email": email, "f_name": f_name,
+            "l_name": l_name, "c_user": c_user}
+
+
 def update_session(session, username, doc):
     session["username"] = username
     gender = doc["gender"]

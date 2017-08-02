@@ -6,6 +6,7 @@ import secure
 from helper import make_lists, retrieve_user_info, reset_sessions
 from helper import make_options, check_answers, calculate_percent_accuracy
 from helper import update_session, update_session_from_form, get_form
+from helper import get_stuff_from_form
 import random
 import collections
 db = make_database()
@@ -247,16 +248,24 @@ def edit_info():
                                f_name=retrieve_user_info(session)["f_name"],
                                l_name=retrieve_user_info(session)["l_name"])
     else:
-        user = request.form.get("user").strip()
-        c_user = request.form.get("c_user").strip()
-        f_name = request.form.get("f_name")
-        l_name = request.form.get("l_name")
-        email = request.form.get("email")
-        username = session["username"]
-        if check_answers(request, flash, username, user):
-            return render_template("edit_info.html", user=user, email=email,
-                                   f_name=f_name, l_name=l_name,
-                                   c_user=c_user)
+        get_stuff_from_form(request, session)
+        if check_answers(request, flash, get_stuff_from_form(request,
+                         session)["username"],
+                         get_stuff_from_form(request, session)["user"]):
+            return render_template("edit_info.html",
+                                   user=get_stuff_from_form(request,
+                                                            session)["user"],
+                                   email=get_stuff_from_form(request,
+                                                             session)["email"],
+                                   f_name=get_stuff_from_form(request,
+                                                              session)["f_name"
+                                                                       ],
+                                   l_name=get_stuff_from_form(request,
+                                                              session)["l_name"
+                                                                       ],
+                                   c_user=get_stuff_from_form(request,
+                                                              session)["c_user"
+                                                                       ])
         else:
             username_query = {"username": session["username"]}
             db.users.update(username_query, {'$set':
@@ -320,31 +329,52 @@ def signup():
     if request.method == "GET":
         return render_template("sign_up.html")
     else:
-        user = request.form.get("user").strip()
-        c_user = request.form.get("c_user").strip()
         pass_word = request.form.get("pass").strip()
         c_pass = request.form.get("c_pass").strip()
         security_word = request.form.get("security_word").strip()
-        email = request.form.get("email").strip()
-        f_name = request.form.get("f_name").strip()
-        l_name = request.form.get("l_name").strip()
-        username = session["username"]
-        if check_answers(request, flash, username, user):
-            return render_template("sign_up2.html", user=user,
-                                   pass_word=pass_word, email=email,
+        get_stuff_from_form(request, session)
+        if check_answers(request, flash,
+                         get_stuff_from_form(request, session)["username"],
+                         get_stuff_from_form(request, session)["user"]):
+            return render_template("sign_up2.html",
+                                   user=get_stuff_from_form(request,
+                                                            session)["user"],
+                                   pass_word=pass_word,
+                                   email=get_stuff_from_form(request,
+                                                             session)["email"],
                                    security_word=security_word,
-                                   f_name=f_name, l_name=l_name,
-                                   c_pass=c_pass, c_user=c_user)
+                                   f_name=get_stuff_from_form(request,
+                                                              session)["f_name"
+                                                                       ],
+                                   l_name=get_stuff_from_form(request,
+                                                              session)["l_name"
+                                                                       ],
+                                   c_pass=c_pass,
+                                   c_user=get_stuff_from_form(request,
+                                                              session)["c_user"
+                                                                       ])
         elif (request.form.get("pass").strip() !=
               request.form.get("c_pass").strip()):
             flash("Please retype the password/confirmed password")
             pass_word = ""
             c_pass = ""
-            return render_template("sign_up2.html", user=user,
-                                   pass_word=pass_word, email=email,
+            return render_template("sign_up2.html",
+                                   user=get_stuff_from_form(request,
+                                                            session)["user"],
+                                   pass_word=pass_word,
+                                   email=get_stuff_from_form(request,
+                                                             session)["email"],
                                    security_word=security_word,
-                                   f_name=f_name, l_name=l_name,
-                                   c_pass=c_pass, c_user=c_user)
+                                   f_name=get_stuff_from_form(request,
+                                                              session)["f_name"
+                                                                       ],
+                                   l_name=get_stuff_from_form(request,
+                                                              session)["l_name"
+                                                                       ],
+                                   c_pass=c_pass,
+                                   c_user=get_stuff_from_form(request,
+                                                              session)["c_user"
+                                                                       ])
         else:
             db.users.insert_one({"username": request.form.get("user").strip(),
                                  "password": request.form.get("pass").strip(),
