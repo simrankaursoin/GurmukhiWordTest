@@ -3,7 +3,9 @@
 from mongo_interface import make_database
 from flask import flash, request, Flask, render_template, redirect, session
 import secure
-from helper import make_lists, retrieve_user_info, reset_sessions, make_options, check_answers, calculate_percent_accuracy, update_session, update_session_from_form
+from helper import make_lists, retrieve_user_info, reset_sessions
+from helper import make_options, check_answers, calculate_percent_accuracy
+from helper import update_session, update_session_from_form, get_form
 import random
 import collections
 db = make_database()
@@ -38,7 +40,9 @@ def set_session():
             template = "set_session2.html"
         else:
             template = "set_session.html"
-        return render_template(template, full_name=retrieve_user_info(session)["full_name"])
+        full_name = retrieve_user_info(session)["full_name"]
+        return render_template(template,
+                               full_name=full_name)
     else:
         session["current_list"] = request.form.get("current_list").strip()
         list_of_words = []
@@ -90,7 +94,8 @@ def progress():
     correct_words = 0
     wrong_words = 0
     retrieve_user_info(session)
-    full_doc = db.users.find_one({"username": retrieve_user_info(session)["username"]})
+    full_doc = db.users.find_one({"username":
+                                 retrieve_user_info(session)["username"]})
     if current_list in full_doc:
         correct_words = full_doc[current_list]["correct_words"]
         wrong_words = full_doc[current_list]["wrong_words"]
@@ -99,7 +104,8 @@ def progress():
     if right is None and wrong is None:
         no_questions = True
     current_list = list(session["current_list"])[-1]
-    return render_template("progress.html", username=retrieve_user_info(session)["username"],
+    return render_template("progress.html",
+                           username=retrieve_user_info(session)["username"],
                            full_name=retrieve_user_info(session)["full_name"],
                            percent_accuracy=percent_accuracy,
                            no_questions=no_questions, right=right,
@@ -111,7 +117,8 @@ def progress():
 
 @app.route("/quiz", methods=["GET", "POST"])
 def quiz():
-    global correct_def, name_of_collection, list_of_words, list_of_definitions, correct_word, list_of_options, word_index, user_doc
+    global correct_def, name_of_collection, list_of_words, list_of_definitions
+    global correct_word, list_of_options, word_index, user_doc
     full_name = retrieve_user_info(session)["full_name"]
     name_of_lis = list(session["current_list"])[-1]
     if request.method == "GET":
@@ -140,7 +147,7 @@ def quiz():
                     not_nothing = False
             correct_def = list_of_definitions[word_index]
             list_of_options = []
-            for i in range(0,3):
+            for i in range(0, 3):
                 wrong_index = random.randint(0, (len(list2)-1))
                 list_of_options.append(list2[wrong_index])
             list_of_options.append(correct_def)
@@ -151,12 +158,14 @@ def quiz():
             word_index = random.randint(0, (len(list_of_words)-1))
             correct_word = list_of_words[word_index]
             correct_def = list_of_definitions[word_index]
-            list_of_options = make_options(list_of_words, list_of_definitions, correct_def)
+            list_of_options = make_options(list_of_words,
+                                           list_of_definitions,
+                                           correct_def)
 
         return render_template("question.html", correct_word=correct_word,
-                                list_of_options=list_of_options,
-                                name_of_lis=name_of_lis,
-                                full_name=full_name)
+                               list_of_options=list_of_options,
+                               name_of_lis=name_of_lis,
+                               full_name=full_name)
     else:
         username = retrieve_user_info(session)["username"]
         name_of_lis = list(session["current_list"])[-1]
@@ -181,7 +190,6 @@ def quiz():
                                    username=username, full_name=full_name)
         elif request.form.get("options") is None:
             flash("Please submit a response")
-            
             return render_template("question.html", correct_word=correct_word,
                                    list_of_options=list_of_options)
         else:
@@ -232,8 +240,12 @@ def login():
 def edit_info():
     if request.method == "GET":
         retrieve_user_info(session)
-        return render_template("edit_info.html", user=retrieve_user_info(session)["username"], c_user=retrieve_user_info(session)["username"],
-                               email=retrieve_user_info(session)["email"], f_name=retrieve_user_info(session)["f_name"], l_name=retrieve_user_info(session)["l_name"])
+        return render_template("edit_info.html",
+                               user=retrieve_user_info(session)["username"],
+                               c_user=retrieve_user_info(session)["username"],
+                               email=retrieve_user_info(session)["email"],
+                               f_name=retrieve_user_info(session)["f_name"],
+                               l_name=retrieve_user_info(session)["l_name"])
     else:
         user = request.form.get("user").strip()
         c_user = request.form.get("c_user").strip()
@@ -243,25 +255,25 @@ def edit_info():
         username = session["username"]
         if check_answers(request, flash, username, user):
             return render_template("edit_info.html", user=user, email=email,
-                                f_name=f_name, l_name=l_name,
-                                c_user=c_user)
+                                   f_name=f_name, l_name=l_name,
+                                   c_user=c_user)
         else:
             username_query = {"username": session["username"]}
             db.users.update(username_query, {'$set':
-                                            {"email":
-                                            request.form.get("email").strip()}})
+                                             {"email":
+                                              get_form(request, "email")}})
             db.users.update(username_query, {'$set':
-                                            {"username":
-                                            request.form.get("user").strip()}})
+                                             {"username":
+                                              get_form(request, "user")}})
             db.users.update(username_query, {'$set':
-                                            {"first_name":
-                                            request.form.get("f_name").strip()}})
+                                             {"first_name":
+                                              get_form(request, "f_name")}})
             db.users.update(username_query, {'$set':
-                                            {"last_name":
-                                            request.form.get("l_name").strip()}})
+                                             {"last_name":
+                                              get_form(request, "l_name")}})
             db.users.update(username_query, {'$set':
-                                            {"gender":
-                                            request.form.get("gender").strip()}})
+                                             {"gender":
+                                              get_form(request, "gender")}})
             update_session_from_form(session, request)
             flash("Profile updated")
             return redirect("/profile", 303)
@@ -319,28 +331,32 @@ def signup():
         username = session["username"]
         if check_answers(request, flash, username, user):
             return render_template("sign_up2.html", user=user,
-                               pass_word=pass_word, email=email,
-                               security_word=security_word,
-                               f_name=f_name, l_name=l_name,
-                               c_pass=c_pass, c_user=c_user)
-        elif request.form.get("pass").strip() != request.form.get("c_pass").strip():
-           flash("Please retype the password/confirmed password")
-           pass_word = ""
-           c_pass = ""
-           return render_template("sign_up2.html", user=user,
-                               pass_word=pass_word, email=email,
-                               security_word=security_word,
-                               f_name=f_name, l_name=l_name,
-                               c_pass=c_pass, c_user=c_user)
+                                   pass_word=pass_word, email=email,
+                                   security_word=security_word,
+                                   f_name=f_name, l_name=l_name,
+                                   c_pass=c_pass, c_user=c_user)
+        elif (request.form.get("pass").strip() !=
+              request.form.get("c_pass").strip()):
+            flash("Please retype the password/confirmed password")
+            pass_word = ""
+            c_pass = ""
+            return render_template("sign_up2.html", user=user,
+                                   pass_word=pass_word, email=email,
+                                   security_word=security_word,
+                                   f_name=f_name, l_name=l_name,
+                                   c_pass=c_pass, c_user=c_user)
         else:
             db.users.insert_one({"username": request.form.get("user").strip(),
-                                "password": request.form.get("pass").strip(),
-                                "security_word":
-                                request.form.get("security_word").strip(),
-                                "email": request.form.get("email").strip(),
-                                "first_name": request.form.get("f_name").strip(),
-                                "last_name": request.form.get("l_name").strip(),
-                                "gender": request.form.get("gender")})
+                                 "password": request.form.get("pass").strip(),
+                                 "security_word":
+                                 request.form.get("security_word").strip(),
+                                 "email": request.form.get("email").strip(),
+                                 "first_name":
+                                 request.form.get("f_name").strip(),
+                                 "last_name":
+                                 request.form.get("l_name").strip(),
+                                 "gender":
+                                 request.form.get("gender")})
             update_session_from_form(session, request)
             flash("Profile created")
             return redirect("/setsession", 303)
@@ -370,20 +386,21 @@ def profile():
         correct_words = stats[lis]["correct_words"]
         wrong_words = stats[lis]["wrong_words"]
         progress[list(lis)[-1]] = {"percent_accuracy": percent_accuracy,
-                                    "percent_inaccuracy":
-                                        percent_inaccuracy,
-                                    "total_questions": num_questions,
-                                    "correct_words": correct_words,
-                                    "wrong_words": wrong_words}
+                                   "percent_inaccuracy": percent_inaccuracy,
+                                   "total_questions": num_questions,
+                                   "correct_words": correct_words,
+                                   "wrong_words": wrong_words}
     od = collections.OrderedDict(sorted(progress.items()))
     if len(list_of_words) < 1:
         template = "profile_2.html"
     else:
         template = "profile.html"
-    return render_template(template, email=retrieve_user_info(session)["email"],
-                               username=retrieve_user_info(session)["username"],
-                               od=od, full_name=retrieve_user_info(session)["full_name"],
-                               gender=retrieve_user_info(session)["gender"])
+    return render_template(template,
+                           email=retrieve_user_info(session)["email"],
+                           username=retrieve_user_info(session)["username"],
+                           od=od,
+                           full_name=retrieve_user_info(session)["full_name"],
+                           gender=retrieve_user_info(session)["gender"])
 
 
 if __name__ == "__main__":

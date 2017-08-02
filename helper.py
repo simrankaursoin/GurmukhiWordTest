@@ -14,22 +14,28 @@ def make_lists(list_of_words, list_of_definitions, name_of_collection):
     # create a list called list_of_definitions based on db defs from list
     # allows appending/deleting/easy-access (unlike the db)
     return list_of_words, list_of_definitions
- 
+
+
 def update_session_from_form(session, request):
     session["username"] = request.form.get("user").strip()
     session["email"] = request.form.get("email").strip()
     session["first_name"] = request.form.get("f_name").strip()
     session["last_name"] = request.form.get("l_name").strip()
     session["gender"] = request.form.get("gender")
-    
-    
+
+
 def update_session(session, username, doc):
     session["username"] = username
     gender = doc["gender"]
     session["gender"] = gender
     email = doc["email"]
     session["email"] = email
-    
+
+
+def get_form(request, x):
+    return request.form.get(x).strip()
+
+
 def retrieve_user_info(session):
     username = session["username"]
     doc = db.users.find_one({"username": username})
@@ -38,9 +44,12 @@ def retrieve_user_info(session):
     l_name = session["last_name"].title()
     gender = session["gender"].title()
     full_name = '{} {}'.format(f_name, l_name)
-    return {"username": username, "doc": doc, "full_name":full_name, "gender": gender, "email": email, "f_name": f_name, "l_name": l_name}
+    return {"username": username, "doc": doc, "full_name": full_name,
+            "gender": gender, "email": email, "f_name": f_name,
+            "l_name": l_name}
 
-def reset_sessions(session, user_doc):   
+
+def reset_sessions(session, user_doc):
     session["username"] = None
     session["email"] = None
     session["first_name"] = None
@@ -48,10 +57,10 @@ def reset_sessions(session, user_doc):
     user_doc = {}
     return user_doc
 
+
 def check_answers(request, flash, username, user):
     errors = False
-    if (request.form.get("user").strip() !=
-        request.form.get("c_user").strip()):
+    if request.form.get("user").strip() != request.form.get("c_user").strip():
         flash("Please ensure that username is validated correctly.")
         user = ""
         c_user = ""
@@ -62,33 +71,38 @@ def check_answers(request, flash, username, user):
         user = ""
         c_user = ""
         errors = True
+        return c_user
     elif "@" not in list(request.form.get("email").strip()):
         flash("Please enter a valid email")
         email = ""
         errors = True
+        return email
     elif len(request.form.get("f_name").split()) > 1:
         flash("Please enter a valid first name (one word)")
         f_name = ""
         errors = True
+        return f_name
     elif len(request.form.get("l_name").split()) > 1:
         flash("Please enter a valid last name (one word)")
         l_name = ""
         errors = True
+        return l_name
     elif request.form.get("gender") is None:
         flash("Please select gender")
         errors = True
-    if errors == True:
+    if errors is True:
         return True
     else:
         return False
+
 
 def calculate_percent_accuracy(full_doc, name):
     right = full_doc[name]["correct"]
     wrong = full_doc[name]["wrong"]
     percent_accuracy = int((right/(right+wrong))*100)
     return percent_accuracy
-    
-    
+
+
 def make_options(list_of_words, list_of_definitions, correct_def):
     not_the_same = False
     while not not_the_same:
@@ -121,6 +135,6 @@ def make_options(list_of_words, list_of_definitions, correct_def):
         else:
             continue
     list_of_options = [correct_def,
-                        wrong_one, wrong_two, wrong_three]
+                       wrong_one, wrong_two, wrong_three]
     random.shuffle(list_of_options)
     return list_of_options
