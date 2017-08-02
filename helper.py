@@ -71,6 +71,7 @@ def reset_sessions(session, user_doc):
 
 
 def check_answers(request, flash, username, user):
+    print(request.form.get("gender"))
     errors = False
     if request.form.get("user").strip() != request.form.get("c_user").strip():
         flash("Please ensure that username is validated correctly.")
@@ -100,6 +101,7 @@ def check_answers(request, flash, username, user):
         errors = True
         return l_name
     elif request.form.get("gender") is None:
+        print("NOPE")
         flash("Please select gender")
         errors = True
     if errors is True:
