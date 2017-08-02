@@ -8,14 +8,14 @@
 <a href="/signup" style="float:right"> Sign-Up </a><a href="/login" style="float:right"> Login |</a>
 <center><h2> Sign-Up </h2> </center>
 <form action="" method="POST">
-  First Name: <input type="text" name="f_name" value="{{f_name}}"><br></br>
-  Last Name: <input type="text" name="l_name" value="{{l_name}}"><br></br>
-  Username: <input type="text" name="user" value="{{user}}"><br></br>
-  Confirm Username: <input type="text" name="c_user" value="{{c_user}}"><br></br>
-  Password: <input type="password" name="pass" value="{{pass_word}}"><br></br>
-  Confirm Password: <input type="password" name="c_pass" value="{{c_pass}}"><br></br>
-  Email: <input type="text" name="email" value="{{email}}"><br></br>
-  Security Word: <input type="text" name="security_word" value="{{security_word}}"><br></br>
+  First Name: <input type="text" name="f_name" value="{{f_name}}" required><br></br>
+  Last Name: <input type="text" name="l_name" value="{{l_name}}" required><br></br>
+  Username: <input type="text" name="user" value="{{user}}" required><br></br>
+  Confirm Username: <input type="text" name="c_user" value="{{c_user}}" required><br></br>
+  Password: <input type="password" name="pass" value="{{pass_word}}" pattern=".{8,}"   required title="8 characters minimum"><br></br>
+  Confirm Password: <input type="password" name="c_pass" value="{{c_pass}}" pattern=".{8,}"   required title="8 characters minimum"><br></br>
+  Email: <input type="text" name="email" value="{{email}}" required><br></br>
+  Security Word: <input type="text" name="security_word" value="{{security_word}}" required><br></br>
   <input class="btn btn-info" type="submit" value="Submit">
 </form>
 </body>

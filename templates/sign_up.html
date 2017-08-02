@@ -8,14 +8,14 @@
 <img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38" style="float:left;"><font style="color:#033784;font-size:120%;"><ul class="nav nav-pills" style="float:left;"> <li><a href="/"> Gurbani Vocab </a></li></ul><br /><br></br>
 <center><h2> Sign-Up </h2> </center>
 <form action="" method="POST">
-  First Name: <input type="text" name="f_name"><br></br>
-  Last Name: <input type="text" name="l_name"><br></br>
-  Username:   <input type="text" name="user"><br></br>
-  Confirm Username: <input type="text" name="c_user"><br></br>
-  Password: <input type="password" name="pass"><br></br>
-  Confirm Password: <input type="password" name="c_pass"><br></br>
-  Email: <input type="text" name="email"><br></br>
-  Security Word: <input type="text" name="security_word"><br></br>
+  First Name: <input type="text" name="f_name" required><br></br>
+  Last Name: <input type="text" name="l_name" required><br></br>
+  Username:   <input type="text" name="user" required><br></br>
+  Confirm Username: <input type="text" name="c_user" required><br></br>
+  Password: <input type="password" name="pass" pattern=".{8,}"   required title="8 characters minimum"><br></br>
+  Confirm Password: <input type="password" name="c_pass" pattern=".{8,}"   required title="8 characters minimum"><br></br>
+  Email: <input type="text" name="email" required><br></br>
+  Security Word: <input type="text" name="security_word" required><br></br>
   Gender:
     <INPUT TYPE="radio" name="gender" value="female"> Female
     <INPUT TYPE="radio" name="gender" value="male"> Male
