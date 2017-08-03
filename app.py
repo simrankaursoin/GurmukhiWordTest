@@ -249,19 +249,19 @@ def edit_info():
             username_query = {"username": session["username"]}
             db.users.update(username_query, {'$set':
                                              {"email":
-                                              get_form(request, "email")}})
+                                              check_answers(request, flash, session["username"], session, False)["new_stuff"]["email"]}})
             db.users.update(username_query, {'$set':
                                              {"username":
-                                              get_form(request, "user")}})
+                                              check_answers(request, flash, session["username"], session, False)["new_stuff"]["user"]}})
             db.users.update(username_query, {'$set':
                                              {"first_name":
-                                              get_form(request, "f_name").split(" ")[0]}})
+                                              check_answers(request, flash, session["username"], session, False)["new_stuff"]["f_name"]}})
             db.users.update(username_query, {'$set':
                                              {"last_name":
-                                              get_form(request, "l_name").split(" ")[0]}})
+                                              check_answers(request, flash, session["username"], session, False)["new_stuff"]["l_name"]}})
             db.users.update(username_query, {'$set':
                                              {"gender":
-                                              get_form(request, "gender")}})
+                                              check_answers(request, flash, session["username"], session, False)["new_stuff"]["gender"]}})
             update_session_from_form(session, request)
             flash("Profile updated")
             return redirect("/profile", 303)
@@ -319,20 +319,21 @@ def signup():
         security_word = request.form.get("security_word").strip()
         get_stuff_from_form(request, session)
         if not check_answers(request, flash, session["username"], session, True)["errors"]:
-                          db.users.insert_one({"username": request.form.get("user").strip(),
-                                            "password": request.form.get("pass").strip(),
-                                            "security_word":
-                                            request.form.get("security_word").strip(),
-                                            "email": request.form.get("email").strip(),
-                                            "first_name":
-                                            request.form.get("f_name").split(" ")[0],
-                                            "last_name":
-                                            request.form.get("l_name").split(" ")[0],
-                                            "gender":
-                                            request.form.get("gender")})
-                          update_session_from_form(session, request)
-                          flash("Profile created")
-                          return redirect("/setsession", 303)
+            check_answers(request, flash, session["username"], session, False)["new_stuff"]
+            db.users.insert_one({"username": check_answers(request, flash, session["username"], session, False)["new_stuff"]["user"],
+                            "password": request.form.get("pass").strip(),
+                            "security_word":
+                            request.form.get("security_word").strip(),
+                            "email": check_answers(request, flash, session["username"], session, False)["new_stuff"]["email"],
+                            "first_name":
+                            check_answers(request, flash, session["username"], session, False)["new_stuff"]["f_name"],
+                            "last_name":
+                            check_answers(request, flash, session["username"], session, False)["new_stuff"]["l_name"],
+                            "gender":
+                            check_answers(request, flash, session["username"], session, False)["new_stuff"]["gender"]})
+            update_session_from_form(session, request)
+            flash("Profile created")
+            return redirect("/setsession", 303)
                          
         elif (request.form.get("pass").strip() !=
               request.form.get("c_pass").strip()):

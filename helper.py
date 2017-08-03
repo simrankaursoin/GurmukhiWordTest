@@ -51,8 +51,8 @@ def retrieve_user_info(session):
     username = session["username"]
     doc = db.users.find_one({"username": username})
     email = doc["email"]
-    f_name = session["first_name"].title()
-    l_name = session["last_name"].title()
+    f_name = doc["first_name"].title()
+    l_name = doc["last_name"].title()
     gender = session["gender"].title()
     full_name = '{} {}'.format(f_name.split(" ")[0], l_name)
     return {"username": username, "doc": doc, "full_name": full_name,
@@ -71,7 +71,7 @@ def reset_sessions(session, user_doc):
 
 def check_answers(request, flash, user, session, x):
     errors = False
-    stuff = {"user":request.form.get("user"), "email":request.form.get("email"), "c_user":request.form.get("c_user"), "gender": request.form.get("gender"), "f_name": request.form.get("f_name").split(" ")[0], "l_name":request.form.get("l_name").split(" ")[0]}
+    stuff = {"user":request.form.get("user").split(" ")[0], "email":request.form.get("email").split(" ")[0], "c_user":request.form.get("c_user").split(" ")[0], "gender": request.form.get("gender"), "f_name": request.form.get("f_name").split(" ")[0], "l_name":request.form.get("l_name").split(" ")[0]}
     if request.form.get("user").strip() != request.form.get("c_user").strip():
         if x:
             flash("Please ensure that username is validated correctly.")
@@ -103,7 +103,8 @@ def check_answers(request, flash, user, session, x):
             stuff[i] = new_stuff[i]
         return {"errors":True,"new_stuff":stuff}
     else:
-        return {"errors":False}
+        print(stuff)
+        return {"errors":False, "new_stuff":stuff}
 
 
 def calculate_percent_accuracy(full_doc, name):
