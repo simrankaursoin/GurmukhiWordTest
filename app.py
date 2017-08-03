@@ -5,7 +5,7 @@ from flask import flash, request, Flask, render_template, redirect, session
 import secure
 from helper import make_lists, retrieve_user_info, reset_sessions
 from helper import make_options, check_answers, calculate_percent_accuracy
-from helper import update_session, update_session_from_form, get_form
+from helper import update_session, update_session_from_form
 from helper import get_stuff_from_form
 import random
 import collections
@@ -106,11 +106,12 @@ def progress():
                            username=retrieve_user_info(session)["username"],
                            full_name=retrieve_user_info(session)["full_name"],
                            percent_accuracy=percent_accuracy,
-                           no_questions=no_questions, current_list=current_list,
+                           no_questions=no_questions,
+                           current_list=current_list,
                            correct_words=correct_words,
                            wrong_words=wrong_words,
                            percent_inaccuracy=percent_inaccuracy)
-    
+
 
 @app.route("/quiz", methods=["GET", "POST"])
 def quiz():
@@ -241,36 +242,80 @@ def edit_info():
                                user=retrieve_user_info(session)["username"],
                                c_user=retrieve_user_info(session)["username"],
                                email=retrieve_user_info(session)["email"],
-                               f_name=retrieve_user_info(session)["f_name"].split(" ")[0],
-                               l_name=retrieve_user_info(session)["l_name"].split(" ")[0])              
+                               f_name=retrieve_user_info(session)
+                               ["f_name"].split(" ")[0],
+                               l_name=retrieve_user_info(session)
+                               ["l_name"].split(" ")[0])
     else:
         get_stuff_from_form(request, session)
-        if not check_answers(request, flash, session["username"], session, True)["errors"]:
+        if not check_answers(request, flash, session["username"],
+                             session, True)["errors"]:
             username_query = {"username": session["username"]}
             db.users.update(username_query, {'$set':
                                              {"email":
-                                              check_answers(request, flash, session["username"], session, False)["new_stuff"]["email"]}})
+                                              check_answers
+                                              (request, flash,
+                                               session["username"],
+                                               session, False)["new_stuff"]
+                                              ["email"]}})
             db.users.update(username_query, {'$set':
                                              {"username":
-                                              check_answers(request, flash, session["username"], session, False)["new_stuff"]["user"]}})
+                                              check_answers
+                                              (request, flash,
+                                               session["username"],
+                                               session, False)["new_stuff"]
+                                              ["user"]}})
             db.users.update(username_query, {'$set':
                                              {"first_name":
-                                              check_answers(request, flash, session["username"], session, False)["new_stuff"]["f_name"]}})
+                                              check_answers
+                                              (request, flash,
+                                               session["username"],
+                                               session, False)["new_stuff"]
+                                              ["f_name"]}})
             db.users.update(username_query, {'$set':
                                              {"last_name":
-                                              check_answers(request, flash, session["username"], session, False)["new_stuff"]["l_name"]}})
+                                              check_answers
+                                              (request, flash,
+                                               session["username"],
+                                               session, False)["new_stuff"]
+                                              ["l_name"]}})
             db.users.update(username_query, {'$set':
                                              {"gender":
-                                              check_answers(request, flash, session["username"], session, False)["new_stuff"]["gender"]}})
+                                              check_answers
+                                              (request, flash,
+                                               session["username"],
+                                               session, False)["new_stuff"]
+                                              ["gender"]}})
             update_session_from_form(session, request)
             flash("Profile updated")
             return redirect("/profile", 303)
         else:
-            return render_template("edit_info.html", user=check_answers(request, flash, session["username"], session, False)["new_stuff"]["user"],
-                                   email=check_answers(request, flash, session["username"], session, False)["new_stuff"]["email"],
-                                   f_name=check_answers(request, flash, session["username"], session, False)["new_stuff"]["f_name"],
-                                   l_name=check_answers(request, flash, session["username"], session, False)["new_stuff"]["l_name"],
-                                   c_user=check_answers(request, flash, session["username"], session, False)["new_stuff"]["c_user"])
+            return render_template("edit_info.html",
+                                   user=check_answers(request, flash,
+                                                      session["username"],
+                                                      session,
+                                                      False)["new_stuff"]
+                                   ["user"],
+                                   email=check_answers(request, flash,
+                                                       session["username"],
+                                                       session,
+                                                       False)["new_stuff"]
+                                   ["email"],
+                                   f_name=check_answers(request, flash,
+                                                        session["username"],
+                                                        session,
+                                                        False)["new_stuff"]
+                                   ["f_name"],
+                                   l_name=check_answers(request, flash,
+                                                        session["username"],
+                                                        session,
+                                                        False)["new_stuff"]
+                                   ["l_name"],
+                                   c_user=check_answers(request, flash,
+                                                        session["username"],
+                                                        session,
+                                                        False)["new_stuff"]
+                                   ["c_user"])
 
 
 @app.route("/security", methods=["GET", "POST"])
@@ -318,23 +363,40 @@ def signup():
         c_pass = request.form.get("c_pass").strip()
         security_word = request.form.get("security_word").strip()
         get_stuff_from_form(request, session)
-        if not check_answers(request, flash, session["username"], session, True)["errors"]:
-            check_answers(request, flash, session["username"], session, False)["new_stuff"]
-            db.users.insert_one({"username": check_answers(request, flash, session["username"], session, False)["new_stuff"]["user"],
-                            "password": request.form.get("pass").strip(),
-                            "security_word":
-                            request.form.get("security_word").strip(),
-                            "email": check_answers(request, flash, session["username"], session, False)["new_stuff"]["email"],
-                            "first_name":
-                            check_answers(request, flash, session["username"], session, False)["new_stuff"]["f_name"],
-                            "last_name":
-                            check_answers(request, flash, session["username"], session, False)["new_stuff"]["l_name"],
-                            "gender":
-                            check_answers(request, flash, session["username"], session, False)["new_stuff"]["gender"]})
+        if not check_answers(request, flash,
+                             session["username"],
+                             session, True)["errors"]:
+            check_answers(request, flash, session["username"],
+                          session, False)["new_stuff"]
+            db.users.insert_one({"username": check_answers(request, flash,
+                                                           session["username"],
+                                                           session, False)
+                                 ["new_stuff"]["user"],
+                                 "password": request.form.get("pass").strip(),
+                                 "security_word": request.form.get
+                                 ("security_word").strip(),
+                                 "email": check_answers(request, flash,
+                                                        session["username"],
+                                                        session, False)
+                                 ["new_stuff"]["email"],
+                                 "first_name": check_answers(request, flash,
+                                                             session
+                                                             ["username"],
+                                                             session, False)
+                                 ["new_stuff"]["f_name"],
+                                 "last_name": check_answers(request, flash,
+                                                            session
+                                                            ["username"],
+                                                            session, False)
+                                 ["new_stuff"]["l_name"],
+                                 "gender": check_answers(request, flash,
+                                                         session
+                                                         ["username"],
+                                                         session, False)
+                                 ["new_stuff"]["gender"]})
             update_session_from_form(session, request)
             flash("Profile created")
             return redirect("/setsession", 303)
-                         
         elif (request.form.get("pass").strip() !=
               request.form.get("c_pass").strip()):
             flash("Please retype the password/confirmed password")
@@ -342,14 +404,29 @@ def signup():
             c_pass = ""
         print("NAH")
         return render_template("sign_up2.html",
-                                   user=check_answers(request, flash, session["username"], session, False)["new_stuff"]["user"],
-                                   pass_word=pass_word,
-                                   email=check_answers(request, flash, session["username"], session, False)["new_stuff"]["email"],
-                                   security_word=security_word,
-                                   f_name=check_answers(request, flash, session["username"], session, False)["new_stuff"]["f_name"],
-                                   l_name=check_answers(request, flash, session["username"], session, False)["new_stuff"]["l_name"],
-                                   c_pass=c_pass,
-                                   c_user=check_answers(request, flash, session["username"], session, False)["new_stuff"]["c_user"])
+                               user=check_answers(request, flash,
+                                                  session["username"],
+                                                  session, False)
+                               ["new_stuff"]["user"],
+                               pass_word=pass_word,
+                               email=check_answers(request, flash,
+                                                   session["username"],
+                                                   session, False)
+                               ["new_stuff"]["email"],
+                               security_word=security_word,
+                               f_name=check_answers(request, flash,
+                                                    session["username"],
+                                                    session, False)
+                               ["new_stuff"]["f_name"],
+                               l_name=check_answers(request, flash,
+                                                    session["username"],
+                                                    session, False)
+                               ["new_stuff"]["l_name"],
+                               c_pass=c_pass,
+                               c_user=check_answers(request, flash,
+                                                    session["username"],
+                                                    session, False)
+                               ["new_stuff"]["c_user"])
 
 
 @app.route("/logged_out", methods=["GET"])

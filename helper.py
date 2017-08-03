@@ -43,10 +43,6 @@ def update_session(session, username, doc):
     session["email"] = email
 
 
-def get_form(request, x):
-    return request.form.get(x).strip()
-
-
 def retrieve_user_info(session):
     username = session["username"]
     doc = db.users.find_one({"username": username})
@@ -71,7 +67,12 @@ def reset_sessions(session, user_doc):
 
 def check_answers(request, flash, user, session, x):
     errors = False
-    stuff = {"user":request.form.get("user").split(" ")[0], "email":request.form.get("email").split(" ")[0], "c_user":request.form.get("c_user").split(" ")[0], "gender": request.form.get("gender"), "f_name": request.form.get("f_name").split(" ")[0], "l_name":request.form.get("l_name").split(" ")[0]}
+    stuff = {"user": request.form.get("user").split(" ")[0],
+             "email": request.form.get("email").split(" ")[0],
+             "c_user": request.form.get("c_user").split(" ")[0],
+             "gender": request.form.get("gender"),
+             "f_name": request.form.get("f_name").split(" ")[0],
+             "l_name": request.form.get("l_name").split(" ")[0]}
     if request.form.get("user").strip() != request.form.get("c_user").strip():
         if x:
             flash("Please ensure that username is validated correctly.")
@@ -79,7 +80,9 @@ def check_answers(request, flash, user, session, x):
         c_user = ""
         errors = True
         new_stuff = {"user": user, "c_user": c_user}
-    elif db.users.find_one({"username":user}) is not None and user != session["username"]:
+    elif db.users.find_one({"username":
+                            user}) is not None and (user !=
+                                                    session["username"]):
         if x:
             flash("Username already taken")
         user = ""
@@ -101,10 +104,10 @@ def check_answers(request, flash, user, session, x):
         for i in new_stuff:
             stuff.pop(i)
             stuff[i] = new_stuff[i]
-        return {"errors":True,"new_stuff":stuff}
+        return {"errors": True, "new_stuff": stuff}
     else:
         print(stuff)
-        return {"errors":False, "new_stuff":stuff}
+        return {"errors": False, "new_stuff": stuff}
 
 
 def calculate_percent_accuracy(full_doc, name):
