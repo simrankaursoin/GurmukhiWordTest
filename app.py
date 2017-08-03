@@ -249,9 +249,8 @@ def edit_info():
                                l_name=retrieve_user_info(session)["l_name"])
     else:
         get_stuff_from_form(request, session)
-        if check_answers(request, flash, get_stuff_from_form(request,
-                         session)["username"],
-                         get_stuff_from_form(request, session)["user"]):
+        if check_answers(request, flash, get_stuff_from_form(request, session)["user"],
+                         session):
             return render_template("edit_info.html",
                                    user=get_stuff_from_form(request,
                                                             session)["user"],
@@ -334,8 +333,8 @@ def signup():
         security_word = request.form.get("security_word").strip()
         get_stuff_from_form(request, session)
         if check_answers(request, flash,
-                         get_stuff_from_form(request, session)["username"],
-                         get_stuff_from_form(request, session)["user"]):
+                         get_stuff_from_form(request, session)["user"],
+                         session):
             return render_template("sign_up2.html",
                                    user=get_stuff_from_form(request,
                                                             session)["user"],
@@ -376,15 +375,18 @@ def signup():
                                                               session)["c_user"
                                                                        ])
         else:
+            check_answers(request, flash,
+                         get_stuff_from_form(request, session)["user"],
+                         session)
             db.users.insert_one({"username": request.form.get("user").strip(),
                                  "password": request.form.get("pass").strip(),
                                  "security_word":
                                  request.form.get("security_word").strip(),
                                  "email": request.form.get("email").strip(),
                                  "first_name":
-                                 request.form.get("f_name").strip(),
+                                 request.form.get("f_name").split(" ")[0],
                                  "last_name":
-                                 request.form.get("l_name").strip(),
+                                 request.form.get("l_name").split(" ")[0],
                                  "gender":
                                  request.form.get("gender")})
             update_session_from_form(session, request)

@@ -27,11 +27,10 @@ def update_session_from_form(session, request):
 def get_stuff_from_form(request, session):
     user = request.form.get("user").strip()
     c_user = request.form.get("c_user").strip()
-    f_name = request.form.get("f_name")
-    l_name = request.form.get("l_name")
+    f_name = request.form.get("f_name").split(" ")[0]
+    l_name = request.form.get("l_name").split(" ")[0]
     email = request.form.get("email")
-    username = session["username"]
-    return {"user": user, "username": username,
+    return {"user": user,
             "email": email, "f_name": f_name,
             "l_name": l_name, "c_user": c_user}
 
@@ -55,7 +54,7 @@ def retrieve_user_info(session):
     f_name = session["first_name"].title()
     l_name = session["last_name"].title()
     gender = session["gender"].title()
-    full_name = '{} {}'.format(f_name, l_name)
+    full_name = '{} {}'.format(f_name.split(" ")[0], l_name)
     return {"username": username, "doc": doc, "full_name": full_name,
             "gender": gender, "email": email, "f_name": f_name,
             "l_name": l_name}
@@ -70,8 +69,7 @@ def reset_sessions(session, user_doc):
     return user_doc
 
 
-def check_answers(request, flash, username, user):
-    print(request.form.get("gender"))
+def check_answers(request, flash, user, session):
     errors = False
     if request.form.get("user").strip() != request.form.get("c_user").strip():
         flash("Please ensure that username is validated correctly.")
@@ -79,7 +77,7 @@ def check_answers(request, flash, username, user):
         c_user = ""
         errors = True
     elif db.users.find_one({"username":
-                            user}) is not None and user != username:
+                            user}) is not None and user != session["username"]:
         flash("Username already taken")
         user = ""
         c_user = ""
@@ -90,18 +88,7 @@ def check_answers(request, flash, username, user):
         email = ""
         errors = True
         return email
-    elif len(request.form.get("f_name").split()) > 1:
-        flash("Please enter a valid first name (one word)")
-        f_name = ""
-        errors = True
-        return f_name
-    elif len(request.form.get("l_name").split()) > 1:
-        flash("Please enter a valid last name (one word)")
-        l_name = ""
-        errors = True
-        return l_name
     elif request.form.get("gender") is None:
-        print("NOPE")
         flash("Please select gender")
         errors = True
     if errors is True:
