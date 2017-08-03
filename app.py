@@ -241,27 +241,11 @@ def edit_info():
                                user=retrieve_user_info(session)["username"],
                                c_user=retrieve_user_info(session)["username"],
                                email=retrieve_user_info(session)["email"],
-                               f_name=retrieve_user_info(session)["f_name"],
-                               l_name=retrieve_user_info(session)["l_name"])
+                               f_name=retrieve_user_info(session)["f_name"].split(" ")[0],
+                               l_name=retrieve_user_info(session)["l_name"].split(" ")[0])              
     else:
         get_stuff_from_form(request, session)
-        if check_answers(request, flash, get_stuff_from_form(request, session)["user"],
-                         session):
-            return render_template("edit_info.html",
-                                   user=get_stuff_from_form(request,
-                                                            session)["user"],
-                                   email=get_stuff_from_form(request,
-                                                             session)["email"],
-                                   f_name=get_stuff_from_form(request,
-                                                              session)["f_name"
-                                                                       ],
-                                   l_name=get_stuff_from_form(request,
-                                                              session)["l_name"
-                                                                       ],
-                                   c_user=get_stuff_from_form(request,
-                                                              session)["c_user"
-                                                                       ])
-        else:
+        if not check_answers(request, flash, session["username"], session, True)["errors"]:
             username_query = {"username": session["username"]}
             db.users.update(username_query, {'$set':
                                              {"email":
@@ -271,16 +255,22 @@ def edit_info():
                                               get_form(request, "user")}})
             db.users.update(username_query, {'$set':
                                              {"first_name":
-                                              get_form(request, "f_name")}})
+                                              get_form(request, "f_name").split(" ")[0]}})
             db.users.update(username_query, {'$set':
                                              {"last_name":
-                                              get_form(request, "l_name")}})
+                                              get_form(request, "l_name").split(" ")[0]}})
             db.users.update(username_query, {'$set':
                                              {"gender":
                                               get_form(request, "gender")}})
             update_session_from_form(session, request)
             flash("Profile updated")
             return redirect("/profile", 303)
+        else:
+            return render_template("edit_info.html", user=check_answers(request, flash, session["username"], session, False)["new_stuff"]["user"],
+                                   email=check_answers(request, flash, session["username"], session, False)["new_stuff"]["email"],
+                                   f_name=check_answers(request, flash, session["username"], session, False)["new_stuff"]["f_name"],
+                                   l_name=check_answers(request, flash, session["username"], session, False)["new_stuff"]["l_name"],
+                                   c_user=check_answers(request, flash, session["username"], session, False)["new_stuff"]["c_user"])
 
 
 @app.route("/security", methods=["GET", "POST"])
@@ -328,66 +318,37 @@ def signup():
         c_pass = request.form.get("c_pass").strip()
         security_word = request.form.get("security_word").strip()
         get_stuff_from_form(request, session)
-        if check_answers(request, flash,
-                         get_stuff_from_form(request, session)["user"],
-                         session):
-            return render_template("sign_up2.html",
-                                   user=get_stuff_from_form(request,
-                                                            session)["user"],
-                                   pass_word=pass_word,
-                                   email=get_stuff_from_form(request,
-                                                             session)["email"],
-                                   security_word=security_word,
-                                   f_name=get_stuff_from_form(request,
-                                                              session)["f_name"
-                                                                       ],
-                                   l_name=get_stuff_from_form(request,
-                                                              session)["l_name"
-                                                                       ],
-                                   c_pass=c_pass,
-                                   c_user=get_stuff_from_form(request,
-                                                              session)["c_user"
-                                                                       ])
+        if not check_answers(request, flash, session["username"], session, True)["errors"]:
+                          db.users.insert_one({"username": request.form.get("user").strip(),
+                                            "password": request.form.get("pass").strip(),
+                                            "security_word":
+                                            request.form.get("security_word").strip(),
+                                            "email": request.form.get("email").strip(),
+                                            "first_name":
+                                            request.form.get("f_name").split(" ")[0],
+                                            "last_name":
+                                            request.form.get("l_name").split(" ")[0],
+                                            "gender":
+                                            request.form.get("gender")})
+                          update_session_from_form(session, request)
+                          flash("Profile created")
+                          return redirect("/setsession", 303)
+                         
         elif (request.form.get("pass").strip() !=
               request.form.get("c_pass").strip()):
             flash("Please retype the password/confirmed password")
             pass_word = ""
             c_pass = ""
-            return render_template("sign_up2.html",
-                                   user=get_stuff_from_form(request,
-                                                            session)["user"],
+        print("NAH")
+        return render_template("sign_up2.html",
+                                   user=check_answers(request, flash, session["username"], session, False)["new_stuff"]["user"],
                                    pass_word=pass_word,
-                                   email=get_stuff_from_form(request,
-                                                             session)["email"],
+                                   email=check_answers(request, flash, session["username"], session, False)["new_stuff"]["email"],
                                    security_word=security_word,
-                                   f_name=get_stuff_from_form(request,
-                                                              session)["f_name"
-                                                                       ],
-                                   l_name=get_stuff_from_form(request,
-                                                              session)["l_name"
-                                                                       ],
+                                   f_name=check_answers(request, flash, session["username"], session, False)["new_stuff"]["f_name"],
+                                   l_name=check_answers(request, flash, session["username"], session, False)["new_stuff"]["l_name"],
                                    c_pass=c_pass,
-                                   c_user=get_stuff_from_form(request,
-                                                              session)["c_user"
-                                                                       ])
-        else:
-            check_answers(request, flash,
-                         get_stuff_from_form(request, session)["user"],
-                         session)
-            db.users.insert_one({"username": request.form.get("user").strip(),
-                                 "password": request.form.get("pass").strip(),
-                                 "security_word":
-                                 request.form.get("security_word").strip(),
-                                 "email": request.form.get("email").strip(),
-                                 "first_name":
-                                 request.form.get("f_name").split(" ")[0],
-                                 "last_name":
-                                 request.form.get("l_name").split(" ")[0],
-                                 "gender":
-                                 request.form.get("gender")})
-            update_session_from_form(session, request)
-            flash("Profile created")
-            return redirect("/setsession", 303)
+                                   c_user=check_answers(request, flash, session["username"], session, False)["new_stuff"]["c_user"])
 
 
 @app.route("/logged_out", methods=["GET"])

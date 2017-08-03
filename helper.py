@@ -69,32 +69,41 @@ def reset_sessions(session, user_doc):
     return user_doc
 
 
-def check_answers(request, flash, user, session):
+def check_answers(request, flash, user, session, x):
     errors = False
+    stuff = {"user":request.form.get("user"), "email":request.form.get("email"), "c_user":request.form.get("c_user"), "gender": request.form.get("gender"), "f_name": request.form.get("f_name").split(" ")[0], "l_name":request.form.get("l_name").split(" ")[0]}
     if request.form.get("user").strip() != request.form.get("c_user").strip():
-        flash("Please ensure that username is validated correctly.")
+        if x:
+            flash("Please ensure that username is validated correctly.")
         user = ""
         c_user = ""
         errors = True
-    elif db.users.find_one({"username":
-                            user}) is not None and user != session["username"]:
-        flash("Username already taken")
+        new_stuff = {"user": user, "c_user": c_user}
+    elif db.users.find_one({"username":user}) is not None and user != session["username"]:
+        if x:
+            flash("Username already taken")
         user = ""
         c_user = ""
         errors = True
-        return c_user
+        new_stuff = {"user": user, "c_user": c_user}
     elif "@" not in list(request.form.get("email").strip()):
-        flash("Please enter a valid email")
+        if x:
+            flash("Please enter a valid email")
         email = ""
         errors = True
-        return email
+        new_stuff = {"email": email}
     elif request.form.get("gender") is None:
-        flash("Please select gender")
+        if x:
+            flash("Please select gender")
         errors = True
+        new_stuff = {}
     if errors is True:
-        return True
+        for i in new_stuff:
+            stuff.pop(i)
+            stuff[i] = new_stuff[i]
+        return {"errors":True,"new_stuff":stuff}
     else:
-        return False
+        return {"errors":False}
 
 
 def calculate_percent_accuracy(full_doc, name):
