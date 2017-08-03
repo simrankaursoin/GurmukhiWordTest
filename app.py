@@ -86,35 +86,31 @@ def list_selected():
 
 @app.route("/progress", methods=["GET"])
 def progress():
-    no_questions = False
-    right = None
-    wrong = None
-    percent_accuracy = None
-    percent_inaccuracy = None
-    current_list = session["current_list"].lower()
-    correct_words = 0
-    wrong_words = 0
     retrieve_user_info(session)
-    full_doc = db.users.find_one({"username":
-                                 retrieve_user_info(session)["username"]})
-    if current_list in full_doc:
-        correct_words = full_doc[current_list]["correct_words"]
-        wrong_words = full_doc[current_list]["wrong_words"]
-        percent_accuracy = calculate_percent_accuracy(full_doc, current_list)
-        percent_inaccuracy = 100 - int((right/(right+wrong))*100)
-    if right is None and wrong is None:
+    no_questions = False
+    doc = retrieve_user_info(session)["doc"]
+    current_list = session["current_list"].lower()
+    if current_list in doc:
+        correct_words = doc[current_list]["correct_words"]
+        wrong_words = doc[current_list]["wrong_words"]
+        percent_accuracy = calculate_percent_accuracy(doc, current_list)
+        percent_inaccuracy = 100 - percent_accuracy
+    else:
         no_questions = True
-    current_list = list(session["current_list"])[-1]
+        correct_words = ""
+        wrong_words = ""
+        percent_accuracy = ""
+        percent_inaccuracy = ""
+    current_list = session["current_list"][-1]
     return render_template("progress.html",
                            username=retrieve_user_info(session)["username"],
                            full_name=retrieve_user_info(session)["full_name"],
                            percent_accuracy=percent_accuracy,
-                           no_questions=no_questions, right=right,
-                           wrong=wrong, current_list=current_list,
+                           no_questions=no_questions, current_list=current_list,
                            correct_words=correct_words,
                            wrong_words=wrong_words,
                            percent_inaccuracy=percent_inaccuracy)
-
+    
 
 @app.route("/quiz", methods=["GET", "POST"])
 def quiz():
