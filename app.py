@@ -9,6 +9,10 @@ from helper import get_stuff_from_form
 import collections
 import random
 import secure
+list_of_words = []
+user_doc = {}
+list_of_definitions = []
+name_of_collection = ''
 db = make_database()
 app = Flask(__name__)
 app.secret_key = secure.APP_SECRET_KEY
@@ -18,10 +22,6 @@ app.secret_key = secure.APP_SECRET_KEY
 def main():
     try:
         global list_of_words, list_of_definitions, name_of_collection, user_doc
-        list_of_words = []
-        user_doc = {}
-        list_of_definitions = []
-        name_of_collection = ''
         retrieve_user_info(session)
         full_name = retrieve_user_info(session)["full_name"]
         if len(list_of_words) > 0:

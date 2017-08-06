@@ -8,8 +8,10 @@
 <br></br>
 
 <ul class="nav nav-pills" style="float:right;"> <li><a href="/profile"> {{full_name}} </a></li><li><a href="/logged_out"> Log Out</a></li></ul>
-<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38" style="float:left;"><font style="color:#033784;font-size:120%;"><ul class="nav nav-pills" style="float:left;"> <li><a href="/"> Gurbani Vocab </a></li></ul><br /><br></br><style>
+<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38" style="float:left;"><font style="color:#033784;font-size:120%;"><ul class="nav nav-pills" style="float:left;"> <li><a href="/"> Gurbani Vocab </a></li></ul><br /><br></br>
+<style>
 .topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:20%;}
+img.two {width: 100%;}
 </style>
 <div class="topnav" id="myTopnav" border="1" style="background-color:#f7cd6a;">
     <a href="/"><b> Home </b></a>
@@ -34,20 +36,22 @@
     <li data-target="#myCarousel" data-slide-to="2"></li>
   </ol>
 
+
   <!-- Wrapper for slides -->
   <div class="carousel-inner">
     <div class="item active">
-      <center><img src="{{url_for('static', filename='generic_studying.jpg')}}" alt="Studying" style="width:900px; height:500px;"></center>
+      <center><img src="{{url_for('static', filename='generic_studying.jpg')}}" alt="Studying" class="two"></center>
     </div>
 
     <div class="item">
-      <center><img src="{{url_for('static', filename='vaheguru.jpg')}}" alt="Vaheguru" style="width:900px; height:500px;"></center>
+      <center><img src="{{url_for('static', filename='vaheguru.jpg')}}" alt="Vaheguru" class="two"></center>
     </div>
 
     <div class="item">
-      <center><img src="{{url_for('static', filename='guru_granth_sahib.jpg')}}" alt="Guru Granth Sahib" style="width:900px; height:500px;"></center>
+      <center><img src="{{url_for('static', filename='guru_granth_sahib.jpg')}}" alt="Guru Granth Sahib" class="two"></center>
     </div>
   </div>
+
 
   <!-- Left and right controls -->
   <a class="left carousel-control" href="#myCarousel" data-slide="prev">

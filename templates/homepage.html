@@ -7,7 +7,9 @@
 <ul class="nav nav-pills" style="float:right;"> <li><a href="/signup"> Sign-Up </a></li><li><a href="/login"> Log in</a></li></ul>
 <img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38" style="float:left;"><font style="color:#033784;font-size:120%;"><ul class="nav nav-pills" style="float:left;"> <li><a href="/"> Gurbani Vocab </a></li></ul><br /><br></br>
 <center><h1 style="color:#033784;font-family:Geneva;font-size:420%;"> Welcome to Gurbani Vocab! </h1></center>
-
+<style>
+img.two {width: 100%;}
+</style>
 
 <br> </br>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -25,15 +27,15 @@
   <!-- Wrapper for slides -->
   <div class="carousel-inner">
     <div class="item active">
-      <center><img src="{{url_for('static', filename='generic_studying.jpg')}}" alt="Studying" style="width:900px; height:500px;"></center>
+      <center><img src="{{url_for('static', filename='generic_studying.jpg')}}" alt="Studying" class="two"></center>
     </div>
 
     <div class="item">
-      <center><img src="{{url_for('static', filename='vaheguru.jpg')}}" alt="Vaheguru" style="width:900px; height:500px;"></center>
+      <center><img src="{{url_for('static', filename='vaheguru.jpg')}}" alt="Vaheguru" class="two"></center>
     </div>
 
     <div class="item">
-      <center><img src="{{url_for('static', filename='guru_granth_sahib.jpg')}}" alt="Guru Granth Sahib" style="width:900px; height:500px;"></center>
+      <center><img src="{{url_for('static', filename='guru_granth_sahib.jpg')}}" alt="Guru Granth Sahib" class="two"></center>
     </div>
   </div>
 
