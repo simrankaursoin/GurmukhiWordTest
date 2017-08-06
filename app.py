@@ -2,23 +2,26 @@
 # app.py
 from mongo_interface import make_database
 from flask import flash, request, Flask, render_template, redirect, session
-import secure
 from helper import make_lists, retrieve_user_info, reset_sessions
 from helper import make_options, check_answers, calculate_percent_accuracy
-from helper import update_session, update_session_from_form, get_stuff_from_form
-import collections, random
+from helper import update_session, update_session_from_form
+from helper import get_stuff_from_form
+import collections
+import random
+import secure
 db = make_database()
-list_of_words = []
-list_of_definitions = []
-name_of_collection = ''
 app = Flask(__name__)
 app.secret_key = secure.APP_SECRET_KEY
-user_doc = {}
 
 
 @app.route("/", methods=["GET"])
 def main():
     try:
+        global list_of_words, list_of_definitions, name_of_collection, user_doc
+        list_of_words = []
+        user_doc = {}
+        list_of_definitions = []
+        name_of_collection = ''
         retrieve_user_info(session)
         full_name = retrieve_user_info(session)["full_name"]
         if len(list_of_words) > 0:
@@ -249,10 +252,11 @@ def edit_info():
             things_to_update = ["email", "user", "gender"]
             for i in things_to_update:
                 db.users.update(username_query, {'$set':
-                                                {i:
-                                                check_answers
-                                                (request, flash,
-                                                session, False)["new_stuff"][i]}})
+                                                 {i:
+                                                  check_answers
+                                                  (request, flash,
+                                                   session, False)
+                                                  ["new_stuff"][i]}})
             db.users.update(username_query, {'$set':
                                              {"first_name":
                                               check_answers
@@ -422,7 +426,8 @@ def profile():
         template = "profile.html"
     return render_template(template,
                            email=retrieve_user_info(session)["email"],
-                           username=retrieve_user_info(session)["username"], od=od,
+                           username=retrieve_user_info(session)["username"],
+                           od=od,
                            full_name=retrieve_user_info(session)["full_name"],
                            gender=retrieve_user_info(session)["gender"])
 

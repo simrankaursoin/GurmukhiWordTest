@@ -79,7 +79,8 @@ def check_answers(request, flash, session, need_to_flash):
         stuff["user"] = ""
         stuff["c_user"] = ""
         errors = True
-    elif (stuff["user"] != session["username"]) and db.users.find_one({"username":stuff["user"]}) is not None:
+    elif ((stuff["user"] != session["username"]) and
+          db.users.find_one({"username": stuff["user"]}) is not None):
         if need_to_flash:
             flash("Username already taken")
         stuff["user"] = ""
