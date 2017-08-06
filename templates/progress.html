@@ -20,8 +20,8 @@
 {% if no_questions %}
     <font style="font-size:160%;"><center> You should start practicing! </center></font>
 {% else %}
-     <font style="font-size:200%;"><u>Percent Accuracy:</u> {{percent_accuracy}}% </font><br />
-    <blockquote><font style="font-size:110%;"><u> Correct Words </u></font>
+     <font style="font-size:200%;"><u>Percent Accuracy:</u></font><font style="font-size:240%;">  {{percent_accuracy}}% </font><br />
+    <blockquote><font style="font-size:110%;"> Correct Words </font>
     <font style="color:#029102;">
     <ul>
         {% if correct_words|length < 1 %}
@@ -33,7 +33,8 @@
             {% endfor %}
         {% endif %}
     </ul></font>
-    <font style="font-size:120%;"><u> Incorrect Words </u></font> <font style="color:#d1160c;">
+    <font style="font-size:110%;"> Incorrect Words </font>
+    <font style="color:#d1160c;">
     <ul>
         {% if wrong_words|length < 1 %}
             <font style="font-size:100%;"> NONE </font>

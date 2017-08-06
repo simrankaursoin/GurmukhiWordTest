@@ -5,10 +5,8 @@ from flask import flash, request, Flask, render_template, redirect, session
 import secure
 from helper import make_lists, retrieve_user_info, reset_sessions
 from helper import make_options, check_answers, calculate_percent_accuracy
-from helper import update_session, update_session_from_form
-from helper import get_stuff_from_form
-import random
-import collections
+from helper import update_session, update_session_from_form, get_stuff_from_form
+import collections, random
 db = make_database()
 list_of_words = []
 list_of_definitions = []
@@ -93,8 +91,8 @@ def progress():
     if current_list in doc:
         correct_words = doc[current_list]["correct_words"]
         wrong_words = doc[current_list]["wrong_words"]
-        percent_accuracy = calculate_percent_accuracy(doc, current_list)
-        percent_inaccuracy = 100 - percent_accuracy
+        percent_accuracy = calculate_percent_accuracy(doc, current_list)[0]
+        percent_inaccuracy = calculate_percent_accuracy(doc, current_list)[1]
     else:
         no_questions = True
         correct_words = ""
@@ -135,7 +133,7 @@ def quiz():
         elif len(list_of_definitions) < 4:
             list2 = []
             for item in db[name_of_collection].find():
-                if item not in list_of_definitions:
+                if item["definition"] not in list_of_definitions:
                     list2.append(item["definition"])
             not_nothing = True
             while not_nothing:
@@ -159,7 +157,6 @@ def quiz():
             list_of_options = make_options(list_of_words,
                                            list_of_definitions,
                                            correct_def)
-
         return render_template("question.html", correct_word=correct_word,
                                list_of_options=list_of_options,
                                name_of_lis=name_of_lis,
@@ -174,7 +171,6 @@ def quiz():
             db.users.update({"username": username},
                             {"$set": {current_list:
                              user_doc[current_list]}})
-
             full_doc = db[name_of_collection].find_one({"word": correct_word})
             quote_ggs = full_doc["quote_ggs"].split()
             list_of_words.pop(word_index)
@@ -247,72 +243,50 @@ def edit_info():
                                l_name=retrieve_user_info(session)
                                ["l_name"].split(" ")[0])
     else:
-        get_stuff_from_form(request, session)
-        if not check_answers(request, flash, session["username"],
-                             session, True)["errors"]:
+        get_stuff_from_form(request)
+        if not check_answers(request, flash, session, True)["errors"]:
             username_query = {"username": session["username"]}
-            db.users.update(username_query, {'$set':
-                                             {"email":
-                                              check_answers
-                                              (request, flash,
-                                               session["username"],
-                                               session, False)["new_stuff"]
-                                              ["email"]}})
-            db.users.update(username_query, {'$set':
-                                             {"username":
-                                              check_answers
-                                              (request, flash,
-                                               session["username"],
-                                               session, False)["new_stuff"]
-                                              ["user"]}})
+            things_to_update = ["email", "user", "gender"]
+            for i in things_to_update:
+                db.users.update(username_query, {'$set':
+                                                {i:
+                                                check_answers
+                                                (request, flash,
+                                                session, False)["new_stuff"][i]}})
             db.users.update(username_query, {'$set':
                                              {"first_name":
                                               check_answers
                                               (request, flash,
-                                               session["username"],
                                                session, False)["new_stuff"]
                                               ["f_name"]}})
             db.users.update(username_query, {'$set':
                                              {"last_name":
                                               check_answers
                                               (request, flash,
-                                               session["username"],
                                                session, False)["new_stuff"]
                                               ["l_name"]}})
-            db.users.update(username_query, {'$set':
-                                             {"gender":
-                                              check_answers
-                                              (request, flash,
-                                               session["username"],
-                                               session, False)["new_stuff"]
-                                              ["gender"]}})
             update_session_from_form(session, request)
             flash("Profile updated")
             return redirect("/profile", 303)
         else:
             return render_template("edit_info.html",
                                    user=check_answers(request, flash,
-                                                      session["username"],
                                                       session,
                                                       False)["new_stuff"]
                                    ["user"],
                                    email=check_answers(request, flash,
-                                                       session["username"],
                                                        session,
                                                        False)["new_stuff"]
                                    ["email"],
                                    f_name=check_answers(request, flash,
-                                                        session["username"],
                                                         session,
                                                         False)["new_stuff"]
                                    ["f_name"],
                                    l_name=check_answers(request, flash,
-                                                        session["username"],
                                                         session,
                                                         False)["new_stuff"]
                                    ["l_name"],
                                    c_user=check_answers(request, flash,
-                                                        session["username"],
                                                         session,
                                                         False)["new_stuff"]
                                    ["c_user"])
@@ -362,36 +336,26 @@ def signup():
         pass_word = request.form.get("pass").strip()
         c_pass = request.form.get("c_pass").strip()
         security_word = request.form.get("security_word").strip()
-        get_stuff_from_form(request, session)
+        get_stuff_from_form(request)
         if not check_answers(request, flash,
-                             session["username"],
                              session, True)["errors"]:
-            check_answers(request, flash, session["username"],
-                          session, False)["new_stuff"]
+            check_answers(request, flash, session, False)["new_stuff"]
             db.users.insert_one({"username": check_answers(request, flash,
-                                                           session["username"],
                                                            session, False)
                                  ["new_stuff"]["user"],
                                  "password": request.form.get("pass").strip(),
                                  "security_word": request.form.get
                                  ("security_word").strip(),
                                  "email": check_answers(request, flash,
-                                                        session["username"],
                                                         session, False)
                                  ["new_stuff"]["email"],
                                  "first_name": check_answers(request, flash,
-                                                             session
-                                                             ["username"],
                                                              session, False)
                                  ["new_stuff"]["f_name"],
                                  "last_name": check_answers(request, flash,
-                                                            session
-                                                            ["username"],
                                                             session, False)
                                  ["new_stuff"]["l_name"],
                                  "gender": check_answers(request, flash,
-                                                         session
-                                                         ["username"],
                                                          session, False)
                                  ["new_stuff"]["gender"]})
             update_session_from_form(session, request)
@@ -402,29 +366,23 @@ def signup():
             flash("Please retype the password/confirmed password")
             pass_word = ""
             c_pass = ""
-        print("NAH")
         return render_template("sign_up2.html",
                                user=check_answers(request, flash,
-                                                  session["username"],
                                                   session, False)
                                ["new_stuff"]["user"],
                                pass_word=pass_word,
                                email=check_answers(request, flash,
-                                                   session["username"],
                                                    session, False)
                                ["new_stuff"]["email"],
                                security_word=security_word,
                                f_name=check_answers(request, flash,
-                                                    session["username"],
                                                     session, False)
                                ["new_stuff"]["f_name"],
                                l_name=check_answers(request, flash,
-                                                    session["username"],
                                                     session, False)
                                ["new_stuff"]["l_name"],
                                c_pass=c_pass,
                                c_user=check_answers(request, flash,
-                                                    session["username"],
                                                     session, False)
                                ["new_stuff"]["c_user"])
 
@@ -464,8 +422,7 @@ def profile():
         template = "profile.html"
     return render_template(template,
                            email=retrieve_user_info(session)["email"],
-                           username=retrieve_user_info(session)["username"],
-                           od=od,
+                           username=retrieve_user_info(session)["username"], od=od,
                            full_name=retrieve_user_info(session)["full_name"],
                            gender=retrieve_user_info(session)["gender"])
 

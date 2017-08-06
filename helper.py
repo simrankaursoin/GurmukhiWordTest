@@ -24,7 +24,7 @@ def update_session_from_form(session, request):
     session["gender"] = request.form.get("gender")
 
 
-def get_stuff_from_form(request, session):
+def get_stuff_from_form(request):
     user = request.form.get("user").strip()
     c_user = request.form.get("c_user").strip()
     f_name = request.form.get("f_name").split(" ")[0]
@@ -65,7 +65,7 @@ def reset_sessions(session, user_doc):
     return user_doc
 
 
-def check_answers(request, flash, user, session, x):
+def check_answers(request, flash, session, need_to_flash):
     errors = False
     stuff = {"user": request.form.get("user").split(" ")[0],
              "email": request.form.get("email").split(" ")[0],
@@ -74,39 +74,34 @@ def check_answers(request, flash, user, session, x):
              "f_name": request.form.get("f_name").split(" ")[0],
              "l_name": request.form.get("l_name").split(" ")[0]}
     if request.form.get("user").strip() != request.form.get("c_user").strip():
-        if x:
+        if need_to_flash:
             flash("Please ensure that username is validated correctly.")
-        user = ""
-        c_user = ""
+        stuff["user"] = ""
+        stuff["c_user"] = ""
         errors = True
-        new_stuff = {"user": user, "c_user": c_user}
-    elif db.users.find_one({"username":
-                            user}) is not None and (user !=
-                                                    session["username"]):
-        if x:
+    elif (stuff["user"] != session["username"]) and db.users.find_one({"username":stuff["user"]}) is not None:
+        if need_to_flash:
             flash("Username already taken")
-        user = ""
-        c_user = ""
+        stuff["user"] = ""
+        stuff["c_user"] = ""
         errors = True
-        new_stuff = {"user": user, "c_user": c_user}
     elif "@" not in list(request.form.get("email").strip()):
-        if x:
+        if need_to_flash:
             flash("Please enter a valid email")
-        email = ""
+        stuff["email"] = ""
         errors = True
-        new_stuff = {"email": email}
+    elif "." not in request.form.get("email").strip().split("@")[1]:
+        if need_to_flash:
+            flash("Please enter a valid email")
+        stuff["email"] = ""
+        errors = True
     elif request.form.get("gender") is None:
-        if x:
+        if need_to_flash:
             flash("Please select gender")
         errors = True
-        new_stuff = {}
     if errors is True:
-        for i in new_stuff:
-            stuff.pop(i)
-            stuff[i] = new_stuff[i]
         return {"errors": True, "new_stuff": stuff}
     else:
-        print(stuff)
         return {"errors": False, "new_stuff": stuff}
 
 
@@ -114,7 +109,8 @@ def calculate_percent_accuracy(full_doc, name):
     right = full_doc[name]["correct"]
     wrong = full_doc[name]["wrong"]
     percent_accuracy = int((right/(right+wrong))*100)
-    return percent_accuracy
+    percent_inaccuracy = 100 - percent_accuracy
+    return [percent_accuracy, percent_inaccuracy]
 
 
 def make_options(list_of_words, list_of_definitions, correct_def):
