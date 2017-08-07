@@ -125,7 +125,7 @@ def quiz():
             if len(list_of_words) > 0:
                 name = session["current_list"].lower()
                 full_doc = db.users.find_one({"username": session["username"]})
-                percent_accuracy = calculate_percent_accuracy(full_doc, name)
+                percent_accuracy = calculate_percent_accuracy(full_doc, name)[0]
                 name = name[-1]
                 return render_template("finished.html", name=name,
                                        full_name=full_name,

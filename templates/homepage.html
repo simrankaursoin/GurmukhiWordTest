@@ -15,22 +15,18 @@ img.two {width: 100%;}
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>  
 <body>
-<div class="container">
+<div class="container" style="width: 80%;">
 <div id="myCarousel" class="carousel slide" data-ride="carousel">
   <!-- Indicators -->
   <ol class="carousel-indicators">
     <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
     <li data-target="#myCarousel" data-slide-to="1"></li>
-    <li data-target="#myCarousel" data-slide-to="2"></li>
   </ol>
+
 
   <!-- Wrapper for slides -->
   <div class="carousel-inner">
     <div class="item active">
-      <center><img src="{{url_for('static', filename='generic_studying.jpg')}}" alt="Studying" class="two"></center>
-    </div>
-
-    <div class="item">
       <center><img src="{{url_for('static', filename='vaheguru.jpg')}}" alt="Vaheguru" class="two"></center>
     </div>
 
@@ -38,6 +34,7 @@ img.two {width: 100%;}
       <center><img src="{{url_for('static', filename='guru_granth_sahib.jpg')}}" alt="Guru Granth Sahib" class="two"></center>
     </div>
   </div>
+
 
   <!-- Left and right controls -->
   <a class="left carousel-control" href="#myCarousel" data-slide="prev">

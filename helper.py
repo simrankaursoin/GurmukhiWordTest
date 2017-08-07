@@ -42,7 +42,7 @@ def update_session(session, username, doc):
     email = doc["email"]
     session["email"] = email
 
-
+      
 def retrieve_user_info(session):
     username = session["username"]
     doc = db.users.find_one({"username": username})
