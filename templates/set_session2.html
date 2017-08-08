@@ -6,6 +6,13 @@
 <br></br>
 <style>
 .topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:20%;}
+button {
+    background-color: rgba(255, 255, 255, 0);
+    border: none;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+}
 </style>
  
 
@@ -20,18 +27,14 @@
     <a href="/progress"><b> Progress </b></a>
 </div>
 <h3 style="color:#033784;font-size:180%; font-family:Geneva;"><strong>Which vocabulary list would you like to be tested on? </strong></h3>
-<div class="panel panel-default">
-<div class="panel-body" style="background-color:#ffe5aa;">
 <form action="/setsession" method="post">
-<select name="current_list">
-  <option value= "List1"> List 1</option>
-  <option value= "List2"> List 2</option>
-  <option value= "List3"> List 3</option>
-  <option value= "List4"> List 4</option>
-  <option value= "List5"> List 5</option>
-</select>
-<br></br>
-<input class="btn btn-info" type="submit" value="Submit">
-</form></div></div>
+<ul id="hp-subject-grid">
+<li class="hp-subject-grid-margin"><center><a><button class="gridLink" name="current_list" value="List1">List 1</button></a></center></li>
+<li class="hp-subject-grid-margin"><center><a><button class="gridLink" name="current_list" value="List2">List 2</button></a></center></li>
+<li class="hp-subject-grid-margin"><center><a><button class="gridLink" name="current_list" value="List3">List 3</button></a></center></li>
+<li class="hp-subject-grid-margin"><center><a><button class="gridLink" name="current_list" value="List4">List 4</button></a></center></li>
+<li class="hp-subject-grid-margin"><center><a><button class="gridLink" name="current_list" value="List5">List 5</button></a></center></li>
+</ul>
+</form>
 </body>
 {% endblock %}
