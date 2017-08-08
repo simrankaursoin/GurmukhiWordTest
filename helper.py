@@ -16,7 +16,7 @@ def make_lists(list_of_words, list_of_definitions, name_of_collection):
     return list_of_words, list_of_definitions
 
 
-def update_session_from_form(session, request):
+def UpdateSession_Form(session, request):
     session["username"] = request.form.get("user").strip()
     session["email"] = request.form.get("email").strip()
     session["first_name"] = request.form.get("f_name").strip()
@@ -24,25 +24,66 @@ def update_session_from_form(session, request):
     session["gender"] = request.form.get("gender")
 
 
-def get_stuff_from_form(request):
-    user = request.form.get("user").strip()
-    c_user = request.form.get("c_user").strip()
-    f_name = request.form.get("f_name").split(" ")[0]
-    l_name = request.form.get("l_name").split(" ")[0]
-    email = request.form.get("email")
-    return {"user": user,
-            "email": email, "f_name": f_name,
-            "l_name": l_name, "c_user": c_user}
+def less_than_four(name, list_of_words, list_of_definitions, list_of_options):
+    list2 = []
+    for item in db[name].find():
+        if item["definition"] not in list_of_definitions:
+            list2.append(item["definition"])
+    not_nothing = True
+    while not_nothing:
+        word_index = random.randint(0, (len(list_of_words)-1))
+        correct_word = list_of_words[word_index]
+        if correct_word != "Nothing":
+            not_nothing = False
+    correct_def = list_of_definitions[word_index]
+    for i in range(0, 3):
+        wrong_index = random.randint(0, (len(list2)-1))
+        list_of_options.append(list2[wrong_index])
+    list_of_options.append(correct_def)
+    random.shuffle(list_of_options)
+    list_of_words.append("Nothing")
+    return {"list_of_words": list_of_words,
+            "list_of_definitions": list_of_definitions,
+            "list_of_options": list_of_options, "correct_word": correct_word,
+            "correct_def": correct_def, "word_index": word_index}
 
 
-def update_session(session, username, doc):
+def UpdateCorrect(user_doc, correct_word, name, username,
+                  word_index, list_of_words, list_of_definitions):
+    user_doc[name]["correct"] += 1
+    user_doc[name]["correct_words"].append(correct_word)
+    db.users.update({"username": username},
+                    {"$set": {name:
+                              user_doc[name]}})
+    full_doc = db[name].find_one({"word": correct_word})
+    quote_ggs = full_doc["quote_ggs"].split()
+    list_of_words.pop(word_index)
+    list_of_definitions.pop(word_index)
+    correct_translit = full_doc["transliteration"]
+    return {"quote_ggs": quote_ggs, "correct_translit": correct_translit}
+
+
+def UpdateWrong(user_doc, correct_word, name, username,
+                word_index, list_of_words, list_of_definitions, session):
+    user_doc[name]["wrong"] += 1
+    user_doc[name]["wrong_words"].append(correct_word)
+    db.users.update({"username": username},
+                    {"$set": {name:
+                              user_doc[name]}})
+    full_doc = db[name].find_one({"word": correct_word})
+    quote_ggs = full_doc["quote_ggs"].split()
+    correct_translit = full_doc["transliteration"]
+    return {"quote_ggs": quote_ggs, "correct_translit": correct_translit}
+
+
+def UpdateSession(session, username, doc):
     session["username"] = username
     gender = doc["gender"]
     session["gender"] = gender
     email = doc["email"]
     session["email"] = email
 
-      
+
 def retrieve_user_info(session):
     username = session["username"]
     doc = db.users.find_one({"username": username})

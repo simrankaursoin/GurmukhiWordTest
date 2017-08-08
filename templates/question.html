@@ -23,7 +23,7 @@
     <h3 style="color:#033784;font-size:180%; font-family:Geneva;"><strong>Which of these words is the correct definition for {{correct_word}}?</strong></h3>
     <form action="" method="post">
         {% for item in list_of_options %}
-            <INPUT TYPE="radio" name="options" value="{{item}}"> {{item}}
+            <INPUT TYPE="radio" name="options" value="{{item}}" required="required"> {{item}}
             <br> </br>
         {%endfor%}
         <br> </br>
