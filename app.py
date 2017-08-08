@@ -9,6 +9,8 @@ from helper import UpdateWrong, less_than_four
 import collections
 import random
 import secure
+app = Flask(__name__)
+app.secret_key = secure.APP_SECRET_KEY
 # global variables
 list_of_definitions = []
 list_of_words = []
@@ -16,15 +18,11 @@ user_doc = {}
 list_of_options = []
 db = make_database()
 
-app = Flask(__name__)
-app.secret_key = secure.APP_SECRET_KEY
-
 
 @app.route("/", methods=["GET"])
 def main():
     try:
         global list_of_words, list_of_definitions
-        # retrieve_user_info uses user info from session to create full_name
         full_name = retrieve_user_info(session)["full_name"]
     except:
         # if error, the user hasn't signed in yet >> homepage.html
@@ -144,22 +142,20 @@ def quiz():
     full_name = retrieve_user_info(session)["full_name"]
     name = session["current_list"].lower()
     if request.method == "GET":
-        # list of defs is empty but list of words is not
-        #      >>  user has finished list
+        # list of defs is empty but list of words isn't, user has finished list
         if len(list_of_definitions) < 1 and len(list_of_words) > 0:
             full_doc = db.users.find_one({"username": session["username"]})
             percent_accuracy = calculate_percent_accuracy(full_doc, name)[0]
             return render_template("finished.html", name=name[-1],
                                    full_name=full_name,
                                    percent_accuracy=percent_accuracy)
-        # list of defs and list of words are both empty
-        #        >> user hasn't chosen list
+        # list of defs/words are both empty >> user hasn't chosen list
         elif len(list_of_definitions) < 1:
             return render_template("error_choose_list.html",
                                    full_name=full_name)
         # list of definitions has less than 4 items left
         elif len(list_of_definitions) < 4:
-            # makes_choices returns list_of_options
+            # less_than_four returns list_of_options
             #       >> also updates correct values/lists for later reference
             make_choices = less_than_four(name, list_of_words,
                                           list_of_definitions, list_of_options)
@@ -174,7 +170,6 @@ def quiz():
             word_index = random.randint(0, (len(list_of_words)-1))
             correct_word = list_of_words[word_index]
             correct_def = list_of_definitions[word_index]
-            # make options returns list_of_options
             list_of_options = make_options(list_of_words, list_of_definitions,
                                            correct_def)
         return render_template("question.html", correct_word=correct_word,
@@ -184,9 +179,8 @@ def quiz():
         username = retrieve_user_info(session)["username"]
         if request.form.get("options") == correct_def:
             # if user is correct, update mongo and lists of words/defs
-            info = UpdateCorrect(user_doc, correct_word, name, username,
-                                 word_index, list_of_words,
-                                 list_of_definitions)
+            info = UpdateCorrect(word_index, correct_word, name, username,
+                                 user_doc, list_of_words, list_of_definitions)
             return render_template("correct.html", correct_word=correct_word,
                                    correct_def=correct_def, username=username,
                                    quote_ggs=info["quote_ggs"],
