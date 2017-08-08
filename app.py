@@ -133,10 +133,9 @@ def progress():
                            username=retrieve_user_info(session)["username"],
                            full_name=retrieve_user_info(session)["full_name"],
                            percent_accuracy=percent_accuracy,
-                           no_questions=no_questions,
+                           no_questions=no_questions, wrong_words=wrong_words,
                            current_list=current_list,
                            correct_words=correct_words,
-                           wrong_words=wrong_words,
                            percent_inaccuracy=percent_inaccuracy)
 
 
@@ -147,16 +146,23 @@ def quiz():
     full_name = retrieve_user_info(session)["full_name"]
     name = session["current_list"].lower()
     if request.method == "GET":
+        # list of defs is empty but list of words is not
+        #      >>  user has finished list
         if len(list_of_definitions) < 1 and len(list_of_words) > 0:
             full_doc = db.users.find_one({"username": session["username"]})
             percent_accuracy = calculate_percent_accuracy(full_doc, name)[0]
             return render_template("finished.html", name=name[-1],
                                    full_name=full_name,
                                    percent_accuracy=percent_accuracy)
+        # list of defs and list of words are both empty
+        #        >> user hasn't chosen list
         elif len(list_of_definitions) < 1:
             return render_template("error_choose_list.html",
                                    full_name=full_name)
+        # list of definitions has less than 4 items left
         elif len(list_of_definitions) < 4:
+            # makes_choices returns list_of_options
+            #       >> also updates correct values/lists for later reference
             make_choices = less_than_four(name, list_of_words,
                                           list_of_definitions, list_of_options)
             list_of_options = make_choices["list_of_options"]
@@ -166,9 +172,11 @@ def quiz():
             correct_def = make_choices["correct_def"]
             word_index = make_choices["word_index"]
         else:
+            # more than 4 values in list of defs and list of words
             word_index = random.randint(0, (len(list_of_words)-1))
             correct_word = list_of_words[word_index]
             correct_def = list_of_definitions[word_index]
+            # make options returns list_of_options
             list_of_options = make_options(list_of_words, list_of_definitions,
                                            correct_def)
         return render_template("question.html", correct_word=correct_word,
@@ -177,6 +185,7 @@ def quiz():
     elif request.method == "POST":
         username = retrieve_user_info(session)["username"]
         if request.form.get("options") == correct_def:
+            # if user is correct, update mongo and lists of words/defs
             info = UpdateCorrect(user_doc, correct_word, name, username,
                                  word_index, list_of_words,
                                  list_of_definitions)
@@ -186,6 +195,7 @@ def quiz():
                                    name_of_lis=name[-1], full_name=full_name,
                                    correct_translit=info["correct_translit"])
         else:
+            # if user is wrong, update mongo and lists of words/defs
             info = UpdateWrong(user_doc, correct_word, name, username, session,
                                word_index, list_of_words, list_of_definitions)
             return render_template("incorrect.html", correct_word=correct_word,
@@ -204,14 +214,17 @@ def login():
         doc = db.users.find_one({"username":
                                  request.form.get("user").lower().strip()})
         username = request.form.get("user").strip()
+        # if the document does not exist in db, wrong username
         if doc is None:
             flash("Wrong Username")
             return render_template("login.html")
+        # if username exists and password matches up, redirect to choose list
         elif doc["password"] == request.form.get("pass").strip():
             user_doc = {}
             UpdateSession(session, username, doc)
             flash("Successful login")
             return redirect("/setsession", 303)
+        # if username exists in db but password doesn't match up, wrong pass
         else:
             UpdateSession(session, username, doc)
             f_name = doc["first_name"]
@@ -225,6 +238,7 @@ def login():
 @app.route("/edit_info", methods=["GET", "POST"])
 def edit_info():
     if request.method == "GET":
+        # if just accessing page, fill in values with existing information
         return render_template("edit_info.html",
                                user=retrieve_user_info(session)["username"],
                                c_user=retrieve_user_info(session)["username"],
@@ -234,13 +248,21 @@ def edit_info():
                                l_name=retrieve_user_info(session)
                                ["l_name"].split(" ")[0])
     elif request.method == "POST":
+        # check answers makes incorrect value(s) blank > user knows what to fix
+        # new stuff is equal to a dict of all variables
+        #     (whether variables are blank or equal to user responses)
         new_stuff = check_answers(request, flash, session, False)["new_stuff"]
+        # if check_answers[errors] is false, no user has not made any errors
         if not check_answers(request, flash, session, True)["errors"]:
+            # username_query is the query for the first part of db.update
             username_query = {"username": session["username"]}
+            # things to update is the list of things to update (for loop)
             things_to_update = ["email", "user", "gender"]
             for i in things_to_update:
                 db.users.update(username_query, {'$set':
                                                  {i: new_stuff[i]}})
+            # first/last names have different variable/db names
+            #         >> they are outside of loop
             db.users.update(username_query, {'$set':
                                              {"first_name":
                                               new_stuff["f_name"]}})
@@ -250,6 +272,8 @@ def edit_info():
             UpdateSession_Form(session, request)
             flash("Profile updated")
             return redirect("/profile", 303)
+        # if check answers returns True, the user has made a mistake
+        # reroute to edit_info so user can fix answer(s)
         else:
             return render_template("edit_info.html",
                                    user=new_stuff["user"],
@@ -264,14 +288,18 @@ def security():
     if request.method == "GET":
         return render_template("wrong_password.html")
     elif request.method == "POST":
+        # let session["username"] and security_word equal to user responses
         session["username"] = request.form.get("user").strip()
         security_word = request.form.get("security_word").strip()
         doc = db.users.find_one({"username": session["username"]})
+        # if there is no document with given username, wrong username entered
         if doc is None:
             flash("Wrong Username")
             return render_template("wrong_password.html")
+        # if doc exists + security word matches up, redirect user to reset pass
         elif doc["security_word"].lower() == security_word.lower().strip():
             return redirect("/reset_password", 303)
+        # doc exists but security word is wrong > security word is incorrect
         else:
             flash("Security word is incorrect. Try again")
             return render_template("wrong_password.html")
@@ -283,10 +311,12 @@ def reset_password():
     if request.method == "GET":
         return render_template("reset_password.html")
     elif request.method == "POST":
+        # if confirmed password ≠ password, ask user to retype them
         if (request.form.get("pass").strip() !=
            request.form.get("c_pass").strip()):
             flash("Re-Type Password or Password Confirmation")
             return render_template("reset_password.html")
+        # else, update database with new password
         else:
             db.users.update({"username": username},
                             {"$set": {"password":
@@ -304,6 +334,8 @@ def signup():
         pass_word = request.form.get("pass").strip()
         c_pass = request.form.get("c_pass").strip()
         security_word = request.form.get("security_word").strip()
+        # if check_answers is False, user has not made any mistakes
+        # insert document in db
         if not check_answers(request, flash, session, True)["errors"]:
             db.users.insert_one({"username": new_stuff["user"],
                                  "password": request.form.get("pass").strip(),
@@ -313,9 +345,11 @@ def signup():
                                  "first_name": new_stuff["f_name"],
                                  "last_name": new_stuff["l_name"],
                                  "gender": new_stuff["gender"]})
+            # update the session with newly created db
             UpdateSession_Form(session, request)
             flash("Profile created")
             return redirect("/setsession", 303)
+        # if password doesnt match up, as user to retype them
         elif (request.form.get("pass").strip() !=
               request.form.get("c_pass").strip()):
             flash("Please retype the password/confirmed password")
@@ -341,14 +375,18 @@ def logged_out():
 
 @app.route("/profile", methods=["GET"])
 def profile():
-    retrieve_user_info(session)
     doc = retrieve_user_info(session)["doc"]
     stats = {}
     progress = {}
+    # for each query in the document, if it is a list, add it to stats
     for item in doc:
         name_of_item = list(str(item))
         if name_of_item[0:4] == list("list"):
             stats[item] = doc[item]
+    # for each list in stats:
+    #   calculate num_questions, percent_accuracy, percent_inaccuracy
+    #   get the correct_words and incorrect_words (minus repeats)
+    #   set equal to progress[list_number]
     for lis in stats:
         num_questions = (stats[lis]["correct"]+stats[lis]["wrong"])
         percent_accuracy = int((stats[lis]["correct"] / num_questions)*100)
@@ -360,7 +398,10 @@ def profile():
                                    "total_questions": num_questions,
                                    "correct_words": correct_words,
                                    "wrong_words": wrong_words}
+    # od is the numerically ordered version of progress
     od = collections.OrderedDict(sorted(progress.items()))
+    # list_of_words empty so user hasnt chosen list
+    #    >> dont display Quiz/Study in topnav (profile_2)
     if len(list_of_words) < 1:
         template = "profile_2.html"
     else:
