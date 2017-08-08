@@ -9,14 +9,12 @@ from helper import UpdateWrong, less_than_four
 import collections
 import random
 import secure
-
 # global variables
 list_of_definitions = []
 list_of_words = []
 user_doc = {}
 list_of_options = []
 db = make_database()
-
 
 app = Flask(__name__)
 app.secret_key = secure.APP_SECRET_KEY
