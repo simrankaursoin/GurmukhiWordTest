@@ -221,7 +221,6 @@ def login():
             UpdateSession(session, username, doc)
             f_name = doc["first_name"]
             l_name = doc["last_name"]
-            
             session["first_name"] = f_name
             session["last_name"] = l_name
             flash("Wrong password")
