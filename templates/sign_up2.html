@@ -17,9 +17,12 @@
   Email: <input type="text" name="email" value="{{email}}" required><br></br>
   Security Word: <input type="text" name="security_word" value="{{security_word}}" required><br></br>
   Gender:
-    <INPUT TYPE="radio" name="gender" value="female"> Female
-    <INPUT TYPE="radio" name="gender" value="male"> Male
-    <INPUT TYPE="radio" name="gender" value="other"> Other <br></br>
+    <INPUT TYPE="radio" name="gender" value={{gender}} checked> {{gender}}
+    {% for item in other_genders %}
+    <INPUT TYPE="radio" name="gender" value={{item}}> {{item}}
+    {%endfor%}
+    
+    <br></br>
   <input class="btn btn-info" type="submit" value="Submit">
 </form>
 </body>

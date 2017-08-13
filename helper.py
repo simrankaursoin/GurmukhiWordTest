@@ -111,7 +111,7 @@ def check_answers(request, flash, session, need_to_flash):
     stuff = {"user": request.form.get("user").split(" ")[0],
              "email": request.form.get("email").split(" ")[0],
              "c_user": request.form.get("c_user").split(" ")[0],
-             "gender": request.form.get("gender"),
+             "gender": request.form.get("gender").title(),
              "f_name": request.form.get("f_name").split(" ")[0],
              "l_name": request.form.get("l_name").split(" ")[0]}
     if request.form.get("user").strip() != request.form.get("c_user").strip():

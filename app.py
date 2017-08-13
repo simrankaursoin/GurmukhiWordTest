@@ -232,6 +232,8 @@ def login():
 def edit_info():
     if request.method == "GET":
         # if just accessing page, fill in values with existing information
+        other_genders = ["Male", "Female", "Other"]
+        other_genders.remove(retrieve_user_info(session)["gender"])
         return render_template("edit_info.html",
                                user=retrieve_user_info(session)["username"],
                                c_user=retrieve_user_info(session)["username"],
@@ -239,7 +241,9 @@ def edit_info():
                                f_name=retrieve_user_info(session)
                                ["f_name"].split(" ")[0],
                                l_name=retrieve_user_info(session)
-                               ["l_name"].split(" ")[0])
+                               ["l_name"].split(" ")[0],
+                               gender=retrieve_user_info(session)["gender"],
+                               other_genders=other_genders)
     elif request.method == "POST":
         # check answers makes incorrect value(s) blank > user knows what to fix
         # new stuff is equal to a dict of all variables
@@ -268,12 +272,16 @@ def edit_info():
         # if check answers returns True, the user has made a mistake
         # reroute to edit_info so user can fix answer(s)
         else:
+            other_genders = ["Male", "Female", "Other"]
+            other_genders.remove(new_stuff["gender"])
             return render_template("edit_info.html",
                                    user=new_stuff["user"],
                                    email=new_stuff["email"],
                                    f_name=new_stuff["f_name"],
                                    l_name=new_stuff["l_name"],
-                                   c_user=new_stuff["c_user"])
+                                   c_user=new_stuff["c_user"],
+                                   gender=new_stuff["gender"],
+                                   other_genders=other_genders)
 
 
 @app.route("/security", methods=["GET", "POST"])
@@ -320,10 +328,10 @@ def reset_password():
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
-    new_stuff = check_answers(request, flash, session, False)["new_stuff"]
     if request.method == "GET":
         return render_template("sign_up.html")
     elif request.method == "POST":
+        new_stuff = check_answers(request, flash, session, False)["new_stuff"]
         pass_word = request.form.get("pass").strip()
         c_pass = request.form.get("c_pass").strip()
         security_word = request.form.get("security_word").strip()
@@ -348,6 +356,8 @@ def signup():
             flash("Please retype the password/confirmed password")
             pass_word = ""
             c_pass = ""
+        other_genders = ["Male", "Female", "Other"]
+        other_genders.remove(new_stuff["gender"])
         return render_template("sign_up2.html",
                                user=new_stuff["user"],
                                pass_word=pass_word,
@@ -356,7 +366,9 @@ def signup():
                                f_name=new_stuff["f_name"],
                                l_name=new_stuff["l_name"],
                                c_pass=c_pass,
-                               c_user=new_stuff["c_user"])
+                               c_user=new_stuff["c_user"],
+                               gender=new_stuff["gender"],
+                               other_genders=other_genders)
 
 
 @app.route("/logged_out", methods=["GET"])
