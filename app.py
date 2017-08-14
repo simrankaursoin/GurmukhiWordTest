@@ -210,7 +210,9 @@ def login():
         # if the document does not exist in db, wrong username
         if doc is None:
             flash("Wrong Username")
-            return render_template("login.html")
+            return render_template("login2.html",
+                                   user="",
+                                   password=request.form.get("pass").lower())
         # if username exists and password matches up, redirect to choose list
         elif doc["password"] == request.form.get("pass").strip():
             user_doc = {}
@@ -219,13 +221,10 @@ def login():
             return redirect("/setsession", 303)
         # if username exists in db but password doesn't match up, wrong pass
         else:
-            UpdateSession(session, username, doc)
-            f_name = doc["first_name"]
-            l_name = doc["last_name"]
-            session["first_name"] = f_name
-            session["last_name"] = l_name
             flash("Wrong password")
-            return render_template("login.html")
+            return render_template("login2.html",
+                                   user=request.form.get("user").lower(),
+                                   password="")
 
 
 @app.route("/edit_info", methods=["GET", "POST"])
