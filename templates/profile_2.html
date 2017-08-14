@@ -32,7 +32,7 @@
 <div> 
             <h2 style="color:#033784;font-size:180%; font-family:Geneva;"><strong> Progress Report </strong></h2>
             {% if od|length < 1 %}
-                no data to display
+                You should start practicing!
             {% else %}
                 {% for vocab_lis in od %}
                     <u><font style="font-size:120%;">List {{vocab_lis}}:</font></u> <br />
@@ -46,7 +46,7 @@
                     Correct Words:
                     <font style="color:#029102;">
                                     {% if od[vocab_lis]["correct_words"]|length < 1 %}
-                                        <font style="font-size:100%;"> NONE </font>
+                                        <font style="font-size:100%;"> N/A </font>
                                     {% else %}
                                     <ul>
                                         {% for word in od[vocab_lis]["correct_words"] %}
@@ -56,7 +56,7 @@
                                     {% endif %}</font>
                     <br />Incorrect Words:<font style="color:#d1160c;">
                                     {% if od[vocab_lis]["wrong_words"]|length < 1 %}
-                                        <font style="font-size:100%;"> NONE </font>
+                                        <font style="font-size:100%;"> N/A </font>
                                     {% else %}
                                     <ul>
                                         {% for word in od[vocab_lis]["wrong_words"] %}
