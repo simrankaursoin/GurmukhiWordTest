@@ -15,7 +15,7 @@ app.secret_key = secure.APP_SECRET_KEY
 list_of_definitions = []
 list_of_words = []
 user_doc = {}
-correct_def = ""
+od = ""
 list_of_options = []
 db = make_database()
 
@@ -379,6 +379,7 @@ def logged_out():
 
 @app.route("/profile", methods=["GET"])
 def profile():
+    global od
     doc = retrieve_user_info(session)["doc"]
     stats = {}
     progress = {}
@@ -415,6 +416,12 @@ def profile():
                            username=retrieve_user_info(session)["username"],
                            full_name=retrieve_user_info(session)["full_name"],
                            gender=retrieve_user_info(session)["gender"], od=od)
+
+
+@app.route("/MyProgressReport", methods=["GET"])
+def print_from_profile():
+    global od
+    return render_template("print_from_profile.html", od=od)
 
 
 if __name__ == "__main__":

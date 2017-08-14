@@ -1,0 +1,26 @@
+{% extends "_base.html" %}
+{% block title %}Login Page{% endblock %}
+
+{% block content %}
+<body>
+<br></br>
+<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38" style="float:left;"><font style="color:#033784;font-size:120%;"><ul class="nav nav-pills" style="float:left;"> <li><a href="/">Gurbani Vocab </a></li></ul><br /><br></br>
+<style>
+.topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:50%;}
+</style>
+<div class="topnav" id="myTopnav" border="1" style="background-color:#f7cd6a;">
+    <a href="/"><b> Home </b></a>
+    <a href="/signup"><b> Sign Up </b></a>
+</div>
+
+<center><h2> Log-In </h2> </center>
+<form action="" method="POST">
+  Username: <input type="text" name="user" value="{{user}}" required><br>
+  Password: <input type="password" name="pass" value="{{password}}" pattern=".{8,}"   required title="8 characters minimum"><br>
+  <input class="btn btn-info" type="submit" value="Submit">
+</form>
+
+<br><a href="/security"> Forgot Password? </a></td></br>
+<br><a href="/signup"> Sign-Up </a></td></br>
+</body>
+{% endblock %}

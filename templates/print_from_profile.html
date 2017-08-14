@@ -1,0 +1,38 @@
+{% extends "_base.html" %}
+{% block title %}Progress Report{% endblock %}
+
+{% block content %}
+<body>
+ <h1 style="color:#033784;font-size:180%; font-family:Geneva;"><strong> Progress Report </strong></h1>
+{% if od|length < 1 %}
+    You should start practicing!
+{% else %}
+    {% for vocab_lis in od %}
+        <u><font style="font-size:120%;">List {{vocab_lis}}:</font></u> <br />
+        <blockquote>Percentage Accuracy: {{od[vocab_lis]["percent_accuracy"]}}% <br />
+        Correct Words:
+        <font style="color:#029102;">
+                        {% if od[vocab_lis]["correct_words"]|length < 1 %}
+                            <font style="font-size:100%;"> N/A </font>
+                        {% else %}
+                        <ul>
+                            {% for word in od[vocab_lis]["correct_words"] %}
+                                <li> {{word}} </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}</font>
+        <br />Incorrect Words:<font style="color:#d1160c;">
+                        {% if od[vocab_lis]["wrong_words"]|length < 1 %}
+                            <font style="font-size:100%;"> N/A </font>
+                        {% else %}
+                        <ul>
+                            {% for word in od[vocab_lis]["wrong_words"] %}
+                                <li> {{word}} </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}</font></blockquote>
+    {% endfor %}
+{% endif %}
+</body>
+{% endblock %}
+
