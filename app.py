@@ -24,7 +24,7 @@ def main():
     try:
         global list_of_words, list_of_definitions
         full_name = retrieve_user_info(session)["full_name"]
-    except:
+    except TypeError:
         # if error, the user hasn't signed in yet >> homepage.html
         return render_template("homepage.html")
     # if len(list_of_words) > 0, user hasn't chosen a list >> homepage_2.html
