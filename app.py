@@ -15,7 +15,6 @@ app.secret_key = secure.APP_SECRET_KEY
 list_of_definitions = []
 list_of_words = []
 user_doc = {}
-od = ""
 list_of_options = []
 db = make_database()
 
@@ -181,7 +180,8 @@ def quiz():
         if request.form.get("options") == correct_def:
             # if user is correct, update mongo and lists of words/defs
             info = UpdateCorrect(user_doc, correct_word, name, username,
-                  word_index, list_of_words, list_of_definitions)
+                                 word_index, list_of_words,
+                                 list_of_definitions)
             return render_template("correct.html", correct_word=correct_word,
                                    correct_def=correct_def, username=username,
                                    quote_ggs=info["quote_ggs"],
