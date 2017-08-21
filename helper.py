@@ -4,16 +4,19 @@ import random
 db = make_database()
 
 
-def make_lists(list_of_words, list_of_definitions, name_of_collection):
+def make_lists(session, name_of_collection):
     # name_of_collection is a variable based on the session[current_list]
     # corresponds to the name of the collection in the mongo db
+    list_of_words = []
+    list_of_definitions = []
     for item in db[name_of_collection].find():
         list_of_words.append(item["word"])
         list_of_definitions.append(item["definition"])
     # create a list called list_of_words based on db words from list
     # create a list called list_of_definitions based on db defs from list
     # allows appending/deleting/easy-access (unlike the db)
-    return list_of_words, list_of_definitions
+    db.users.update({"username":session["username"]}, {'$set': {"list_of_words":list_of_words}})
+    db.users.update({"username":session["username"]}, {'$set': {"list_of_definitions":list_of_definitions}})
 
 
 def UpdateSession_Form(session, request):
@@ -26,6 +29,7 @@ def UpdateSession_Form(session, request):
 
 def less_than_four(name, list_of_words, list_of_definitions, list_of_options):
     list2 = []
+    list_of_options=[]
     for item in db[name].find():
         if item["definition"] not in list_of_definitions:
             list2.append(item["definition"])
@@ -48,8 +52,7 @@ def less_than_four(name, list_of_words, list_of_definitions, list_of_options):
             "correct_def": correct_def, "word_index": word_index}
 
 
-def UpdateCorrect(user_doc, correct_word, name, username,
-                  word_index, list_of_words, list_of_definitions):
+def UpdateCorrect(user_doc, correct_word, name, username, word_index):
     user_doc[name]["correct"] += 1
     user_doc[name]["correct_words"].append(correct_word)
     db.users.update({"username": username},
@@ -57,14 +60,18 @@ def UpdateCorrect(user_doc, correct_word, name, username,
                               user_doc[name]}})
     full_doc = db[name].find_one({"word": correct_word})
     quote_ggs = full_doc["quote_ggs"].split()
+    list_of_words = db.users.find_one({"username": username})["list_of_words"]
     list_of_words.pop(word_index)
+    list_of_definitions = db.users.find_one({"username": username})["list_of_definitions"]
     list_of_definitions.pop(word_index)
+    db.users.update({"username": username}, {"$set": {"list_of_words": list_of_words}})
+    db.users.update({"username": username}, {"$set": {"list_of_definitions": list_of_definitions}})
     correct_translit = full_doc["transliteration"]
     return {"quote_ggs": quote_ggs, "correct_translit": correct_translit}
 
 
 def UpdateWrong(user_doc, correct_word, name, username,
-                word_index, list_of_words, list_of_definitions, session):
+                word_index, session):
     user_doc[name]["wrong"] += 1
     user_doc[name]["wrong_words"].append(correct_word)
     db.users.update({"username": username},
