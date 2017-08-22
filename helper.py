@@ -15,8 +15,10 @@ def make_lists(session, name_of_collection):
     # create a list called list_of_words based on db words from list
     # create a list called list_of_definitions based on db defs from list
     # allows appending/deleting/easy-access (unlike the db)
-    db.users.update({"username":session["username"]}, {'$set': {"list_of_words":list_of_words}})
-    db.users.update({"username":session["username"]}, {'$set': {"list_of_definitions":list_of_definitions}})
+    db.users.update({"username": session["username"]},
+                    {'$set': {"list_of_words": list_of_words}})
+    db.users.update({"username": session["username"]},
+                    {'$set': {"list_of_definitions": list_of_definitions}})
 
 
 def UpdateSession_Form(session, request):
@@ -29,7 +31,7 @@ def UpdateSession_Form(session, request):
 
 def less_than_four(name, list_of_words, list_of_definitions, list_of_options):
     list2 = []
-    list_of_options=[]
+    list_of_options = []
     for item in db[name].find():
         if item["definition"] not in list_of_definitions:
             list2.append(item["definition"])
@@ -62,10 +64,14 @@ def UpdateCorrect(correct_word, name, username, word_index):
     quote_ggs = full_doc["quote_ggs"].split()
     list_of_words = db.users.find_one({"username": username})["list_of_words"]
     list_of_words.pop(word_index)
-    list_of_definitions = db.users.find_one({"username": username})["list_of_definitions"]
+    list_of_definitions = db.users.find_one(
+                                            {"username": username}
+                                           )["list_of_definitions"]
     list_of_definitions.pop(word_index)
-    db.users.update({"username": username}, {"$set": {"list_of_words": list_of_words}})
-    db.users.update({"username": username}, {"$set": {"list_of_definitions": list_of_definitions}})
+    db.users.update({"username": username},
+                    {"$set": {"list_of_words": list_of_words}})
+    db.users.update({"username": username},
+                    {"$set": {"list_of_definitions": list_of_definitions}})
     correct_translit = full_doc["transliteration"]
     return {"quote_ggs": quote_ggs, "correct_translit": correct_translit}
 
@@ -108,7 +114,6 @@ def reset_sessions(session):
     session["email"] = None
     session["first_name"] = None
     session["last_name"] = None
-    return user_doc
 
 
 def check_answers(request, flash, session, need_to_flash):

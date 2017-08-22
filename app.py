@@ -86,7 +86,7 @@ def list_selected():
     #           >> initialize list in user doc with values equal to 0
     if name not in doc:
         doc[name] = {"correct": 0, "wrong": 0, "correct_words": [],
-                          "wrong_words": []}
+                     "wrong_words": []}
     # reset name to just the list number
     name = name[-1]
     return render_template("list_selected.html",
@@ -137,33 +137,42 @@ def quiz():
     doc = retrieve_user_info(session)["doc"]
     if request.method == "GET":
         # list of defs is empty but list of words isn't, user has finished list
-        if len(retrieve_user_info(session)["doc"]["list_of_definitions"]) < 1 and len(retrieve_user_info(session)["doc"]["list_of_words"]) > 0:
+        if len(doc["list_of_definitions"]) < 1 and len(
+                                                       doc["doc"]
+                                                       ["list_of_words"]) > 0:
             full_doc = db.users.find_one({"username": session["username"]})
             percent_accuracy = calculate_percent_accuracy(full_doc, name)[0]
             return render_template("finished.html", name=name[-1],
                                    full_name=full_name,
                                    percent_accuracy=percent_accuracy)
         # list of defs/words are both empty >> user hasn't chosen list
-        elif len(retrieve_user_info(session)["doc"]["list_of_definitions"]) < 1:
+        elif len(doc["list_of_definitions"]) < 1:
             return render_template("error_choose_list.html",
                                    full_name=full_name)
         # list of definitions has less than 4 items left
-        elif len(retrieve_user_info(session)["doc"]["list_of_definitions"]) < 4:
+        elif len(doc["list_of_definitions"]) < 4:
             # less_than_four returns list_of_options
             #       >> also updates correct values/lists for later reference
-            make_choices = less_than_four(name, retrieve_user_info(session)["doc"]["list_of_words"],
-                                          retrieve_user_info(session)["doc"]["list_of_definitions"], list_of_options)
+            make_choices = less_than_four(name, doc["list_of_words"],
+                                          doc["list_of_definitions"],
+                                          list_of_options)
             list_of_options = make_choices["list_of_options"]
-            db.users.update({"username":session["username"]}, {'$set': {"list_of_words": make_choices["list_of_words"]}})
+            db.users.update({"username": session["username"]},
+                            {'$set': {"list_of_words":
+                                      make_choices["list_of_words"]}})
             correct_word = make_choices["correct_word"]
             correct_def = make_choices["correct_def"]
             word_index = make_choices["word_index"]
         else:
             # more than 4 values in list of defs and list of words
-            word_index = random.randint(0, (len(retrieve_user_info(session)["doc"]["list_of_words"])-1))
+            word_index = random.randint(0,
+                                        (len(retrieve_user_info(session)
+                                             ["doc"]["list_of_words"])-1))
             correct_word = doc["list_of_words"][word_index]
             correct_def = doc["list_of_definitions"][word_index]
-            list_of_options = make_options(retrieve_user_info(session)["doc"]["list_of_words"], doc["list_of_definitions"],
+            list_of_options = make_options(retrieve_user_info(session)
+                                           ["doc"]["list_of_words"],
+                                           doc["list_of_definitions"],
                                            correct_def)
         return render_template("question.html", correct_word=correct_word,
                                list_of_options=list_of_options,
@@ -180,7 +189,8 @@ def quiz():
                                    correct_translit=info["correct_translit"])
         else:
             # if user is wrong, update mongo and lists of words/defs
-            info = UpdateWrong(correct_word, name, username, word_index, session)
+            info = UpdateWrong(correct_word, name, username,
+                               word_index, session)
             return render_template("incorrect.html", correct_word=correct_word,
                                    correct_def=correct_def,
                                    full_name=full_name, name_of_lis=name[-1],
@@ -334,7 +344,7 @@ def signup():
                                  "last_name": new_stuff["l_name"],
                                  "gender": new_stuff["gender"],
                                  "list_of_words": [],
-                                 "list_of_definitions":[],
+                                 "list_of_definitions": [],
                                  })
             # update the session with newly created db
             UpdateSession_Form(session, request)
@@ -409,7 +419,8 @@ def profile():
                            email=retrieve_user_info(session)["email"],
                            username=retrieve_user_info(session)["username"],
                            full_name=retrieve_user_info(session)["full_name"],
-                           gender=retrieve_user_info(session)["gender"], od=session["od"])
+                           gender=retrieve_user_info(session)["gender"],
+                           od=session["od"])
 
 
 @app.route("/MyProgressReport", methods=["GET"])
