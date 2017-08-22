@@ -21,6 +21,10 @@ def make_lists(session, name_of_collection):
                     {'$set': {"list_of_definitions": list_of_definitions}})
 
 
+def CreateMongoList(session, name):
+    db.users.update({"username": session["username"]},{"$set": {name:{"correct": 0, "wrong": 0, "correct_words": [], "wrong_words": []}}})
+ 
+
 def UpdateSession_Form(session, request):
     session["username"] = request.form.get("user").strip()
     session["email"] = request.form.get("email").strip()

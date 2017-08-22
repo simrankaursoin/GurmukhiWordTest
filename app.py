@@ -5,7 +5,7 @@ from flask import flash, request, Flask, render_template, redirect, session
 from helper import make_lists, retrieve_user_info, reset_sessions
 from helper import make_options, check_answers, calculate_percent_accuracy
 from helper import UpdateSession, UpdateSession_Form, UpdateCorrect
-from helper import UpdateWrong, less_than_four
+from helper import UpdateWrong, less_than_four, CreateMongoList
 import collections
 import random
 import secure
@@ -83,9 +83,8 @@ def list_selected():
     # if list does not exist in user_doc, the user has not accessed it before
     #           >> initialize list in user doc with values equal to 0
     if name not in doc:
-        doc[name] = {"correct": 0, "wrong": 0, "correct_words": [],
-                     "wrong_words": []}
-    # reset name to just the list number
+        CreateMongoList(session, name)
+        # reset name to just the list number
     name = name[-1]
     return render_template("list_selected.html",
                            name=name, full_name=full_name)
