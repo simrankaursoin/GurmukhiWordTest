@@ -12,7 +12,6 @@ import secure
 app = Flask(__name__)
 app.secret_key = secure.APP_SECRET_KEY
 # global variables
-user_doc = {}
 list_of_options = []
 db = make_database()
 
@@ -79,14 +78,14 @@ def study():
 
 @app.route("/list_selected", methods=["GET"])
 def list_selected():
-    global user_doc
     full_name = retrieve_user_info(session)["full_name"]
     name = session["current_list"].lower()
+    doc = db.users.find_one({"username": session["username"]})
     # name is the name of the vocab list
     # if list does not exist in user_doc, the user has not accessed it before
     #           >> initialize list in user doc with values equal to 0
-    if name not in user_doc:
-        user_doc[name] = {"correct": 0, "wrong": 0, "correct_words": [],
+    if name not in doc:
+        doc[name] = {"correct": 0, "wrong": 0, "correct_words": [],
                           "wrong_words": []}
     # reset name to just the list number
     name = name[-1]
@@ -131,7 +130,7 @@ def progress():
 
 @app.route("/quiz", methods=["GET", "POST"])
 def quiz():
-    global user_doc, correct_def
+    global correct_def
     global correct_word, word_index, list_of_options
     full_name = retrieve_user_info(session)["full_name"]
     name = session["current_list"].lower()
@@ -173,7 +172,7 @@ def quiz():
         username = retrieve_user_info(session)["username"]
         if request.form.get("options") == correct_def:
             # if user is correct, update mongo and lists of words/defs
-            info = UpdateCorrect(user_doc, correct_word, name, username, word_index)
+            info = UpdateCorrect(correct_word, name, username, word_index)
             return render_template("correct.html", correct_word=correct_word,
                                    correct_def=correct_def, username=username,
                                    quote_ggs=info["quote_ggs"],
@@ -181,8 +180,7 @@ def quiz():
                                    correct_translit=info["correct_translit"])
         else:
             # if user is wrong, update mongo and lists of words/defs
-            info = UpdateWrong(user_doc, correct_word, name, username, session,
-                               word_index, doc["list_of_words"], doc["list_of_definitions"])
+            info = UpdateWrong(correct_word, name, username, word_index, session)
             return render_template("incorrect.html", correct_word=correct_word,
                                    correct_def=correct_def,
                                    full_name=full_name, name_of_lis=name[-1],
@@ -192,7 +190,6 @@ def quiz():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    global user_doc
     if request.method == "GET":
         return render_template("login.html")
     elif request.method == "POST":
@@ -207,7 +204,6 @@ def login():
                                    password=request.form.get("pass").lower())
         # if username exists and password matches up, redirect to choose list
         elif doc["password"] == request.form.get("pass").strip():
-            user_doc = {}
             UpdateSession(session, username, doc)
             flash("Successful login")
             return redirect("/setsession", 303)
@@ -338,7 +334,8 @@ def signup():
                                  "last_name": new_stuff["l_name"],
                                  "gender": new_stuff["gender"],
                                  "list_of_words": [],
-                                 "list_of_definitions":[]})
+                                 "list_of_definitions":[],
+                                 })
             # update the session with newly created db
             UpdateSession_Form(session, request)
             flash("Profile created")
@@ -366,8 +363,7 @@ def signup():
 
 @app.route("/logged_out", methods=["GET"])
 def logged_out():
-    global user_doc
-    reset_sessions(session, user_doc)
+    reset_sessions(session)
     return render_template("logged_out.html")
 
 

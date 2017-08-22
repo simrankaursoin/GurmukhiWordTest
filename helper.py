@@ -52,12 +52,12 @@ def less_than_four(name, list_of_words, list_of_definitions, list_of_options):
             "correct_def": correct_def, "word_index": word_index}
 
 
-def UpdateCorrect(user_doc, correct_word, name, username, word_index):
-    user_doc[name]["correct"] += 1
-    user_doc[name]["correct_words"].append(correct_word)
+def UpdateCorrect(correct_word, name, username, word_index):
+    list_doc = db.users.find_one({"username": username})[name]
+    list_doc["correct"] += 1
+    list_doc["correct_words"].append(correct_word)
     db.users.update({"username": username},
-                    {"$set": {name:
-                              user_doc[name]}})
+                    {"$set": {name: list_doc}})
     full_doc = db[name].find_one({"word": correct_word})
     quote_ggs = full_doc["quote_ggs"].split()
     list_of_words = db.users.find_one({"username": username})["list_of_words"]
@@ -70,13 +70,12 @@ def UpdateCorrect(user_doc, correct_word, name, username, word_index):
     return {"quote_ggs": quote_ggs, "correct_translit": correct_translit}
 
 
-def UpdateWrong(user_doc, correct_word, name, username,
-                word_index, session):
-    user_doc[name]["wrong"] += 1
-    user_doc[name]["wrong_words"].append(correct_word)
+def UpdateWrong(correct_word, name, username, word_index, session):
+    list_doc = db.users.find_one({"username": username})[name]
+    list_doc["wrong"] += 1
+    list_doc["wrong_words"].append(correct_word)
     db.users.update({"username": username},
-                    {"$set": {name:
-                              user_doc[name]}})
+                    {"$set": {name: list_doc}})
     full_doc = db[name].find_one({"word": correct_word})
     quote_ggs = full_doc["quote_ggs"].split()
     correct_translit = full_doc["transliteration"]
@@ -104,12 +103,11 @@ def retrieve_user_info(session):
             "l_name": l_name}
 
 
-def reset_sessions(session, user_doc):
+def reset_sessions(session):
     session["username"] = None
     session["email"] = None
     session["first_name"] = None
     session["last_name"] = None
-    user_doc = {}
     return user_doc
 
 
