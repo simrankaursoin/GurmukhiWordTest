@@ -18,7 +18,7 @@ db = make_database()
 def main():
     try:
         full_name = retrieve_user_info(session)["full_name"]
-    except TypeError:
+    except KeyError:
         # if error, the user hasn't signed in yet >> homepage.html
         return render_template("homepage.html")
     # if len(list_of_words) > 0, user hasn't chosen a list >> homepage_2.html
@@ -44,7 +44,7 @@ def set_session():
         return render_template(template,
                                full_name=full_name)
     elif request.method == "POST":
-        # once the user has selected a list, set session[current_list]
+        # once the user has selected a list, set session[current_list]s
         session["current_list"] = request.form.get("current_list").strip()
         # clear lists of words/defs (in case they had previously chosen a list)
         name_of_collection = str(session["current_list"]).lower()
