@@ -31,7 +31,7 @@ def UpdateSession_Form(session, request):
 
 def less_than_four(name, list_of_words, list_of_definitions, list_of_options):
     list2 = []
-    list_of_options = []
+    list_of_ops = []
     for item in db[name].find():
         if item["definition"] not in list_of_definitions:
             list2.append(item["definition"])
@@ -44,9 +44,10 @@ def less_than_four(name, list_of_words, list_of_definitions, list_of_options):
     correct_def = list_of_definitions[word_index]
     for i in range(0, 3):
         wrong_index = random.randint(0, (len(list2)-1))
-        list_of_options.append(list2[wrong_index])
+        list_of_ops.append(list2[wrong_index])
     list_of_options.append(correct_def)
-    random.shuffle(list_of_options)
+    random.shuffle(list_of_ops)
+    list_of_options = tuple(list_of_ops)
     list_of_words.append("Nothing")
     return {"list_of_words": list_of_words,
             "list_of_definitions": list_of_definitions,
@@ -196,7 +197,8 @@ def make_options(list_of_words, list_of_definitions, correct_def):
                 continue
         else:
             continue
-    list_of_options = [correct_def,
+    list_of_ops = [correct_def,
                        wrong_one, wrong_two, wrong_three]
-    random.shuffle(list_of_options)
+    random.shuffle(list_of_ops)
+    list_of_options = tuple(list_of_ops)
     return list_of_options

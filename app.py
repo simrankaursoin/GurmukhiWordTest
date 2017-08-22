@@ -12,7 +12,6 @@ import secure
 app = Flask(__name__)
 app.secret_key = secure.APP_SECRET_KEY
 # global variables
-list_of_options = []
 db = make_database()
 
 
@@ -131,7 +130,7 @@ def progress():
 @app.route("/quiz", methods=["GET", "POST"])
 def quiz():
     global correct_def
-    global correct_word, word_index, list_of_options
+    global correct_word, word_index
     full_name = retrieve_user_info(session)["full_name"]
     name = session["current_list"].lower()
     doc = retrieve_user_info(session)["doc"]
@@ -154,8 +153,7 @@ def quiz():
             # less_than_four returns list_of_options
             #       >> also updates correct values/lists for later reference
             make_choices = less_than_four(name, doc["list_of_words"],
-                                          doc["list_of_definitions"],
-                                          list_of_options)
+                                          doc["list_of_definitions"])
             list_of_options = make_choices["list_of_options"]
             db.users.update({"username": session["username"]},
                             {'$set': {"list_of_words":
