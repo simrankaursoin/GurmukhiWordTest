@@ -325,6 +325,7 @@ def signup():
     if request.method == "GET":
         return render_template("sign_up.html")
     elif request.method == "POST":
+        UpdateSession_Form(session, request)
         new_stuff = check_answers(request, flash, session, False)["new_stuff"]
         pass_word = request.form.get("pass").strip()
         c_pass = request.form.get("c_pass").strip()
