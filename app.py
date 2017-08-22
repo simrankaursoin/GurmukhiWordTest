@@ -135,9 +135,7 @@ def quiz():
     doc = retrieve_user_info(session)["doc"]
     if request.method == "GET":
         # list of defs is empty but list of words isn't, user has finished list
-        if len(doc["list_of_definitions"]) < 1 and len(
-                                                       doc["doc"]
-                                                       ["list_of_words"]) > 0:
+        if len(doc["list_of_definitions"]) < 1 and len(doc["list_of_words"]) > 0:
             full_doc = db.users.find_one({"username": session["username"]})
             percent_accuracy = calculate_percent_accuracy(full_doc, name)[0]
             return render_template("finished.html", name=name[-1],
