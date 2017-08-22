@@ -11,7 +11,6 @@ import random
 import secure
 app = Flask(__name__)
 app.secret_key = secure.APP_SECRET_KEY
-# global variables
 db = make_database()
 
 

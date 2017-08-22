@@ -198,7 +198,7 @@ def make_options(list_of_words, list_of_definitions, correct_def):
         else:
             continue
     list_of_ops = [correct_def,
-                       wrong_one, wrong_two, wrong_three]
+                   wrong_one, wrong_two, wrong_three]
     random.shuffle(list_of_ops)
     list_of_options = tuple(list_of_ops)
     return list_of_options
