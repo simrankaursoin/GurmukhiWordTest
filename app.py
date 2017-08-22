@@ -387,7 +387,7 @@ def profile():
             try:
                 int(name_of_item[4])
                 stats[item] = doc[item]
-            except:
+            except (IndexError, ValueError):
                 continue
     # for each list in stats:
     #   calculate num_questions, percent_accuracy, percent_inaccuracy
