@@ -165,8 +165,12 @@ def check_answers(request, flash, session, need_to_flash):
 def calculate_percent_accuracy(full_doc, name):
     right = full_doc[name]["correct"]
     wrong = full_doc[name]["wrong"]
-    percent_accuracy = int((right/(right+wrong))*100)
-    percent_inaccuracy = 100 - percent_accuracy
+    if right+wrong == 0:
+        percent_accuracy = 0
+        percent_inaccuracy = 0
+    else:
+        percent_accuracy = int((right/(right+wrong))*100)
+        percent_inaccuracy = 100 - percent_accuracy
     return [percent_accuracy, percent_inaccuracy]
 
 

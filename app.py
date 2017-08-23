@@ -105,6 +105,8 @@ def progress():
         # calculate percent accuracy and percent inaccuracy
         percent_accuracy = calculate_percent_accuracy(doc, current_list)[0]
         percent_inaccuracy = calculate_percent_accuracy(doc, current_list)[1]
+        if percent_accuracy == 0 and percent_inaccuracy == 0:
+            no_questions = True
     # if list is not in doc, user hasn't answered any questions yet
     else:
         # set no_questions = True so the browser can handle accordingly
