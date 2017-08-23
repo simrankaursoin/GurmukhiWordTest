@@ -1,3 +1,3 @@
 # secure.py
 
-APP_SECRET_KEY = "turtle"
+APP_SECRET_KEY = "alohomora"
