@@ -19,7 +19,7 @@ db = make_database()
 def main():
     try:
         full_name = retrieve_user_info(session)["full_name"]
-    except KeyError:
+    except (KeyError, TypeError):
         # if error, the user hasn't signed in yet >> homepage.html
         return render_template("homepage.html")
     # if len(list_of_words) > 0, user hasn't chosen a list >> homepage_2.html
@@ -394,19 +394,22 @@ def profile():
     #   set equal to progress[list_number]
     for lis in stats:
         num_questions = (stats[lis]["correct"]+stats[lis]["wrong"])
-        percent_accuracy = int((stats[lis]["correct"] / num_questions)*100)
-        percent_inaccuracy = 100 - percent_accuracy
-        correct_words = list(set(stats[lis]["correct_words"]))
-        wrong_words = list(set(stats[lis]["wrong_words"]))
-        progress[list(lis)[-1]] = {"percent_accuracy": percent_accuracy,
-                                   "percent_inaccuracy": percent_inaccuracy,
-                                   "total_questions": num_questions,
-                                   "correct_words": correct_words,
-                                   "wrong_words": wrong_words}
-    # od is the numerically ordered version of progress
-    session["od"] = collections.OrderedDict(sorted(progress.items()))
-    # list_of_words empty so user hasnt chosen list
-    #    >> dont display Quiz/Study in topnav (profile_2)
+        if num_questions == 0:
+            session["od"] = {}
+        else:
+            percent_accuracy = int((stats[lis]["correct"] / num_questions)*100)
+            percent_inaccuracy = 100 - percent_accuracy
+            correct_words = list(set(stats[lis]["correct_words"]))
+            wrong_words = list(set(stats[lis]["wrong_words"]))
+            progress[list(lis)[-1]] = {"percent_accuracy": percent_accuracy,
+                                    "percent_inaccuracy": percent_inaccuracy,
+                                    "total_questions": num_questions,
+                                    "correct_words": correct_words,
+                                    "wrong_words": wrong_words}
+            # od is the numerically ordered version of progress
+            session["od"] = collections.OrderedDict(sorted(progress.items()))
+            # list_of_words empty so user hasnt chosen list
+            #    >> dont display Quiz/Study in topnav (profile_2)
     if len(retrieve_user_info(session)["doc"]["list_of_words"]) < 1:
         template = "profile_2.html"
     else:
@@ -421,7 +424,9 @@ def profile():
 
 @app.route("/MyProgressReport", methods=["GET"])
 def print_from_profile():
-    return render_template("print_from_profile.html", od=session["od"])
+    full_name = retrieve_user_info(session)["full_name"]
+    return render_template("print_from_profile.html", od=session["od"],
+                           full_name=full_name)
 
 
 if __name__ == "__main__":
