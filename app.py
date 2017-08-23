@@ -6,6 +6,7 @@ from helper import make_lists, retrieve_user_info, reset_sessions
 from helper import make_options, check_answers, calculate_percent_accuracy
 from helper import UpdateSession, UpdateSession_Form, UpdateCorrect
 from helper import UpdateWrong, less_than_four, CreateMongoList
+from passlib.hash import pbkdf2_sha512
 import collections
 import random
 import secure
@@ -207,7 +208,7 @@ def login():
                                    user="",
                                    password=request.form.get("pass").lower())
         # if username exists and password matches up, redirect to choose list
-        elif doc["password"] == request.form.get("pass").strip():
+        elif pbkdf2_sha512.verify(request.form.get("pass").strip(), doc["password"]):
             UpdateSession(session, username, doc)
             flash("Successful login")
             return redirect("/setsession", 303)
@@ -312,7 +313,7 @@ def reset_password():
         else:
             db.users.update({"username": username},
                             {"$set": {"password":
-                             request.form.get("pass").strip()}})
+                             pbkdf2_sha512.hash(request.form.get("pass").strip())}})
             flash("Password reset")
             return redirect("/")
 
@@ -331,7 +332,7 @@ def signup():
         # insert document in db
         if not check_answers(request, flash, session, True)["errors"]:
             db.users.insert_one({"username": new_stuff["user"],
-                                 "password": request.form.get("pass").strip(),
+                                 "password": pbkdf2_sha512.hash(request.form.get("pass").strip()),
                                  "security_word": request.form.get
                                  ("security_word").strip(),
                                  "email": new_stuff["email"],
