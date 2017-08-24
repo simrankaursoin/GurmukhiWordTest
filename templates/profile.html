@@ -39,11 +39,9 @@
                 {% for vocab_lis in od %}
                     <u><font style="font-size:120%;">List {{vocab_lis}}:</font></u> <br />
                     <blockquote>Percentage Accuracy: {{od[vocab_lis]["percent_accuracy"]}}% <br />
-                    <div class="progress" style="width:60%;">
-                    <div class="progress progress-striped active">
+                    <div class="progress progress-striped active" style="width:70%;">
                         <div class="progress-bar progress-bar-success" style="width: {{od[vocab_lis]["percent_accuracy"]}}%"></div>
                         <div class="progress-bar progress-bar-danger" style="width: {{od[vocab_lis]["percent_inaccuracy"]}}%"></div>
-                    </div>
                     </div>
                     Correct Words:
                     <font style="color:#029102;">
