@@ -8,6 +8,7 @@ from helper import UpdateSession, UpdateSession_Form, UpdateCorrect
 from helper import UpdateWrong, less_than_four, CreateMongoList
 from passlib.hash import pbkdf2_sha512
 import collections
+import arrow
 import random
 import secure
 app = Flask(__name__)
@@ -393,7 +394,6 @@ def profile():
             try:
                 int(name_of_item[4])
                 stats[item] = doc[item]
-                print("GOT HERE")
             except (IndexError, ValueError):
                 continue
     # for each list in stats:
@@ -435,8 +435,10 @@ def profile():
 @app.route("/MyProgressReport", methods=["GET"])
 def print_from_profile():
     full_name = retrieve_user_info(session)["full_name"]
+    # FIX THIS IN FUTURE. DONT AUTOMATICALLY SET TO EASTERN STANDARD TIME
+    current_time = arrow.utcnow().to("US/Eastern").format('MM/DD/YYYY ; h:mm A')
     return render_template("print_from_profile.html", od=session["od"],
-                           full_name=full_name)
+                           full_name=full_name, current_time=current_time)
 
 
 if __name__ == "__main__":
