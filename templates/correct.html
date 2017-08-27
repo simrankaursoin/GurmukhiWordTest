@@ -36,8 +36,9 @@ mark {
         <font style="font-size:120%;"><u>Definition:</u>
         {{correct_def}}</font><br />
     <h4>"
+    {% set list_for_word = correct_word.split(' ') %}
     {% for word in quote_ggs %}
-    {% if word == correct_word %}
+    {% if word in list_for_word %}
         <mark>{{word}}</mark>
     {% else %}
         {{word}}
