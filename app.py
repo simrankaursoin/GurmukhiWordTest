@@ -140,24 +140,26 @@ def quiz():
     full_name = user_info["full_name"]
     name = session["current_list"].lower()
     doc = user_info["doc"]
+    list_of_defs = doc["list_of_definitions"]
+    list_of_words = doc["list_of_words"]
     if request.method == "GET":
         # list of defs is empty but list of words isn't, user has finished list
-        if len(doc["list_of_definitions"]) < 1 and len(doc["list_of_words"]) > 0:
+        if (len(list_of_defs) < 1 and len(list_of_words)) > 0:
             full_doc = db.users.find_one({"username": session["username"]})
             percent_accuracy = calculate_percent_accuracy(full_doc, name)[0]
             return render_template("finished.html", name=name[-1],
                                    full_name=full_name,
                                    percent_accuracy=percent_accuracy)
         # list of defs/words are both empty >> user hasn't chosen list
-        elif len(doc["list_of_definitions"]) < 1:
+        elif len(list_of_defs) < 1:
             return render_template("error_choose_list.html",
                                    full_name=full_name)
         # list of definitions has less than 4 items left
-        elif len(doc["list_of_definitions"]) < 4:
+        elif len(list_of_defs) < 4:
             # less_than_four returns list_of_options
             #       >> also updates correct values/lists for later reference
-            make_choices = less_than_four(name, doc["list_of_words"],
-                                          doc["list_of_definitions"])
+            make_choices = less_than_four(name, list_of_words,
+                                          list_of_defs)
             list_of_options = make_choices["list_of_options"]
             db.users.update({"username": session["username"]},
                             {'$set': {"list_of_words":
@@ -169,7 +171,7 @@ def quiz():
             # more than 4 values in list of defs and list of words
             word_index = random.randint(0,
                                         (len(user_info["doc"]["list_of_words"])
-                                         -1))
+                                         - 1))
             correct_word = doc["list_of_words"][word_index]
             correct_def = doc["list_of_definitions"][word_index]
             list_of_options = make_options(user_info["doc"]["list_of_words"],
@@ -214,7 +216,8 @@ def login():
                                    user="",
                                    password=request.form.get("pass").lower())
         # if username exists and password matches up, redirect to choose list
-        elif pbkdf2_sha512.verify(request.form.get("pass").strip(), doc["password"]):
+        elif pbkdf2_sha512.verify(request.form.get("pass").strip(),
+                                  doc["password"]):
             UpdateSession(session, username, doc)
             flash("Successful login")
             return redirect("/setsession", 303)
@@ -321,7 +324,8 @@ def reset_password():
         else:
             db.users.update({"username": username},
                             {"$set": {"password":
-                             pbkdf2_sha512.hash(request.form.get("pass").strip())}})
+                             pbkdf2_sha512.hash
+                             (request.form.get("pass").strip())}})
             flash("Password reset")
             return redirect("/")
 
@@ -333,14 +337,14 @@ def signup():
     elif request.method == "POST":
         UpdateSession_Form(session, request)
         new_stuff = check_answers(request, flash, session, False)["new_stuff"]
-        pass_word = request.form.get("pass").strip()
+        pass_word = pbkdf2_sha512.hash(request.form.get("pass").strip())
         c_pass = request.form.get("c_pass").strip()
         security_word = request.form.get("security_word").strip()
         # if check_answers is False, user has not made any mistakes
         # insert document in db
         if not check_answers(request, flash, session, True)["errors"]:
             db.users.insert_one({"username": new_stuff["user"],
-                                 "password": pbkdf2_sha512.hash(request.form.get("pass").strip()),
+                                 "password": pass_word,
                                  "security_word": request.form.get
                                  ("security_word").strip(),
                                  "email": new_stuff["email"],
@@ -412,10 +416,11 @@ def profile():
             correct_words = list(set(stats[lis]["correct_words"]))
             wrong_words = list(set(stats[lis]["wrong_words"]))
             progress[list(lis)[-1]] = {"percent_accuracy": percent_accuracy,
-                                    "percent_inaccuracy": percent_inaccuracy,
-                                    "total_questions": num_questions,
-                                    "correct_words": correct_words,
-                                    "wrong_words": wrong_words}
+                                       "percent_inaccuracy":
+                                           percent_inaccuracy,
+                                       "total_questions": num_questions,
+                                       "correct_words": correct_words,
+                                       "wrong_words": wrong_words}
             # od is the numerically ordered version of progress
             session["od"] = collections.OrderedDict(sorted(progress.items()))
             # list_of_words empty so user hasnt chosen list
@@ -436,7 +441,8 @@ def profile():
 def print_from_profile():
     full_name = retrieve_user_info(session)["full_name"]
     # FIX THIS IN FUTURE. DONT AUTOMATICALLY SET TO EASTERN STANDARD TIME
-    current_time = arrow.utcnow().to("US/Eastern").format('MM/DD/YYYY ; h:mm A')
+    current_time = arrow.utcnow().to("US/Eastern")
+    current_time = current_time.format('MM/DD/YYYY ; h:mm A')
     return render_template("print_from_profile.html", od=session["od"],
                            full_name=full_name, current_time=current_time)
 
