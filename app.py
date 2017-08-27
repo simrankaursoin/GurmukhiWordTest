@@ -442,7 +442,7 @@ def print_from_profile():
     full_name = retrieve_user_info(session)["full_name"]
     # FIX THIS IN FUTURE. DONT AUTOMATICALLY SET TO EASTERN STANDARD TIME
     current_time = arrow.utcnow().to("US/Eastern")
-    current_time = current_time.format('MM/DD/YYYY ; h:mm A')
+    current_time = current_time.format('MM/DD/YYYY; h:mm A')
     return render_template("print_from_profile.html", od=session["od"],
                            full_name=full_name, current_time=current_time)
 
