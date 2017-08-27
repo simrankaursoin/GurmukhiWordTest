@@ -119,6 +119,7 @@ def reset_sessions(session):
     session["email"] = None
     session["first_name"] = None
     session["last_name"] = None
+    session["od"] = None
 
 
 def check_answers(request, flash, session, need_to_flash):

@@ -34,14 +34,15 @@ def main():
 @app.route("/setsession", methods=["GET", "POST"])
 def set_session():
     if request.method == "GET":
+        user_info = retrieve_user_info(session)
         # if choosing list for the first time, don't show quiz/study in nav bar
         #       >> set_session2.html
-        if len(retrieve_user_info(session)["doc"]["list_of_words"]) > 0:
+        if len(user_info["doc"]["list_of_words"]) > 0:
             template = "set_session2.html"
         # else, go to set_session.html
         else:
             template = "set_session.html"
-        full_name = retrieve_user_info(session)["full_name"]
+        full_name = user_info["full_name"]
         return render_template(template,
                                full_name=full_name)
     elif request.method == "POST":
@@ -58,11 +59,12 @@ def set_session():
 @app.route("/study", methods=["GET"])
 def study():
     name_of_collection = str(session["current_list"]).lower()
-    full_name = retrieve_user_info(session)["full_name"]
+    user_info = retrieve_user_info(session)
+    full_name = user_info["full_name"]
     all_words = []
     # if the list_of_words is empty, user hasn't chosen a list
     #         >> redirect to error page
-    if len(retrieve_user_info(session)["doc"]["list_of_words"]) < 1:
+    if len(user_info["doc"]["list_of_words"]) < 1:
             return render_template("error_choose_list.html",
                                    full_name=full_name)
     # if user has chosen a list, create all_words based on vocab list in db
@@ -95,7 +97,8 @@ def list_selected():
 def progress():
     no_questions = False
     # doc is the user's document in the db
-    doc = retrieve_user_info(session)["doc"]
+    user_info = retrieve_user_info(session)
+    doc = user_info["doc"]
     current_list = session["current_list"].lower()
     # if the current list in doc, user has answered questions from the list
     if current_list in doc:
@@ -119,8 +122,8 @@ def progress():
     # reset current_list to just the list number
     current_list = session["current_list"][-1]
     return render_template("progress.html",
-                           username=retrieve_user_info(session)["username"],
-                           full_name=retrieve_user_info(session)["full_name"],
+                           username=session["username"],
+                           full_name=user_info["full_name"],
                            percent_accuracy=percent_accuracy,
                            no_questions=no_questions, wrong_words=wrong_words,
                            current_list=current_list,
@@ -132,9 +135,10 @@ def progress():
 def quiz():
     global correct_def
     global correct_word, word_index
-    full_name = retrieve_user_info(session)["full_name"]
+    user_info = retrieve_user_info(session)
+    full_name = user_info["full_name"]
     name = session["current_list"].lower()
-    doc = retrieve_user_info(session)["doc"]
+    doc = user_info["doc"]
     if request.method == "GET":
         # list of defs is empty but list of words isn't, user has finished list
         if len(doc["list_of_definitions"]) < 1 and len(doc["list_of_words"]) > 0:
@@ -163,19 +167,18 @@ def quiz():
         else:
             # more than 4 values in list of defs and list of words
             word_index = random.randint(0,
-                                        (len(retrieve_user_info(session)
-                                             ["doc"]["list_of_words"])-1))
+                                        (len(user_info["doc"]["list_of_words"])
+                                         -1))
             correct_word = doc["list_of_words"][word_index]
             correct_def = doc["list_of_definitions"][word_index]
-            list_of_options = make_options(retrieve_user_info(session)
-                                           ["doc"]["list_of_words"],
+            list_of_options = make_options(user_info["doc"]["list_of_words"],
                                            doc["list_of_definitions"],
                                            correct_def)
         return render_template("question.html", correct_word=correct_word,
                                list_of_options=list_of_options,
                                name_of_lis=name[-1], full_name=full_name)
     elif request.method == "POST":
-        username = retrieve_user_info(session)["username"]
+        username = session["username"]
         if request.form.get("options") == correct_def:
             # if user is correct, update mongo and lists of words/defs
             info = UpdateCorrect(correct_word, name, username, word_index)
@@ -227,16 +230,15 @@ def edit_info():
     if request.method == "GET":
         # if just accessing page, fill in values with existing information
         other_genders = ["Male", "Female", "Other"]
-        other_genders.remove(retrieve_user_info(session)["gender"])
+        user_info = retrieve_user_info(session)
+        other_genders.remove(user_info["gender"])
         return render_template("edit_info.html",
-                               user=retrieve_user_info(session)["username"],
-                               c_user=retrieve_user_info(session)["username"],
-                               email=retrieve_user_info(session)["email"],
-                               f_name=retrieve_user_info(session)
-                               ["f_name"].split(" ")[0],
-                               l_name=retrieve_user_info(session)
-                               ["l_name"].split(" ")[0],
-                               gender=retrieve_user_info(session)["gender"],
+                               user=user_info["username"],
+                               c_user=user_info["username"],
+                               email=user_info["email"],
+                               f_name=user_info["f_name"].split(" ")[0],
+                               l_name=user_info["l_name"].split(" ")[0],
+                               gender=user_info["gender"],
                                other_genders=other_genders)
     elif request.method == "POST":
         # check answers makes incorrect value(s) blank > user knows what to fix
@@ -252,8 +254,11 @@ def edit_info():
             for i in things_to_update:
                 db.users.update(username_query, {'$set':
                                                  {i: new_stuff[i]}})
-            # first/last names have different variable/db names
+            # first/last/user names have different variable/db names
             #         >> they are outside of loop
+            db.users.update(username_query, {'$set':
+                                             {"username":
+                                              new_stuff["user"]}})
             db.users.update(username_query, {'$set':
                                              {"first_name":
                                               new_stuff["f_name"]}})
@@ -377,8 +382,8 @@ def logged_out():
 
 @app.route("/profile", methods=["GET"])
 def profile():
-    global od
     doc = retrieve_user_info(session)["doc"]
+    user_info = retrieve_user_info(session)
     stats = {}
     progress = {}
     # for each query in the document, if it is a list, add it to stats
@@ -388,12 +393,15 @@ def profile():
             try:
                 int(name_of_item[4])
                 stats[item] = doc[item]
+                print("GOT HERE")
             except (IndexError, ValueError):
                 continue
     # for each list in stats:
     #   calculate num_questions, percent_accuracy, percent_inaccuracy
     #   get the correct_words and incorrect_words (minus repeats)
     #   set equal to progress[list_number]
+    if len(stats) == 0:
+        session["od"] = {}
     for lis in stats:
         num_questions = (stats[lis]["correct"]+stats[lis]["wrong"])
         if num_questions == 0:
@@ -412,15 +420,15 @@ def profile():
             session["od"] = collections.OrderedDict(sorted(progress.items()))
             # list_of_words empty so user hasnt chosen list
             #    >> dont display Quiz/Study in topnav (profile_2)
-    if len(retrieve_user_info(session)["doc"]["list_of_words"]) < 1:
+    if len(doc["list_of_words"]) < 1:
         template = "profile_2.html"
     else:
         template = "profile.html"
     return render_template(template,
-                           email=retrieve_user_info(session)["email"],
-                           username=retrieve_user_info(session)["username"],
-                           full_name=retrieve_user_info(session)["full_name"],
-                           gender=retrieve_user_info(session)["gender"],
+                           email=user_info["email"],
+                           username=user_info["username"],
+                           full_name=user_info["full_name"],
+                           gender=user_info["gender"],
                            od=session["od"])
 
 
