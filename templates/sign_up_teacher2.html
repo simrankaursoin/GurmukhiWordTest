@@ -1,12 +1,12 @@
 {% extends "_base.html" %}
-{% block title %}Sign-Up{% endblock %}
+{% block title %}Sign-Up Teacher{% endblock %}
 
 {% block content %}
 <body>
 <br></br>
 <img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#035a9e;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
 <a href="/login" style="float:right"> Log In</a><a href="/signup" style="float:right"> Sign-Up |</a>
-<center><h2> Sign-Up (Student)</h2> </center>
+<center><h2> Sign-Up (Teacher) </h2> </center>
 <form action="" method="POST">
   First Name: <input type="text" name="f_name" value="{{f_name}}" required><br></br>
   Last Name: <input type="text" name="l_name" value="{{l_name}}" required><br></br>

@@ -1,0 +1,27 @@
+{% extends "_base.html" %}
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<body>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+<br></br>
+<ul class="nav nav-pills" style="float:right;"> <li><a href="/profile"> {{full_name}} </a></li><li><a href="/logged_out"> Log Out</a></li></ul>
+<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38" style="float:left;"><font style="color:#033784;font-size:120%;"><ul class="nav nav-pills" style="float:left;"> <li><a href="/"> Gurbani Vocab </a></li></ul></font><br /><br></br>
+<style>
+.topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:20%;}
+</style>
+
+<form action="" method="POST" class="form-horizontal">
+  <label for="classCode" class="col-lg-2 control-label">Class Code: </label>
+    <input type="text" name="class_code" id="class_code" value="{{class_code}}" pattern=".{2,}" required title="2 characters minimum" required><br></br>
+    <input class="btn btn-info" type="submit" value="Submit">
+</form>
+
+<br></br>
+</body>
+{% endblock %}

@@ -117,17 +117,52 @@ def retrieve_user_info(session):
             "l_name": l_name}
 
 
+def retrieve_teacher_info(session):
+    username = session["username"]
+    doc = db.teachers.find_one({"username": username})
+    email = doc["email"]
+    f_name = doc["first_name"].title()
+    l_name = doc["last_name"].title()
+    gender = session["gender"].title()
+    full_name = '{} {}'.format(f_name.split(" ")[0], l_name)
+    return {"username": username, "doc": doc, "full_name": full_name,
+            "gender": gender, "email": email, "f_name": f_name,
+            "l_name": l_name}
+
+
+def make_progress_report(session, stats, collections):
+    progress = {}
+    for lis in stats:
+        num_questions = (stats[lis]["correct"]+stats[lis]["wrong"])
+        if num_questions == 0:
+            session["od"] = {}
+        else:
+            percent_accuracy = int((stats[lis]["correct"] / num_questions)*100)
+            percent_inaccuracy = 100 - percent_accuracy
+            correct_words = list(set(stats[lis]["correct_words"]))
+            wrong_words = list(set(stats[lis]["wrong_words"]))
+            progress[list(lis)[-1]] = {"percent_accuracy": percent_accuracy,
+                                       "percent_inaccuracy":
+                                           percent_inaccuracy,
+                                       "total_questions": num_questions,
+                                       "correct_words": correct_words,
+                                       "wrong_words": wrong_words}
+            # od is the numerically ordered version of progress
+            session["od"] = collections.OrderedDict(sorted(progress.items()))
+
+
 def reset_sessions(session):
     session["username"] = None
     session["email"] = None
     session["first_name"] = None
     session["last_name"] = None
     session["od"] = None
+    session["user_type"] = None
 
 
 def check_answers(request, flash, session, need_to_flash):
     errors = False
-    stuff = {"user": request.form.get("user").split(" ")[0],
+    stuff = {"username": request.form.get("user").split(" ")[0],
              "email": request.form.get("email").split(" ")[0],
              "c_user": request.form.get("c_user").split(" ")[0],
              "gender": request.form.get("gender").title(),
@@ -136,14 +171,14 @@ def check_answers(request, flash, session, need_to_flash):
     if request.form.get("user").strip() != request.form.get("c_user").strip():
         if need_to_flash:
             flash("Please ensure that username is validated correctly.")
-        stuff["user"] = ""
+        stuff["username"] = ""
         stuff["c_user"] = ""
         errors = True
-    elif ((stuff["user"] != session["username"]) and
-          db.users.find_one({"username": stuff["user"]}) is not None):
+    elif ((stuff["username"] != session["username"]) and
+          db.users.find_one({"username": stuff["username"]}) is not None):
         if need_to_flash:
             flash("Username already taken")
-        stuff["user"] = ""
+        stuff["username"] = ""
         stuff["c_user"] = ""
         errors = True
     elif "@" not in list(request.form.get("email").strip()):

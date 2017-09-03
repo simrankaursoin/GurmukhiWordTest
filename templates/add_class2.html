@@ -1,0 +1,40 @@
+<! DOCTYPE html>
+{% extends "_base.html" %}
+{% block title %}Create a Class{% endblock %}
+
+{% block content %}
+<br></br>
+<style>
+.topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:50%;}
+img.two {width: 100%;}
+</style>
+
+<body>
+<ul class="nav nav-pills" style="float:right;">
+    <li><a href="/profile_teacher"> {{full_name}} </a></li>
+    <li><a href="/logged_out"> Log Out</a></li>
+</ul>
+<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38" style="float:left;">
+
+<font style="color:#033784;font-size:120%;">
+<ul class="nav nav-pills" style="float:left;">
+    <li><a href="/"> Gurbani Vocab </a></li>
+</ul><br />
+<br></br>
+<div class="topnav" id="myTopnav" border="1" style="background-color:#f7cd6a;">
+    <a href="/"><b> Home </b></a>
+    <a href="/my_classes"><b> My Classes </b></a>
+</div>
+<center><h2> Create a Class </h2></center>
+
+<form action="" method="POST" class="form-horizontal">
+  <label for="className" class="col-lg-2 control-label">Class Name: </label>
+    <input type="text" name="class_name" id="class_name" value="{{class_name}}" required><br></br>
+  <label for="classCode" class="col-lg-2 control-label">Class Code: </label>
+    <input type="text" name="class_code" id="class_code" value="{{class_code}}" pattern=".{2,}" required title="2 characters minimum" required><br></br>
+    <input class="btn btn-info" type="submit" value="Submit">
+</form>
+  <br></br>
+    
+</body>
+{% endblock %}

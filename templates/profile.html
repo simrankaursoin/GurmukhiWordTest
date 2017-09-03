@@ -23,15 +23,31 @@
     <a href="/study"><b> Study </b></a>
     <a href="/progress"><b> Progress </b></a>
 </div>
-    <center><h1 style="color:#033784;font-size:300%; font-family:Geneva;"><strong>{{full_name}} </strong></h1>
+    <center><h1 style="color:#033784;font-size:300%; font-family:Geneva;"><strong> {{full_name}} </strong></h1>
   <input style="color:#033784; border: none;background: none;" type="button" data-toggle="collapse" data-target="#demo" value="More info"></center>
     <div id="demo" class="collapse" text-align="left" style="margin-left: 40%;">
-    <u>Username</u>: {{username}}<br />
+    <u>Username</u>: {{username}}<br /></font>
     <u>Email</u>: {{email}}<br />
     <u>Gender</u>: {{gender}}<br></br>
     <a href="/edit_info" class="btn btn-info" style="margin-left: 10%;">Edit Info</a>
+    
   </div>
-        <div> 
+  <div>
+  <h2 style="color:#033784;font-size:180%; font-family:Geneva;"><strong> Classes:</strong></h2>
+  {% if class_name %}
+  <form action="/delete_class">
+ <blockquote><font style="font-size:130%;"><u><strong>{{class_name}}</u> 
+ <input type="Submit" value="Delete" style="font-size:49%;">
+ </strong></font><br />
+ {{teacher_name}}</form>
+    </blockquote>
+    {% else %}
+    <div class="panel panel-default" style="width:15%; padding: 5px;">
+        <a href="/enroll_in_class"> + Enroll in a class </a>
+    </div>
+    {% endif %}
+  
+<div> 
             <h2 style="color:#033784;font-size:180%; font-family:Geneva;"><strong> Progress Report </strong></h2>
             {% if od|length < 1 %}
                 You should start practicing!

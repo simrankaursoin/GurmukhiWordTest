@@ -6,6 +6,7 @@ from helper import make_lists, retrieve_user_info, reset_sessions
 from helper import make_options, check_answers, calculate_percent_accuracy
 from helper import UpdateSession, UpdateSession_Form, UpdateCorrect
 from helper import UpdateWrong, less_than_four, CreateMongoList
+from helper import retrieve_teacher_info, make_progress_report
 from passlib.hash import pbkdf2_sha512
 import collections
 import arrow
@@ -18,18 +19,18 @@ db = make_database()
 
 @app.route("/", methods=["GET"])
 def main():
-    try:
-        full_name = retrieve_user_info(session)["full_name"]
-    except (KeyError, TypeError):
-        # if error, the user hasn't signed in yet >> homepage.html
+    if session["username"] is None:
         return render_template("homepage.html")
-    # if len(list_of_words) > 0, user hasn't chosen a list >> homepage_2.html
-    if len(retrieve_user_info(session)["doc"]["list_of_words"]) > 0:
-        template = "homepage_2.html"
-    # else, user has chosen a list >> homepage_3.html
+    elif session["user_type"] == "Teacher":
+        full_name = retrieve_teacher_info(session)["full_name"]
+        return render_template("homepage_teacher.html", full_name=full_name)
     else:
-        template = "homepage_3.html"
-    return render_template(template, full_name=full_name)
+        full_name = retrieve_user_info(session)["full_name"]
+        if len(retrieve_user_info(session)["doc"]["list_of_words"]) > 0:
+            template = "homepage_2.html"
+        else:
+            template = "homepage_3.html"
+        return render_template(template, full_name=full_name)
 
 
 @app.route("/setsession", methods=["GET", "POST"])
@@ -201,32 +202,266 @@ def quiz():
                                    correct_translit=info["correct_translit"])
 
 
+@app.route("/my_classes", methods=["GET"])
+def my_classes():
+    username = session["username"]
+    mongo_doc = db.teachers.find_one({"username": username})
+    other_stuff_in_mongo_doc = ["_id", "username", "gender",
+                                "password", "first_name",
+                                "last_name", "security_word",
+                                "email"]
+    classes = {}
+    for item in mongo_doc:
+        if item in other_stuff_in_mongo_doc:
+            continue
+        else:
+            classes[item] = mongo_doc[item]
+    students = {}
+    for item in classes:
+        students[item] = {}
+        for student in db.users.find({"class_name": item}):
+            f_name = student["first_name"]
+            l_name = student["last_name"]
+            student_name = '{} {}'.format(f_name.split(" ")[0], l_name)
+            student_data = {}
+            for thing in student:
+                name_of_item = list(str(thing))
+                if name_of_item[0:4] == list("list"):
+                    try:
+                        int(name_of_item[4])
+                        percent_accuracy = (student[thing]["correct"] /
+                                            (student[thing]["correct"] +
+                                             student[thing]["wrong"]))*100
+                        list_name = name_of_item[4]
+                        student_data[list_name] = percent_accuracy
+                    except (IndexError, ValueError):
+                        continue
+            sorted_data = collections.OrderedDict(sorted(student_data.items()))
+            students[item][student_name] = sorted_data
+    full_name = retrieve_teacher_info(session)["full_name"]
+    return render_template("my_classes.html",
+                           classes=classes, students=students,
+                           full_name=full_name)
+
+
+@app.route("/delete_class", methods=["GET", "POST"])
+def delete_class():
+    full_name = retrieve_user_info(session)["full_name"]
+    username = session["username"]
+    mongo_doc = db.users.find_one({"username": username})
+    class_name = mongo_doc["class_name"]
+    if request.method == "GET":
+        if len(mongo_doc["list_of_words"]) < 1:
+            return render_template("delete_class2.html",
+                                full_name=full_name,
+                                class_name=class_name)
+        else:
+            return render_template("delete_class.html",
+                                full_name=full_name,
+                                class_name=class_name)
+    else:
+        if request.form.get("yes/no") == "Yes":
+            db.users.update({"username": username}, {"$set": {"class_name": None}})
+            db.users.update({"username": username}, {"$set": {"class_code": None}})
+            flash("You have officially un-enrolled from "+class_name)
+            return redirect("/profile", 303)
+        else:
+            return redirect("/profile", 303)
+            
+
+@app.route("/edit_info_teacher", methods=["GET", "POST"])
+def edit_info_teacher():
+    if request.method == "GET":
+        other_genders = ["Male", "Female", "Other"]
+        user_info = retrieve_teacher_info(session)
+        other_genders.remove(user_info["gender"])
+        return render_template("edit_info.html",
+                               user=user_info["username"],
+                               c_user=user_info["username"],
+                               email=user_info["email"],
+                               f_name=user_info["f_name"].split(" ")[0],
+                               l_name=user_info["l_name"].split(" ")[0],
+                               gender=user_info["gender"],
+                               other_genders=other_genders)
+    elif request.method == "POST":
+        new_stuff = check_answers(request, flash, session, False)["new_stuff"]
+        if not check_answers(request, flash, session, True)["errors"]:
+            username_query = {"username": session["username"]}
+            things_to_update = ["email", "username", "gender"]
+            for i in things_to_update:
+                db.teachers.update(username_query, {'$set':
+                                                    {i: new_stuff[i]}})
+            db.teachers.update(username_query, {'$set':
+                                                {"first_name":
+                                                 new_stuff["f_name"]}})
+            db.teachers.update(username_query, {'$set':
+                                                {"last_name":
+                                                 new_stuff["l_name"]}})
+            UpdateSession_Form(session, request)
+            flash("Profile updated")
+            return redirect("/profile_teacher", 303)
+        # if check answers returns True, the user has made a mistake
+        # reroute to edit_info so user can fix answer(s)
+        else:
+            other_genders = ["Male", "Female", "Other"]
+            other_genders.remove(new_stuff["gender"])
+            return render_template("edit_info_teacher.html",
+                                   user=new_stuff["user"],
+                                   email=new_stuff["email"],
+                                   f_name=new_stuff["f_name"],
+                                   l_name=new_stuff["l_name"],
+                                   c_user=new_stuff["c_user"],
+                                   gender=new_stuff["gender"],
+                                   other_genders=other_genders)
+
+
+@app.route("/add_class", methods=["GET", "POST"])
+def add_class():
+    if request.method == "GET":
+        full_name = retrieve_teacher_info(session)["full_name"]
+        return render_template("add_class.html", full_name=full_name)
+    else:
+        for teacher in db.teachers.find():
+            for item in teacher:
+                if item == request.form.get("class_name"):
+                    flash("Class Name is taken")
+                    class_name = ""
+                    class_code = request.form.get("class_code")
+                    full_name = retrieve_teacher_info(session)["full_name"]
+                    return render_template("add_class2.html",
+                                           class_name=class_name,
+                                           class_code=class_code,
+                                           full_name=full_name)
+                elif teacher[item] == request.form.get("class_code"):
+                    flash("Class Code already taken")
+                    class_name = request.form.get("class_name")
+                    class_code = ""
+                    full_name = retrieve_teacher_info(session)["full_name"]
+                    return render_template("add_class2.html",
+                                           class_name=class_name,
+                                           class_code=class_code,
+                                           full_name=full_name)
+                else:
+                    continue
+        db.teachers.update({"username": session["username"]
+                            }, {'$set': {request.form.get("class_name"):
+                                         request.form.get("class_code")}})
+        flash("Class created")
+        return redirect("/my_classes", 303)
+
+
+@app.route("/profile_teacher", methods=["GET", "POST"])
+def profile_teacher():
+    full_name = retrieve_teacher_info(session)["full_name"]
+    username = retrieve_teacher_info(session)["username"]
+    email = retrieve_teacher_info(session)["email"]
+    gender = retrieve_teacher_info(session)["gender"]
+    return render_template("profile_teacher.html",
+                           full_name=full_name, gender=gender,
+                           email=email, username=username)
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
         return render_template("login.html")
     elif request.method == "POST":
-        doc = db.users.find_one({"username":
-                                 request.form.get("user").lower().strip()})
+        submitted_username = request.form.get("user").lower().strip()
+        doc = db.users.find_one({"username": submitted_username})
+        teacher_doc = db.teachers.find_one({"username": submitted_username})
         username = request.form.get("user").strip()
         # if the document does not exist in db, wrong username
-        if doc is None:
+        if doc is None and teacher_doc is None:
             flash("Wrong Username")
             return render_template("login2.html",
                                    user="",
                                    password=request.form.get("pass").lower())
         # if username exists and password matches up, redirect to choose list
-        elif pbkdf2_sha512.verify(request.form.get("pass").strip(),
-                                  doc["password"]):
-            UpdateSession(session, username, doc)
-            flash("Successful login")
-            return redirect("/setsession", 303)
-        # if username exists in db but password doesn't match up, wrong pass
+        elif teacher_doc is None:
+            if pbkdf2_sha512.verify(request.form.get("pass").strip(),
+                                    doc["password"]):
+                UpdateSession(session, username, doc)
+                flash("Successful login")
+                session["user_type"] = "Student"
+                return redirect("/setsession", 303)
+            else:
+                flash("Wrong password")
+                return render_template("login2.html",
+                                       user=request.form.get("user").lower(),
+                                       password="")
         else:
-            flash("Wrong password")
-            return render_template("login2.html",
-                                   user=request.form.get("user").lower(),
-                                   password="")
+            if pbkdf2_sha512.verify(request.form.get("pass").strip(),
+                                    teacher_doc["password"]):
+                UpdateSession(session, username, teacher_doc)
+                session["user_type"] = "Teacher"
+                flash("Successful login")
+                return redirect("/", 303)
+            else:
+                flash("Wrong password")
+                return render_template("login2.html",
+                                       user=request.form.get("user").lower(),
+                                       password="")
+
+
+@app.route("/choose_user_type", methods=["GET", "POST"])
+def choose_user_type():
+    if request.method == "GET":
+        return render_template("choose_user_type.html")
+    else:
+        if request.form["user_type"] == "Student":
+            session["user_type"] = "Student"
+            return redirect("/signup", 303)
+        else:
+            session["user_type"] = "Teacher"
+            return redirect("/sign_up_teacher", 303)
+
+
+@app.route("/sign_up_teacher", methods=["GET", "POST"])
+def sign_up_teacher():
+    if request.method == "GET":
+        return render_template("sign_up_teacher.html")
+    elif request.method == "POST":
+        UpdateSession_Form(session, request)
+        new_stuff = check_answers(request, flash, session, False)["new_stuff"]
+        pass_word = pbkdf2_sha512.hash(request.form.get("pass").strip())
+        c_pass = request.form.get("c_pass").strip()
+        security_word = request.form.get("security_word").strip()
+        # if check_answers is False, user has not made any mistakes
+        # insert document in db
+        if not check_answers(request, flash, session, True)["errors"]:
+            db.teachers.insert_one({"username": new_stuff["username"],
+                                    "password": pass_word,
+                                    "security_word": request.form.get
+                                    ("security_word").strip(),
+                                    "email": new_stuff["email"],
+                                    "first_name": new_stuff["f_name"],
+                                    "last_name": new_stuff["l_name"],
+                                    "gender": new_stuff["gender"]
+                                    })
+            # update the session with newly created db
+            UpdateSession_Form(session, request)
+            session["user_type"] = "Teacher"
+            flash("Profile created")
+            return redirect("/", 303)
+        # if password doesnt match up, as user to retype them
+        elif (request.form.get("pass").strip() !=
+              request.form.get("c_pass").strip()):
+            flash("Please retype the password/confirmed password")
+            pass_word = ""
+            c_pass = ""
+        other_genders = ["Male", "Female", "Other"]
+        other_genders.remove(new_stuff["gender"])
+        return render_template("sign_up_teacher2.html",
+                               user=new_stuff["user"],
+                               pass_word=pass_word,
+                               email=new_stuff["email"],
+                               security_word=security_word,
+                               f_name=new_stuff["f_name"],
+                               l_name=new_stuff["l_name"],
+                               c_pass=c_pass,
+                               c_user=new_stuff["c_user"],
+                               gender=new_stuff["gender"],
+                               other_genders=other_genders)
 
 
 @app.route("/edit_info", methods=["GET", "POST"])
@@ -343,7 +578,7 @@ def signup():
         # if check_answers is False, user has not made any mistakes
         # insert document in db
         if not check_answers(request, flash, session, True)["errors"]:
-            db.users.insert_one({"username": new_stuff["user"],
+            db.users.insert_one({"username": new_stuff["username"],
                                  "password": pass_word,
                                  "security_word": request.form.get
                                  ("security_word").strip(),
@@ -353,6 +588,8 @@ def signup():
                                  "gender": new_stuff["gender"],
                                  "list_of_words": [],
                                  "list_of_definitions": [],
+                                 "class_name": None,
+                                 "class_code": None
                                  })
             # update the session with newly created db
             UpdateSession_Form(session, request)
@@ -367,7 +604,7 @@ def signup():
         other_genders = ["Male", "Female", "Other"]
         other_genders.remove(new_stuff["gender"])
         return render_template("sign_up2.html",
-                               user=new_stuff["user"],
+                               user=new_stuff["username"],
                                pass_word=pass_word,
                                email=new_stuff["email"],
                                security_word=security_word,
@@ -389,9 +626,8 @@ def logged_out():
 def profile():
     doc = retrieve_user_info(session)["doc"]
     user_info = retrieve_user_info(session)
-    stats = {}
-    progress = {}
     # for each query in the document, if it is a list, add it to stats
+    stats = {}
     for item in doc:
         name_of_item = list(str(item))
         if name_of_item[0:4] == list("list"):
@@ -400,31 +636,28 @@ def profile():
                 stats[item] = doc[item]
             except (IndexError, ValueError):
                 continue
+    class_code = doc["class_code"]
+    class_name = doc["class_name"]
+    if class_code is None:
+        teacher_name = None
+    else:
+        for teacher_mongodoc in db.teachers.find():
+            for item in teacher_mongodoc:
+                if item == class_name and teacher_mongodoc[item] == class_code:
+                    teacher_fname = teacher_mongodoc["first_name"]
+                    teacher_lname = teacher_mongodoc["last_name"]
+                else:
+                    continue
+        teacher_name = '{} {}'.format(teacher_fname.split(" ")[0],
+                                      teacher_lname)
     # for each list in stats:
     #   calculate num_questions, percent_accuracy, percent_inaccuracy
     #   get the correct_words and incorrect_words (minus repeats)
-    #   set equal to progress[list_number]
+    #   set equal to progress[list_numbxer]
     if len(stats) == 0:
         session["od"] = {}
-    for lis in stats:
-        num_questions = (stats[lis]["correct"]+stats[lis]["wrong"])
-        if num_questions == 0:
-            session["od"] = {}
-        else:
-            percent_accuracy = int((stats[lis]["correct"] / num_questions)*100)
-            percent_inaccuracy = 100 - percent_accuracy
-            correct_words = list(set(stats[lis]["correct_words"]))
-            wrong_words = list(set(stats[lis]["wrong_words"]))
-            progress[list(lis)[-1]] = {"percent_accuracy": percent_accuracy,
-                                       "percent_inaccuracy":
-                                           percent_inaccuracy,
-                                       "total_questions": num_questions,
-                                       "correct_words": correct_words,
-                                       "wrong_words": wrong_words}
-            # od is the numerically ordered version of progress
-            session["od"] = collections.OrderedDict(sorted(progress.items()))
-            # list_of_words empty so user hasnt chosen list
-            #    >> dont display Quiz/Study in topnav (profile_2)
+    else:
+        make_progress_report(session, stats, collections)
     if len(doc["list_of_words"]) < 1:
         template = "profile_2.html"
     else:
@@ -434,7 +667,30 @@ def profile():
                            username=user_info["username"],
                            full_name=user_info["full_name"],
                            gender=user_info["gender"],
-                           od=session["od"])
+                           od=session["od"], class_code=class_code,
+                           class_name=class_name, teacher_name=teacher_name)
+
+
+@app.route("/enroll_in_class", methods=["GET", "POST"])
+def enroll_in_class():
+    if request.method == "GET":
+        full_name = retrieve_user_info(session)["full_name"]
+        return render_template("enroll_in_class.html", full_name=full_name)
+    else:
+        class_code = request.form.get("class_code")
+        for teacher in db.teachers.find():
+            for attribute in teacher:
+                if teacher[attribute] == class_code:
+                    flash("You have enrolled in '"+attribute+"'")
+                    db.users.update({"username": session["username"]},
+                                    {'$set': {"class_code": class_code}})
+                    db.users.update({"username": session["username"]},
+                                    {'$set': {"class_name": attribute}})
+                    return redirect("/profile", 303)
+                else:
+                    continue
+        flash("Class Doesn't Exist. Please Try Again")
+        return redirect("/enroll_in_class", 303)
 
 
 @app.route("/MyProgressReport", methods=["GET"])

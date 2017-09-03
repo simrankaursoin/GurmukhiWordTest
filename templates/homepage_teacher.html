@@ -1,26 +1,38 @@
+<! DOCTYPE html>
 {% extends "_base.html" %}
 {% block title %}Homepage{% endblock %}
 
 {% block content %}
-<body>
 <br></br>
-<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38" style="float:left;"><font style="color:#033784;font-size:120%;"><ul class="nav nav-pills" style="float:left;"> <li><a href="/"> Gurbani Vocab </a></li></ul><br />
+<style>
+.topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:50%;}
+img.two {width: 100%;}
+</style>
+
+<body>
+<ul class="nav nav-pills" style="float:right;">
+    <li><a href="/profile_teacher"> {{full_name}} </a></li>
+    <li><a href="/logged_out"> Log Out</a></li>
+</ul>
+<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38" style="float:left;">
+
+<font style="color:#033784;font-size:120%;">
+<ul class="nav nav-pills" style="float:left;">
+    <li><a href="/"> Gurbani Vocab </a></li>
+</ul><br />
 <br></br>
 <div class="topnav" id="myTopnav" border="1" style="background-color:#f7cd6a;">
-    <a href="/login"><b>Log In </b></a>
-    <a href="/choose_user_type"><b> Sign Up </b></a>
+    <a href="/"><b> Home </b></a>
+    <a href="/my_classes"><b> My Classes </b></a>
 </div>
-<center><h1 style="color:#033784;font-family:Geneva;font-size:420%;"> Welcome to Gurbani Vocab! <sup><font style="font-size:30%">BETA</font></sup></h1>
-<h4><i>Learn the most common words from the Guru Granth Sahib ji. Test yourself and improve your understanding!</i></h4></center>
-<style>
-img.two {width: 100%;}
-.topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:50%;}
-</style>
+<center><h1 style="color:#033784;font-family:Geneva;font-size:420%;">Welcome to Gurbani Vocab!<sup><font style="font-size:30%">BETA</font></sup><h4><i>Learn the most common words from the Guru Granth Sahib ji. Test yourself and improve your understanding!</i></h4></center>
+
 
 <br> </br>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>  
-<div class="container" style="width: 80%;" >
+<body>
+<div class="container" style="width: 80%;">
 <div id="myCarousel" class="carousel slide" data-ride="carousel">
   <!-- Indicators -->
   <ol class="carousel-indicators">
@@ -41,6 +53,7 @@ img.two {width: 100%;}
   </div>
 
 
+
   <!-- Left and right controls -->
   <a class="left carousel-control" href="#myCarousel" data-slide="prev">
     <span class="glyphicon glyphicon-chevron-left"></span>
@@ -57,7 +70,7 @@ img.two {width: 100%;}
 <div class="panel-body" style="background-color:#ffe5aa;">
 <h1 style="color:#033784; font-size: 290%;"><strong>Features of the Application</strong></h1>
 <font style="font-size:180%; color:#033784;">Evaluate</font>
-<br />The Quiz feature of Gurbani Vocab allows you to evaluate yourself by asking you multiple choice questions based on the vocabulary list you selected. 
+<br />The Quiz feature of Gurbani Vocab allows you to evaluate yourself by asking you multiple choice questions based on the vocabulary list you select. 
 The instant results help you to immediately see the areas in which you need to improve, giving you the most efficient way to study!<br></br>
 <font style="font-size:180%; color:#033784;">Progress</font>
 <br />Track your progress per vocabulary list under the Progress tab. Under your profile, download your results and send them to your teacher or just watch as your grades improve!<br></br>
@@ -65,6 +78,5 @@ The instant results help you to immediately see the areas in which you need to i
 <br />Go to the Study tab to look at the entire vocabulary list and review before you evaluate yourself!<br></br>
 </div>
 </div>
-
 </body>
 {% endblock %}

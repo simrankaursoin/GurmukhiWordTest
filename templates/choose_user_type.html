@@ -1,0 +1,29 @@
+{% extends "_base.html" %}
+{% block title %}Choose User Type{% endblock %}
+
+{% block content %}
+<body>
+<br></br>
+<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38" style="float:left;">
+<font style="color:#033784;font-size:120%;">
+<ul class="nav nav-pills" style="float:left;"> 
+    <li><a href="/">Gurbani Vocab </a></li>
+</ul>
+<br /><br></br>
+<style>
+.topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:50%;}
+</style>
+<div class="topnav" id="myTopnav" border="1" style="background-color:#f7cd6a;">
+    <a href="/"><b> Home </b></a>
+    <a href="/login"><b> Log-In </b></a>
+</div>
+
+<center><h2> Choose what type of user you are: </h2>
+<form action="" method="POST">
+  <input class="btn btn-info" type="submit" name="user_type" value="Student" style="font-size:160%;">
+  <input class="btn btn-info" type="submit" name="user_type" value="Teacher" style="font-size:160%;">
+</form>
+</center>
+
+</body>
+{% endblock %}

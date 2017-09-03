@@ -1,21 +1,19 @@
 {% extends "_base.html" %}
-{% block title %}Sign-Up{% endblock %}
+{% block title %}Edit Info{% endblock %}
 
 {% block content %}
 <body>
+<br> </br>
+<ul class="nav nav-pills" style="float:right;"> <li><a href="/profile_teacher"> {{full_name}} </a></li><li><a href="/logged_out"> Log Out</a></li></ul>
+<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38" style="float:left;"><font style="color:#033784;font-size:120%;"><ul class="nav nav-pills" style="float:left;"> <li><a href="/"> Gurbani Vocab </a></li></ul>
 <br></br>
-<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#035a9e;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
-<a href="/login" style="float:right"> Log In</a><a href="/signup" style="float:right"> Sign-Up |</a>
-<center><h2> Sign-Up (Student)</h2> </center>
+<center><h2> Edit Info </h2> </center>
 <form action="" method="POST">
   First Name: <input type="text" name="f_name" value="{{f_name}}" required><br></br>
   Last Name: <input type="text" name="l_name" value="{{l_name}}" required><br></br>
   Username: <input type="text" name="user" value="{{user}}" required><br></br>
   Confirm Username: <input type="text" name="c_user" value="{{c_user}}" required><br></br>
-  Password: <input type="password" name="pass" value="{{pass_word}}" pattern=".{8,}"   required title="8 characters minimum"><br></br>
-  Confirm Password: <input type="password" name="c_pass" value="{{c_pass}}" pattern=".{8,}"   required title="8 characters minimum"><br></br>
   Email: <input type="text" name="email" value="{{email}}" required><br></br>
-  Security Word: <input type="text" name="security_word" value="{{security_word}}" required><br></br>
   Gender:
     <INPUT TYPE="radio" name="gender" value={{gender}} checked> {{gender}}
     {% for item in other_genders %}

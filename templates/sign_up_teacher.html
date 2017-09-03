@@ -1,12 +1,12 @@
 {% extends "_base.html" %}
-{% block title %}Sign-Up{% endblock %}
+{% block title %}Sign-Up Teacher{% endblock %}
 
 {% block content %}
 <body>
 <br></br>
 <ul class="nav nav-pills" style="float:right;"> <li><a href="/profile"> {{full_name}} </a></li><li><a href="/login"> Log In</a></li></ul>
 <img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38" style="float:left;"><font style="color:#033784;font-size:120%;"><ul class="nav nav-pills" style="float:left;"> <li><a href="/"> Gurbani Vocab </a></li></ul><br /><br></br>
-<center><h2> Sign-Up (Student) </h2> </center>
+<center><h2> Sign-Up (Teacher) </h2> </center>
 <form action="" method="POST" class="form-horizontal">
   <label for="inputFirstName" class="col-lg-2 control-label">First Name: </label>
     <input type="text" name="f_name" id="inputFirstName" required><br></br>
@@ -28,6 +28,7 @@
     <INPUT TYPE="radio" id="inputGender" name="gender" value="female"> Female
     <INPUT TYPE="radio" id="inputGender" name="gender" value="male"> Male
     <INPUT TYPE="radio" id="inputGender" name="gender" value="other"> Other <br></br>
+  
 <input class="btn btn-info" type="submit" value="Submit">
 </form>
 </body>
