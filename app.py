@@ -22,10 +22,15 @@ def main():
     if session["username"] is None:
         return render_template("homepage.html")
     elif session["user_type"] == "Teacher":
+        db.teachers.update({"username": session["username"]},
+                           {"$set": {"last_accessed": arrow.utcnow()}})
         full_name = retrieve_teacher_info(session)["full_name"]
         return render_template("homepage_teacher.html", full_name=full_name)
     else:
         full_name = retrieve_user_info(session)["full_name"]
+        db.users.update({"username": session["username"]},
+                        {"$set": {"last_accessed":
+                                  arrow.utcnow().format('YYYY-MM-DD')}})
         if len(retrieve_user_info(session)["doc"]["list_of_words"]) > 0:
             template = "homepage_2.html"
         else:
@@ -37,6 +42,9 @@ def main():
 def set_session():
     if request.method == "GET":
         user_info = retrieve_user_info(session)
+        db.users.update({"username": session["username"]},
+                        {"$set": {"last_accessed":
+                                  arrow.utcnow().format('YYYY-MM-DD')}})
         # if choosing list for the first time, don't show quiz/study in nav bar
         #       >> set_session2.html
         if len(user_info["doc"]["list_of_words"]) > 0:
@@ -66,6 +74,9 @@ def study():
     all_words = []
     # if the list_of_words is empty, user hasn't chosen a list
     #         >> redirect to error page
+    db.users.update({"username": session["username"]},
+                    {"$set": {"last_accessed":
+                              arrow.utcnow().format('YYYY-MM-DD')}})
     if len(user_info["doc"]["list_of_words"]) < 1:
             return render_template("error_choose_list.html",
                                    full_name=full_name)
@@ -102,6 +113,9 @@ def progress():
     user_info = retrieve_user_info(session)
     doc = user_info["doc"]
     current_list = session["current_list"].lower()
+    db.users.update({"username": session["username"]},
+                    {"$set": {"last_accessed":
+                              arrow.utcnow().format('YYYY-MM-DD')}})
     # if the current list in doc, user has answered questions from the list
     if current_list in doc:
         correct_words = list(set(doc[current_list]["correct_words"]))
@@ -253,21 +267,23 @@ def delete_class():
     if request.method == "GET":
         if len(mongo_doc["list_of_words"]) < 1:
             return render_template("delete_class2.html",
-                                full_name=full_name,
-                                class_name=class_name)
+                                   full_name=full_name,
+                                   class_name=class_name)
         else:
             return render_template("delete_class.html",
-                                full_name=full_name,
-                                class_name=class_name)
+                                   full_name=full_name,
+                                   class_name=class_name)
     else:
         if request.form.get("yes/no") == "Yes":
-            db.users.update({"username": username}, {"$set": {"class_name": None}})
-            db.users.update({"username": username}, {"$set": {"class_code": None}})
+            db.users.update({"username": username}, {"$set":
+                                                     {"class_name": None}})
+            db.users.update({"username": username}, {"$set":
+                                                     {"class_code": None}})
             flash("You have officially un-enrolled from "+class_name)
             return redirect("/profile", 303)
         else:
             return redirect("/profile", 303)
-            
+
 
 @app.route("/edit_info_teacher", methods=["GET", "POST"])
 def edit_info_teacher():
@@ -356,6 +372,9 @@ def profile_teacher():
     username = retrieve_teacher_info(session)["username"]
     email = retrieve_teacher_info(session)["email"]
     gender = retrieve_teacher_info(session)["gender"]
+    db.teachers.update({"username": session["username"]},
+                       {"$set": {"last_accessed":
+                                 arrow.utcnow().format('YYYY-MM-DD')}})
     return render_template("profile_teacher.html",
                            full_name=full_name, gender=gender,
                            email=email, username=username)
@@ -382,7 +401,10 @@ def login():
                                     doc["password"]):
                 UpdateSession(session, username, doc)
                 flash("Successful login")
-                session["user_type"] = "Student"
+                db.users.update({"username": session["username"]},
+                                {"$set":
+                                 {"last_accessed":
+                                  arrow.utcnow().format('YYYY-MM-DD')}})
                 return redirect("/setsession", 303)
             else:
                 flash("Wrong password")
@@ -394,6 +416,10 @@ def login():
                                     teacher_doc["password"]):
                 UpdateSession(session, username, teacher_doc)
                 session["user_type"] = "Teacher"
+                db.teachers.update({"username": session["username"]},
+                                   {"$set":
+                                    {"last_accessed":
+                                     arrow.utcnow().format('YYYY-MM-DD')}})
                 flash("Successful login")
                 return redirect("/", 303)
             else:
@@ -436,7 +462,9 @@ def sign_up_teacher():
                                     "email": new_stuff["email"],
                                     "first_name": new_stuff["f_name"],
                                     "last_name": new_stuff["l_name"],
-                                    "gender": new_stuff["gender"]
+                                    "gender": new_stuff["gender"],
+                                    "last_accessed":
+                                    arrow.utcnow().format('YYYY-MM-DD')
                                     })
             # update the session with newly created db
             UpdateSession_Form(session, request)
@@ -589,7 +617,9 @@ def signup():
                                  "list_of_words": [],
                                  "list_of_definitions": [],
                                  "class_name": None,
-                                 "class_code": None
+                                 "class_code": None,
+                                 "last_accessed":
+                                 arrow.utcnow().format('YYYY-MM-DD')
                                  })
             # update the session with newly created db
             UpdateSession_Form(session, request)
@@ -626,6 +656,9 @@ def logged_out():
 def profile():
     doc = retrieve_user_info(session)["doc"]
     user_info = retrieve_user_info(session)
+    db.users.update({"username": session["username"]},
+                    {"$set":
+                     {"last_accessed": arrow.utcnow().format('YYYY-MM-DD')}})
     # for each query in the document, if it is a list, add it to stats
     stats = {}
     for item in doc:
@@ -674,6 +707,9 @@ def profile():
 @app.route("/enroll_in_class", methods=["GET", "POST"])
 def enroll_in_class():
     if request.method == "GET":
+        db.users.update({"username": session["username"]},
+                        {"$set": {"last_accessed":
+                                  arrow.utcnow().format('YYYY-MM-DD')}})
         full_name = retrieve_user_info(session)["full_name"]
         return render_template("enroll_in_class.html", full_name=full_name)
     else:
