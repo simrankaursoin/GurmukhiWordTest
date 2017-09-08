@@ -223,7 +223,7 @@ def my_classes():
     other_stuff_in_mongo_doc = ["_id", "username", "gender",
                                 "password", "first_name",
                                 "last_name", "security_word",
-                                "email"]
+                                "email", "last_accessed"]
     classes = {}
     for item in mongo_doc:
         if item in other_stuff_in_mongo_doc:
