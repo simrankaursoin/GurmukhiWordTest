@@ -517,7 +517,7 @@ def edit_info():
             # username_query is the query for the first part of db.update
             username_query = {"username": session["username"]}
             # things to update is the list of things to update (for loop)
-            things_to_update = ["email", "user", "gender"]
+            things_to_update = ["email", "gender"]
             for i in things_to_update:
                 db.users.update(username_query, {'$set':
                                                  {i: new_stuff[i]}})
@@ -525,7 +525,7 @@ def edit_info():
             #         >> they are outside of loop
             db.users.update(username_query, {'$set':
                                              {"username":
-                                              new_stuff["user"]}})
+                                              new_stuff["username"]}})
             db.users.update(username_query, {'$set':
                                              {"first_name":
                                               new_stuff["f_name"]}})
