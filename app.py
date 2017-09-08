@@ -19,9 +19,11 @@ db = make_database()
 
 @app.route("/", methods=["GET"])
 def main():
-    if session["username"] is None:
+    try:
+        session["username"]
+    except KeyError:
         return render_template("homepage.html")
-    elif session["user_type"] == "Teacher":
+    if session["user_type"] == "Teacher":
         db.teachers.update({"username": session["username"]},
                            {"$set": {"last_accessed":  arrow.utcnow().format('YYYY-MM-DD')}})
         full_name = retrieve_teacher_info(session)["full_name"]
