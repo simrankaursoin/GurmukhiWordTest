@@ -23,7 +23,7 @@ def main():
         return render_template("homepage.html")
     elif session["user_type"] == "Teacher":
         db.teachers.update({"username": session["username"]},
-                           {"$set": {"last_accessed": arrow.utcnow()}})
+                           {"$set": {"last_accessed":  arrow.utcnow().format('YYYY-MM-DD')}})
         full_name = retrieve_teacher_info(session)["full_name"]
         return render_template("homepage_teacher.html", full_name=full_name)
     else:
