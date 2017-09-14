@@ -95,12 +95,13 @@ def UpdateWrong(correct_word, name, username, word_index, session):
     correct_translit = full_doc["transliteration"]
     return {"quote_ggs": quote_ggs, "correct_translit": correct_translit}
 
-
 def UpdateSession(session, username, doc):
     session["username"] = username
     gender = doc["gender"]
     session["gender"] = gender
     email = doc["email"]
+    session["first_name"] = doc["first_name"]
+    session["last_name"] = doc["last_name"]
     session["email"] = email
 
 
@@ -128,6 +129,17 @@ def retrieve_teacher_info(session):
     return {"username": username, "doc": doc, "full_name": full_name,
             "gender": gender, "email": email, "f_name": f_name,
             "l_name": l_name}
+
+def check_if_user_chose_list(session, arrow):
+    if len(retrieve_user_info(session)["doc"]["list_of_words"]) > 0:
+            template = "homepage_2.html"
+    else:
+        template = "homepage_3.html"
+    full_name = retrieve_user_info(session)["full_name"]
+    db.users.update({"username": session["username"]},
+                    {"$set": {"last_accessed":
+                                arrow.utcnow().format('YYYY-MM-DD')}})
+    return {"full_name": full_name, "template": template}
 
 
 def make_progress_report(session, stats, collections):
@@ -168,6 +180,7 @@ def check_answers(request, flash, session, need_to_flash):
              "gender": request.form.get("gender").title(),
              "f_name": request.form.get("f_name").split(" ")[0],
              "l_name": request.form.get("l_name").split(" ")[0]}
+    print(stuff)
     if request.form.get("user").strip() != request.form.get("c_user").strip():
         if need_to_flash:
             flash("Please ensure that username is validated correctly.")
@@ -195,10 +208,7 @@ def check_answers(request, flash, session, need_to_flash):
         if need_to_flash:
             flash("Please select gender")
         errors = True
-    if errors is True:
-        return {"errors": True, "new_stuff": stuff}
-    else:
-        return {"errors": False, "new_stuff": stuff}
+    return {"errors": errors, "new_stuff": stuff}
 
 
 def calculate_percent_accuracy(full_doc, name):

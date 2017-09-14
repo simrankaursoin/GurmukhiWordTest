@@ -4,30 +4,33 @@
 {% block content %}
 <body>
 <br></br>
-<ul class="nav nav-pills" style="float:right;"> <li><a href="/profile"> {{full_name}} </a></li><li><a href="/login"> Log In</a></li></ul>
-<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38" style="float:left;"><font style="color:#033784;font-size:120%;"><ul class="nav nav-pills" style="float:left;"> <li><a href="/"> Gurbani Vocab </a></li></ul><br /><br></br>
+<a href="/"><img src="{{url_for('static', filename='GurbaniVocabLogo.png')}}" style="float:left;" class="logo"></a><br /><br></br>
+<a href="/login" style="float:right"> Log In</a><a href="/signup" style="float:right"> Sign-Up |</a>
+<style>
+img.logo {max-width:20%;min-width:144px; min-height:30px}
+</style>
 <center><h2> Sign-Up (Teacher) </h2> </center>
 <form action="" method="POST" class="form-horizontal">
-  <label for="inputFirstName" class="col-lg-2 control-label">First Name: </label>
-    <input type="text" name="f_name" id="inputFirstName" required><br></br>
-  <label for="inputLastName" class="col-lg-2 control-label">Last Name: </label>
-    <input id="inputLastName" type="text" name="l_name" required><br></br>
-  <label for="inputUser" class="col-lg-2 control-label">Username: </label>
-    <input type="text" id="inputUser" name="user" required><br></br>
-  <label for="inputCUser" class="col-lg-2 control-label">Confirm Username: </label>
-    <input type="text" id="inputCUser" name="c_user" required><br></br>
-  <label for="inputPass" class="col-lg-2 control-label">Password: </label>
-    <input type="password" id="inputPass" name="pass" pattern=".{8,}"   required title="8 characters minimum"><br></br>
-  <label for="inputCPass" class="col-lg-2 control-label">Confirm Password: </label>
-    <input type="password" id="inputCPass" name="c_pass" pattern=".{8,}"   required title="8 characters minimum"><br></br>
-  <label for="inputEmail" class="col-lg-2 control-label">Email: </label>
-    <input type="text" id="inputEmail" name="email" required><br></br>
-  <label for="inputSecurityWord" class="col-lg-2 control-label">Security Word: </label>
-    <input type="text" id="inputSecurityWord" name="security_word" required><br></br>
-  <label for="inputGender" class="col-lg-2 control-label">Gender: </label>
-    <INPUT TYPE="radio" id="inputGender" name="gender" value="female"> Female
-    <INPUT TYPE="radio" id="inputGender" name="gender" value="male"> Male
-    <INPUT TYPE="radio" id="inputGender" name="gender" value="other"> Other <br></br>
+  <label for="inputFirstName" class="col-md-3 control-label">First Name: </label>
+    <input type="text" name="f_name" required><br></br>
+  <label for="inputLastName" class="col-md-3 control-label">Last Name: </label>
+    <input type="text" name="l_name" required><br></br>
+  <label for="inputUser" class="col-md-3 control-label">Username: </label>
+    <input type="text" name="user" required><br></br>
+  <label for="inputCUser" class="col-md-3 control-label">Confirm Username: </label>
+    <input type="text" name="c_user" required><br></br>
+  <label for="inputPass" class="col-md-3 control-label">Password: </label>
+    <input type="password" name="pass" pattern=".{8,}"   required title="8 characters minimum"><br></br>
+  <label for="inputCPass" class="col-md-3 control-label">Confirm Password: </label>
+    <input type="password" name="c_pass" pattern=".{8,}"   required title="8 characters minimum"><br></br>
+  <label for="inputEmail" class="col-md-3 control-label">Email: </label>
+    <input type="text" name="email" required><br></br>
+  <label for="inputSecurityWord" class="col-md-3 control-label">Security Word: </label>
+    <input type="text" name="security_word" required><br></br>
+  <label for="inputGender" class="col-md-3 control-label">Gender: </label>
+    <INPUT TYPE="radio" name="gender" value="female"> Female
+    <INPUT TYPE="radio" name="gender" value="male"> Male
+    <INPUT TYPE="radio" name="gender" value="other"> Other <br></br>
   
 <input class="btn btn-info" type="submit" value="Submit">
 </form>

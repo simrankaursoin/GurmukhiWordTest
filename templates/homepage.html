@@ -4,8 +4,8 @@
 {% block content %}
 <body>
 <br></br>
-<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38" style="float:left;"><font style="color:#033784;font-size:120%;"><ul class="nav nav-pills" style="float:left;"> <li><a href="/"> Gurbani Vocab </a></li></ul><br />
-<br></br>
+<a href="/"><img src="{{url_for('static', filename='GurbaniVocabLogo.png')}}" style="float:left;" class="logo"></a><br /><br></br>
+
 <div class="topnav" id="myTopnav" border="1" style="background-color:#f7cd6a;">
     <a href="/login"><b>Log In </b></a>
     <a href="/choose_user_type"><b> Sign Up </b></a>
@@ -13,6 +13,7 @@
 <h1 style="color:#033784;font-family:Geneva;font-size:420%;"> Welcome to Gurbani Vocab! <sup><font style="font-size:30%">BETA</font></sup></h1>
 <h4><i>Learn the most common words from the Guru Granth Sahib ji. Test yourself and improve your understanding!</i></h4></center>
 <style>
+img.logo {max-width:20%;min-width:144px; min-height:30px}
 img.two {width: 100%;}
 .topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:50%;}
 </style>

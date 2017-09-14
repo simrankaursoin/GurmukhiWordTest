@@ -4,26 +4,35 @@
 {% block content %}
 <body>
 <br></br>
-<img src="{{url_for('static', filename='ek_onkaar.jpg')}}" width="40" height="38"><font style="color:#035a9e;font-size:120%;"><strong><a href="/"> Gurbani Vocab </a></strong></font>
-<a href="/login" style="float:right"> Log In</a><a href="/signup" style="float:right"> Sign-Up |</a>
+<ul class="nav nav-pills" style="float:right;"> <li><a href="/profile"> {{full_name}} </a></li><li><a href="/login"> Log In</a></li></ul>
+<a href="/"><img src="{{url_for('static', filename='GurbaniVocabLogo.png')}}" style="float:left;" class="logo"></a><br /><br></br>
+<style>
+img.logo {max-width:20%;min-width:144px; min-height:30px}
+</style>
 <center><h2> Sign-Up (Teacher) </h2> </center>
-<form action="" method="POST">
-  First Name: <input type="text" name="f_name" value="{{f_name}}" required><br></br>
-  Last Name: <input type="text" name="l_name" value="{{l_name}}" required><br></br>
-  Username: <input type="text" name="user" value="{{user}}" required><br></br>
-  Confirm Username: <input type="text" name="c_user" value="{{c_user}}" required><br></br>
-  Password: <input type="password" name="pass" value="{{pass_word}}" pattern=".{8,}"   required title="8 characters minimum"><br></br>
-  Confirm Password: <input type="password" name="c_pass" value="{{c_pass}}" pattern=".{8,}"   required title="8 characters minimum"><br></br>
-  Email: <input type="text" name="email" value="{{email}}" required><br></br>
-  Security Word: <input type="text" name="security_word" value="{{security_word}}" required><br></br>
-  Gender:
-    <INPUT TYPE="radio" name="gender" value={{gender}} checked> {{gender}}
+<form action="" method="POST" class="form-horizontal">
+  <label for="inputFirstName" class="col-md-3 control-label">First Name: </label>
+    <input type="text" name="f_name" id="inputFirstName" value="{{f_name}}" required><br></br>
+  <label for="inputLastName" class="col-md-3 control-label">Last Name: </label>
+    <input id="inputLastName" type="text" name="l_name" value="{{l_name}}" required><br></br>
+  <label for="inputUser" class="col-md-3 control-label">Username: </label>
+    <input type="text" id="inputUser" name="user" value="{{user}}" required><br></br>
+  <label for="inputCUser" class="col-md-3 control-label">Confirm Username: </label>
+    <input type="text" id="inputCUser" name="c_user" value="{{c_pass}}" required><br></br>
+  <label for="inputPass" class="col-md-3 control-label">Password: </label>
+    <input type="password" id="inputPass" name="pass" pattern=".{8,}"  value="{{pass_word}}" required title="8 characters minimum"><br></br>
+  <label for="inputCPass" class="col-md-3 control-label">Confirm Password: </label>
+    <input type="password" id="inputCPass" name="c_pass" pattern=".{8,}" value="{{c_pass}}"  required title="8 characters minimum"><br></br>
+  <label for="inputEmail" class="col-md-3 control-label">Email: </label>
+    <input type="text" id="inputEmail" name="email" value="{{email}}" required><br></br>
+  <label for="inputSecurityWord" class="col-md-3 control-label">Security Word: </label>
+    <input type="text" id="inputSecurityWord" name="security_word" value="{{security_word}}" required><br></br>
+  <label for="inputGender" class="col-md-3 control-label">Gender: </label>
+    <INPUT TYPE="radio" name="gender" value="{{gender}}" checked> {{gender}}
     {% for item in other_genders %}
-    <INPUT TYPE="radio" name="gender" value={{item}}> {{item}}
+    <INPUT TYPE="radio" name="gender" value="{{item}}"> {{item}}
     {%endfor%}
-    
-    <br></br>
-  <input class="btn btn-info" type="submit" value="Submit">
+<input class="btn btn-info" type="submit" value="Submit">
 </form>
 </body>
 {% endblock %}

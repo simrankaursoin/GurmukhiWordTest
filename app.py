@@ -6,7 +6,7 @@ from helper import make_lists, retrieve_user_info, reset_sessions
 from helper import make_options, check_answers, calculate_percent_accuracy
 from helper import UpdateSession, UpdateSession_Form, UpdateCorrect
 from helper import UpdateWrong, less_than_four, CreateMongoList
-from helper import retrieve_teacher_info, make_progress_report
+from helper import retrieve_teacher_info, make_progress_report, check_if_user_chose_list
 from passlib.hash import pbkdf2_sha512
 import collections
 import arrow
@@ -21,24 +21,22 @@ db = make_database()
 def main():
     try:
         session["username"]
+        if session["username"] is None:
+            return render_template("homepage.html")
     except KeyError:
         return render_template("homepage.html")
-    if session["user_type"] == "Teacher":
-        db.teachers.update({"username": session["username"]},
-                           {"$set": {"last_accessed":  arrow.utcnow().format('YYYY-MM-DD')}})
-        full_name = retrieve_teacher_info(session)["full_name"]
-        return render_template("homepage_teacher.html", full_name=full_name)
-    else:
-        full_name = retrieve_user_info(session)["full_name"]
-        db.users.update({"username": session["username"]},
-                        {"$set": {"last_accessed":
-                                  arrow.utcnow().format('YYYY-MM-DD')}})
-        if len(retrieve_user_info(session)["doc"]["list_of_words"]) > 0:
-            template = "homepage_2.html"
-        else:
-            template = "homepage_3.html"
-        return render_template(template, full_name=full_name)
-
+    try:
+        if session["user_type"] == "Teacher":
+            db.teachers.update({"username": session["username"]},
+                               {"$set": {"last_accessed":  arrow.utcnow().format('YYYY-MM-DD')}})
+            full_name = retrieve_teacher_info(session)["full_name"]
+            return render_template("homepage_teacher.html", full_name=full_name)
+    except KeyError:
+        full_name = check_if_user_chose_list(session, arrow)["full_name"]
+        template = check_if_user_chose_list(session, arrow)["template"]
+    full_name = check_if_user_chose_list(session, arrow)["full_name"]
+    template = check_if_user_chose_list(session, arrow)["template"]
+    return render_template(template, full_name=full_name)
 
 @app.route("/setsession", methods=["GET", "POST"])
 def set_session():
@@ -742,9 +740,7 @@ def print_from_profile():
 
 
 if __name__ == "__main__":
-    '''
     app.config['PROPAGATE_EXCEPTIONS'] = True
     app.config['DEBUG'] = True
-    '''
     app.config['TRAP_BAD_REQUEST_ERRORS'] = True
     app.run()
