@@ -248,7 +248,7 @@ def my_classes():
                                              student[thing]["wrong"]))*100
                         list_name = name_of_item[4]
                         student_data[list_name] = percent_accuracy
-                    except (IndexError, ValueError):
+                    except (IndexError, ValueError, ZeroDivisionError):
                         continue
             sorted_data = collections.OrderedDict(sorted(student_data.items()))
             students[item][student_name] = sorted_data
