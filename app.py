@@ -6,7 +6,8 @@ from helper import make_lists, retrieve_user_info, reset_sessions
 from helper import make_options, check_answers, calculate_percent_accuracy
 from helper import UpdateSession, UpdateSession_Form, UpdateCorrect
 from helper import UpdateWrong, less_than_four, CreateMongoList
-from helper import retrieve_teacher_info, make_progress_report, check_if_user_chose_list
+from helper import retrieve_teacher_info, make_progress_report
+from helper import check_if_user_chose_list
 from passlib.hash import pbkdf2_sha512
 import collections
 import arrow
@@ -20,15 +21,16 @@ db = make_database()
 @app.route("/", methods=["GET"])
 def main():
     try:
-        session["username"]
-        if session["username"] is None:
+        session["email"]
+        if session["email"] is None:
             return render_template("homepage.html")
     except KeyError:
         return render_template("homepage.html")
     try:
         if session["user_type"] == "Teacher":
             db.teachers.update({"username": session["username"]},
-                               {"$set": {"last_accessed":  arrow.utcnow().format('YYYY-MM-DD')}})
+                               {"$set": {"last_accessed":
+                                         arrow.utcnow().format('YYYY-MM-DD')}})
             full_name = retrieve_teacher_info(session)["full_name"]
             return render_template("homepage_teacher.html", full_name=full_name)
     except KeyError:
@@ -153,11 +155,15 @@ def quiz():
     global correct_word, word_index
     user_info = retrieve_user_info(session)
     full_name = user_info["full_name"]
-    name = session["current_list"].lower()
     doc = user_info["doc"]
     list_of_defs = doc["list_of_definitions"]
     list_of_words = doc["list_of_words"]
     if request.method == "GET":
+        try:
+            name = session["current_list"].lower()
+        except KeyError:
+            return render_template("error_choose_list.html",
+                                   full_name=full_name)
         # list of defs is empty but list of words isn't, user has finished list
         if (len(list_of_defs) < 1 and len(list_of_words)) > 0:
             full_doc = db.users.find_one({"username": session["username"]})
@@ -165,10 +171,6 @@ def quiz():
             return render_template("finished.html", name=name[-1],
                                    full_name=full_name,
                                    percent_accuracy=percent_accuracy)
-        # list of defs/words are both empty >> user hasn't chosen list
-        elif len(list_of_defs) < 1:
-            return render_template("error_choose_list.html",
-                                   full_name=full_name)
         # list of definitions has less than 4 items left
         elif len(list_of_defs) < 4:
             # less_than_four returns list_of_options
@@ -243,11 +245,13 @@ def my_classes():
                 if name_of_item[0:4] == list("list"):
                     try:
                         int(name_of_item[4])
-                        percent_accuracy = (student[thing]["correct"] /
+                        percent_accuracy = int((student[thing]["correct"] /
                                             (student[thing]["correct"] +
-                                             student[thing]["wrong"]))*100
+                                             student[thing]["wrong"]))*100)
+                        number_questions = (student[thing]["correct"] +
+                                             student[thing]["wrong"])
                         list_name = name_of_item[4]
-                        student_data[list_name] = percent_accuracy
+                        student_data[list_name] = (percent_accuracy, number_questions)
                     except (IndexError, ValueError, ZeroDivisionError):
                         continue
             sorted_data = collections.OrderedDict(sorted(student_data.items()))
@@ -279,11 +283,10 @@ def delete_class():
                                                      {"class_name": None}})
             db.users.update({"username": username}, {"$set":
                                                      {"class_code": None}})
-            flash("You have officially un-enrolled from "+class_name)
+            flash("You have officially un-enrolled from ", class_name)
             return redirect("/profile", 303)
         else:
             return redirect("/profile", 303)
-
 
 @app.route("/edit_info_teacher", methods=["GET", "POST"])
 def edit_info_teacher():
@@ -300,7 +303,22 @@ def edit_info_teacher():
                                gender=user_info["gender"],
                                other_genders=other_genders)
     elif request.method == "POST":
+        doc = {}
+        for teacher in db.teachers.find():
+            for item in teacher:
+                doc[item] = teacher[item]
         new_stuff = check_answers(request, flash, session, False)["new_stuff"]
+        if session["username"] != new_stuff["username"]:
+            if session["username"] in doc.values():
+                print("in db")
+                flash("Username taken")
+                other_genders = ["Male", "Female", "Other"]
+                other_genders.remove(new_stuff["gender"])
+                return render_template("/edit_info.html", user="", c_user="", email=new_stuff["email"],
+                                f_name=new_stuff["f_name"],
+                                l_name=new_stuff["l_name"],
+                                gender=new_stuff["gender"],
+                                other_genders=other_genders)
         if not check_answers(request, flash, session, True)["errors"]:
             username_query = {"username": session["username"]}
             things_to_update = ["email", "username", "gender"]
@@ -559,6 +577,8 @@ def security():
         session["username"] = request.form.get("user").strip()
         security_word = request.form.get("security_word").strip()
         doc = db.users.find_one({"username": session["username"]})
+        if doc is None:
+            doc = db.teachers.find_one({"username": session["username"]})
         # if there is no document with given username, wrong username entered
         if doc is None:
             flash("Wrong Username")
@@ -646,10 +666,21 @@ def signup():
                                other_genders=other_genders)
 
 
-@app.route("/logged_out", methods=["GET"])
+@app.route("/logged_out", methods=["GET","POST"])
 def logged_out():
-    reset_sessions(session)
-    return render_template("logged_out.html")
+    if request.method == "GET":
+        return render_template("logoutconfirmation.html")
+    else:
+        if request.form.get("yesorno") == "Yes":
+            reset_sessions(session)
+            return render_template("logged_out.html")
+        else:
+            return redirect("/profile", 303)
+
+
+@app.route("/design", methods=["GET"])
+def design():
+    return render_template("design.html")
 
 
 @app.route("/profile", methods=["GET"])

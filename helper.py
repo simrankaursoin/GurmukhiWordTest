@@ -180,7 +180,6 @@ def check_answers(request, flash, session, need_to_flash):
              "gender": request.form.get("gender").title(),
              "f_name": request.form.get("f_name").split(" ")[0],
              "l_name": request.form.get("l_name").split(" ")[0]}
-    print(stuff)
     if request.form.get("user").strip() != request.form.get("c_user").strip():
         if need_to_flash:
             flash("Please ensure that username is validated correctly.")

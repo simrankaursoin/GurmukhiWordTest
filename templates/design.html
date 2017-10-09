@@ -1,0 +1,39 @@
+{% extends "_base.html" %}
+{% block title %}Design Page{% endblock %}
+
+{% block content %}
+<body>
+<br></br>
+<a href="/"><img src="{{url_for('static', filename='GurbaniVocabLogo.png')}}" style="float:left;" class="logo"></a><br /><br></br>
+<style>
+img.logo {max-width:20%;min-width:144px; min-height:30px}
+.topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:33.33%;}
+body {color: #033784;}
+</style>
+<center><h1> <b>Design of Gurbani Vocab</b> </h1> </center><br />
+<h3><u> Technical Design </u></h3><blockquote>
+<h4>Gurbani Vocab is a three-tiered web application.
+<br></br><img src="{{url_for('static', filename='architecture.png')}}" style="float:right; height:240px; width:250px; border:5px black;"><u>User Interface Layer</u><br />
+Jinja2 is the template language that allows Python code to be written and accessed from the user interface. The user interface itself is coded using
+a combination of HTML5 and CSS.
+<br></br><u>Logic Layer</u><br />
+The primary logic is written using Python3. The web framework used to build the web application is Flask. It handles HTTP requests, session management, etc.
+<br></br><u>Data Layer</u><br />
+The database - used to store and analyze data - is MongoDB which is accessed via Python using PyMongo. Sensitive data 
+such as passwords are encrypted in Python using Passlib - a password hashing library used in Python versions 2 and 3.
+<br></br>Click <a href="https://github.com/simrankaursoin/gurmukhiwordtest"> here</a> to see the code in GitHub.<br />
+Click <a href="https://media.readthedocs.org/pdf/flask/latest/flask.pdf"> here</a> to see the Flask documentation.
+<br></br></h4></blockquote>
+
+<h3><u> Functionality </u></h3><blockquote>
+<h4>Gurbani Vocab utilizes a list of the 330 most common words from the Guru Granth Sahib (Sikh scripture) that have been
+divided into word lists of 15 for user convenience.<br></br><u>Study</u><br />
+The Study mode allows the user to view the entire list of words, definitions, and transliterations to study.<br></br><u>Quiz</u><br /> The Quiz
+mode asks the user multiple choice questions about each word to test the user understanding of the definitions. The 
+user's progress is stored in the database. <br></br><u>Progress</u><br />User progress can be retrieved in either the Progress or Profile tab. The user can view
+the percent accuracy as well as all of the words they have answered incorrectly and correctly for each vocabulary list.
+<br></br><u>Classes</u><br />The user also has the option to enroll in a class using a class code assigned by a teacher user. This allows the teacher
+to monitor the user's progress for each vocabulary list.
+</h4></blockquote>
+</body>
+{% endblock %}
