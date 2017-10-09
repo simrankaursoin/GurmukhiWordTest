@@ -32,13 +32,15 @@ def main():
                                {"$set": {"last_accessed":
                                          arrow.utcnow().format('YYYY-MM-DD')}})
             full_name = retrieve_teacher_info(session)["full_name"]
-            return render_template("homepage_teacher.html", full_name=full_name)
+            return render_template("homepage_teacher.html",
+                                   full_name=full_name)
     except KeyError:
         full_name = check_if_user_chose_list(session, arrow)["full_name"]
         template = check_if_user_chose_list(session, arrow)["template"]
     full_name = check_if_user_chose_list(session, arrow)["full_name"]
     template = check_if_user_chose_list(session, arrow)["template"]
     return render_template(template, full_name=full_name)
+
 
 @app.route("/setsession", methods=["GET", "POST"])
 def set_session():
@@ -151,8 +153,7 @@ def progress():
 
 @app.route("/quiz", methods=["GET", "POST"])
 def quiz():
-    global correct_def
-    global correct_word, word_index
+    global correct_def, correct_word, word_index
     user_info = retrieve_user_info(session)
     full_name = user_info["full_name"]
     doc = user_info["doc"]
@@ -246,12 +247,13 @@ def my_classes():
                     try:
                         int(name_of_item[4])
                         percent_accuracy = int((student[thing]["correct"] /
-                                            (student[thing]["correct"] +
-                                             student[thing]["wrong"]))*100)
+                                               (student[thing]["correct"] +
+                                                student[thing]["wrong"]))*100)
                         number_questions = (student[thing]["correct"] +
-                                             student[thing]["wrong"])
+                                            student[thing]["wrong"])
                         list_name = name_of_item[4]
-                        student_data[list_name] = (percent_accuracy, number_questions)
+                        student_data[list_name] = (percent_accuracy,
+                                                   number_questions)
                     except (IndexError, ValueError, ZeroDivisionError):
                         continue
             sorted_data = collections.OrderedDict(sorted(student_data.items()))
@@ -288,6 +290,7 @@ def delete_class():
         else:
             return redirect("/profile", 303)
 
+
 @app.route("/edit_info_teacher", methods=["GET", "POST"])
 def edit_info_teacher():
     if request.method == "GET":
@@ -314,11 +317,13 @@ def edit_info_teacher():
                 flash("Username taken")
                 other_genders = ["Male", "Female", "Other"]
                 other_genders.remove(new_stuff["gender"])
-                return render_template("/edit_info.html", user="", c_user="", email=new_stuff["email"],
-                                f_name=new_stuff["f_name"],
-                                l_name=new_stuff["l_name"],
-                                gender=new_stuff["gender"],
-                                other_genders=other_genders)
+                return render_template("/edit_info.html",
+                                       user="", c_user="",
+                                       email=new_stuff["email"],
+                                       f_name=new_stuff["f_name"],
+                                       l_name=new_stuff["l_name"],
+                                       gender=new_stuff["gender"],
+                                       other_genders=other_genders)
         if not check_answers(request, flash, session, True)["errors"]:
             username_query = {"username": session["username"]}
             things_to_update = ["email", "username", "gender"]
@@ -666,7 +671,7 @@ def signup():
                                other_genders=other_genders)
 
 
-@app.route("/logged_out", methods=["GET","POST"])
+@app.route("/logged_out", methods=["GET", "POST"])
 def logged_out():
     if request.method == "GET":
         return render_template("logoutconfirmation.html")

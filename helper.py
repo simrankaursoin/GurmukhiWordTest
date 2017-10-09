@@ -95,6 +95,7 @@ def UpdateWrong(correct_word, name, username, word_index, session):
     correct_translit = full_doc["transliteration"]
     return {"quote_ggs": quote_ggs, "correct_translit": correct_translit}
 
+
 def UpdateSession(session, username, doc):
     session["username"] = username
     gender = doc["gender"]
@@ -130,6 +131,7 @@ def retrieve_teacher_info(session):
             "gender": gender, "email": email, "f_name": f_name,
             "l_name": l_name}
 
+
 def check_if_user_chose_list(session, arrow):
     if len(retrieve_user_info(session)["doc"]["list_of_words"]) > 0:
             template = "homepage_2.html"
@@ -138,7 +140,7 @@ def check_if_user_chose_list(session, arrow):
     full_name = retrieve_user_info(session)["full_name"]
     db.users.update({"username": session["username"]},
                     {"$set": {"last_accessed":
-                                arrow.utcnow().format('YYYY-MM-DD')}})
+                              arrow.utcnow().format('YYYY-MM-DD')}})
     return {"full_name": full_name, "template": template}
 
 
