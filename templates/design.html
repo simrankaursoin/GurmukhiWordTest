@@ -12,27 +12,46 @@ body {color: #033784;}
 </style>
 <center><h1> <b>Design of Gurbani Vocab</b> </h1> </center><br />
 <h3><u> Technical Design </u></h3><blockquote>
-<h4>Gurbani Vocab is a three-tiered web application.
+<h4>Gurbani Vocab is a piece of software created in Python designed to help students study Gurmukhi words. The program is structured as a
+three-tiered web application. A web application is a piece of cloud hosted software which users can access via a browser.
 <br></br><img src="{{url_for('static', filename='architecture.png')}}" style="float:right; height:240px; width:250px; border:5px black;"><u>User Interface Layer</u><br />
-Jinja2 is the template language that allows Python code to be written and accessed from the user interface. The user interface itself is coded using
-a combination of HTML5 and CSS.
+User interface is the visual display that a user sees in the browser. Jinja2 is the template language that allows Python code to be written 
+and accessed from the user interface. The user interface itself is coded using a combination of HTML5 and CSS. Bootstrap - an open source HTML, 
+CSS, and JavaScript code library - was used to provide some complex graphic/styling elements.
 <br></br><u>Logic Layer</u><br />
-The primary logic is written using Python3. The web framework used to build the web application is Flask. It handles HTTP requests, session management, etc.
+The primary logic is written using Python 3.5.2. The web framework that is used to build the web application is Flask. It handles HTTP 
+requests, session management and encryption, etc.
 <br></br><u>Data Layer</u><br />
-The database - used to store and analyze data - is MongoDB which is accessed via Python using PyMongo. Sensitive data 
-such as passwords is encrypted in Python using Passlib - a password hashing library used in Python versions 2 and 3 - before being stored in the database.
+The database - used to store and analyze data - is MongoDB. 
+MongoDB is a No-SQL("schema-less") database that allows for flexibility within data structure. This flexible data structure was ideal for the application as
+varying amounts/types of data needed to be stored for different users. MongoDB was accessed from Python via PyMongo. PyMongo is the reccomended Python driver for MongoDB.
+Sensitive data such as passwords is encrypted in Python using Passlib - a password hashing library used in Python 
+versions 2 and 3 - before being stored in the database.
+<br></br><u>Cloud</u><br />
+The web application is hosted in an AWS EC2 instance in the cloud.
+
+<br></br><u>Data Schema</u><br />
+Sample data schema from the "users" collection<br />
+<img src="{{url_for('static', filename='schema.png')}}" alt="Sample Data Schema" style="height:400px; width:490px; border:5px black;">
+
+</figure>
 <br></br>Click <a href="https://github.com/simrankaursoin/gurmukhiwordtest"> here</a> to see the code in GitHub.<br />
-Click <a href="https://media.readthedocs.org/pdf/flask/latest/flask.pdf"> here</a> to see the Flask documentation.
 <br></br></h4></blockquote>
 
 <h3><u> Functionality </u></h3><blockquote>
-<h4>Gurbani Vocab utilizes a list of the 330 most common words from the Guru Granth Sahib (Sikh scripture) that have been
-divided into word lists of 15 for user convenience.<br></br><u>Study</u><br />
-The Study mode allows the user to view the entire list of words, definitions, and transliterations to study.<br></br><u>Quiz</u><br /> The Quiz
-mode asks the user multiple choice questions about each word to test the user understanding of the definitions. The 
-user's progress is stored in the database. <br></br><u>Progress</u><br />User progress can be retrieved in either the Progress or Profile tab. The user can view
-the percent accuracy as well as all of the words they have answered incorrectly and correctly for each vocabulary list.
-<br></br><u>Classes</u><br />The user also has the option to enroll in a class using a class code assigned by a teacher user. This allows the teacher
+<h4>
+Gurbani Vocab utilizes a list of the 330 most common words from the Guru Granth Sahib (Sikh scripture) that have been
+divided into word lists of 15 for user convenience.
+<br></br><u>Study</u><br />
+The Study mode allows the user to view the entire list of words, definitions, and transliterations to study.
+<br></br><u>Quiz</u><br /> 
+The Quiz mode asks the user multiple choice questions about each word to test the user understanding of the definitions. The 
+user's progress is stored in the database. 
+<br></br><u>Progress</u><br />
+User progress can be retrieved in either the Progress or Profile tab. The user can view the percent accuracy as well as all of the 
+words they have answered incorrectly and correctly for each vocabulary list.
+<br></br><u>Classes</u><br />
+The user also has the option to enroll in a class using a class code assigned by a teacher user. This allows the teacher
 to monitor the user's progress for each vocabulary list.
 </h4></blockquote>
 </body>
