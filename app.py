@@ -313,7 +313,22 @@ def edit_info_teacher():
         new_stuff = check_answers(request, flash, session, False)["new_stuff"]
         if session["username"] != new_stuff["username"]:
             if session["username"] in doc.values():
-                print("in db")
+                flash("Username taken")
+                other_genders = ["Male", "Female", "Other"]
+                other_genders.remove(new_stuff["gender"])
+                return render_template("/edit_info.html",
+                                       user="", c_user="",
+                                       email=new_stuff["email"],
+                                       f_name=new_stuff["f_name"],
+                                       l_name=new_stuff["l_name"],
+                                       gender=new_stuff["gender"],
+                                       other_genders=other_genders)
+        doc = {}
+        for user in db.users.find():
+            for item in user:
+                doc[item] = user[item]
+        if session["username"] != new_stuff["username"]:
+            if session["username"] in doc.values():
                 flash("Username taken")
                 other_genders = ["Male", "Female", "Other"]
                 other_genders.remove(new_stuff["gender"])
@@ -345,7 +360,7 @@ def edit_info_teacher():
             other_genders = ["Male", "Female", "Other"]
             other_genders.remove(new_stuff["gender"])
             return render_template("edit_info_teacher.html",
-                                   user=new_stuff["user"],
+                                   user=new_stuff["username"],
                                    email=new_stuff["email"],
                                    f_name=new_stuff["f_name"],
                                    l_name=new_stuff["l_name"],
@@ -503,7 +518,7 @@ def sign_up_teacher():
         other_genders = ["Male", "Female", "Other"]
         other_genders.remove(new_stuff["gender"])
         return render_template("sign_up_teacher2.html",
-                               user=new_stuff["user"],
+                               user=new_stuff["username"],
                                pass_word=pass_word,
                                email=new_stuff["email"],
                                security_word=security_word,
@@ -535,6 +550,38 @@ def edit_info():
         # new stuff is equal to a dict of all variables
         #     (whether variables are blank or equal to user responses)
         new_stuff = check_answers(request, flash, session, False)["new_stuff"]
+        doc = {}
+        for user in db.users.find():
+            for item in user:
+                doc[item] = user[item]
+        if session["username"] != new_stuff["username"]:
+            if session["username"] in doc.values():
+                flash("Username taken")
+                other_genders = ["Male", "Female", "Other"]
+                other_genders.remove(new_stuff["gender"])
+                return render_template("/edit_info.html",
+                                       user="", c_user="",
+                                       email=new_stuff["email"],
+                                       f_name=new_stuff["f_name"],
+                                       l_name=new_stuff["l_name"],
+                                       gender=new_stuff["gender"],
+                                       other_genders=other_genders)
+        doc = {}
+        for teacher in db.teachers.find():
+            for item in teacher:
+                doc[item] = teacher[item]
+        if session["username"] != new_stuff["username"]:
+            if session["username"] in doc.values():
+                flash("Username taken")
+                other_genders = ["Male", "Female", "Other"]
+                other_genders.remove(new_stuff["gender"])
+                return render_template("/edit_info.html",
+                                       user="", c_user="",
+                                       email=new_stuff["email"],
+                                       f_name=new_stuff["f_name"],
+                                       l_name=new_stuff["l_name"],
+                                       gender=new_stuff["gender"],
+                                       other_genders=other_genders)
         # if check_answers[errors] is false, no user has not made any errors
         if not check_answers(request, flash, session, True)["errors"]:
             # username_query is the query for the first part of db.update
