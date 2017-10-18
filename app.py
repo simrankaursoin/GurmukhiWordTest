@@ -823,7 +823,5 @@ def print_from_profile():
 
 
 if __name__ == "__main__":
-    app.config['PROPAGATE_EXCEPTIONS'] = True
-    app.config['DEBUG'] = True
     app.config['TRAP_BAD_REQUEST_ERRORS'] = True
     app.run()
