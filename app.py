@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # app.py
 from mongo_interface import make_database
+from bson.objectid import ObjectId  
 from flask import flash, request, Flask, render_template, redirect, session
 from helper import make_lists, retrieve_user_info, reset_sessions
 from helper import make_options, check_answers, calculate_percent_accuracy
@@ -92,6 +93,20 @@ def study():
     name = name[-1]
     return render_template("study.html", name=name,
                            full_name=full_name, all_words=all_words)
+
+
+@app.route("/list_info", methods=["GET"])
+def list_info():
+    lists = {}
+    all_list_numbers = ["1", "2", "3", "4", "5", "6"]
+    for item in all_list_numbers:
+        list_name = "list" + item
+        lists[item] = []
+        for word in db[list_name].find():
+            lists[item].append(word)
+            print(word["definition"])
+    full_name = retrieve_teacher_info(session)["full_name"]
+    return render_template("list_info.html", lists=lists, full_name=full_name)
 
 
 @app.route("/list_selected", methods=["GET"])
@@ -199,6 +214,7 @@ def quiz():
                                list_of_options=list_of_options,
                                name_of_lis=name[-1], full_name=full_name)
     elif request.method == "POST":
+        name = session["current_list"].lower()
         username = session["username"]
         if request.form.get("options") == correct_def:
             # if user is correct, update mongo and lists of words/defs
@@ -417,6 +433,37 @@ def profile_teacher():
                            full_name=full_name, gender=gender,
                            email=email, username=username)
 
+
+'''
+@app.route("/make_a_list", methods=["GET", "POST"])
+def make_a_list():
+    if request.method == "GET":
+        masterlist = []
+        doc = db.masterlist.find()
+        for word in doc:
+            masterlist.append(word)
+        full_name = retrieve_teacher_info(session)["full_name"]
+        return render_template("make_a_list.html",
+                               masterlist=masterlist,
+                               full_name=full_name)
+    else:
+        full_name = retrieve_teacher_info(session)["full_name"]
+        list_ids = request.form.getlist('word')
+        list_name = request.form.get("list_name")
+        db[retrieve_teacher_info(session)["username"]].insert({list_name: list_ids})
+        words = []
+        for word_id in list_ids:
+            list_of_words = db.masterlist.find({"_id": ObjectId(word_id)})
+            for word in list_of_words:
+                for item in word:
+                    if item == "word":
+                        words.append(word[item])
+                    else:
+                        continue
+        return render_template("list_confirmation.html",
+                               words=words,
+                               list_name=list_name)
+'''
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -690,6 +737,7 @@ def signup():
                                  "list_of_definitions": [],
                                  "class_name": None,
                                  "class_code": None,
+                                 "teacher_username": None,
                                  "last_accessed":
                                  arrow.utcnow().format('YYYY-MM-DD')
                                  })
@@ -805,6 +853,8 @@ def enroll_in_class():
                                     {'$set': {"class_code": class_code}})
                     db.users.update({"username": session["username"]},
                                     {'$set': {"class_name": attribute}})
+                    db.users.update({"username": session["username"]},
+                                    {'$set': {"teacher_username": teacher["username"]}})
                     return redirect("/profile", 303)
                 else:
                     continue
@@ -823,5 +873,5 @@ def print_from_profile():
 
 
 if __name__ == "__main__":
-    app.config['TRAP_BAD_REQUEST_ERRORS'] = True
+    app.config['PROPAGATE_EXCEPTIONS'] = True
     app.run()
