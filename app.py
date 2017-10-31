@@ -191,8 +191,8 @@ def quiz():
         elif len(list_of_defs) < 4:
             # less_than_four returns list_of_options
             #       >> also updates correct values/lists for later reference
-            make_choices = less_than_four(name, list_of_words,
-                                          list_of_defs)
+            make_choices = less_than_four(name, list_of_words, list_of_defs)
+            print(make_choices)
             list_of_options = make_choices["list_of_options"]
             db.users.update({"username": session["username"]},
                             {'$set': {"list_of_words":
