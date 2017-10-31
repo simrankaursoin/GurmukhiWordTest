@@ -73,7 +73,6 @@ def set_session():
 
 @app.route("/study", methods=["GET"])
 def study():
-    name_of_collection = str(session["current_list"]).lower()
     user_info = retrieve_user_info(session)
     full_name = user_info["full_name"]
     all_words = []
@@ -82,9 +81,12 @@ def study():
     db.users.update({"username": session["username"]},
                     {"$set": {"last_accessed":
                               arrow.utcnow().format('YYYY-MM-DD')}})
-    if len(user_info["doc"]["list_of_words"]) < 1:
-            return render_template("error_choose_list.html",
-                                   full_name=full_name)
+    try:
+        name = session["current_list"].lower()
+    except KeyError:
+        return render_template("error_choose_list.html",
+                                full_name=full_name)
+    name_of_collection = str(session["current_list"]).lower()
     # if user has chosen a list, create all_words based on vocab list in db
     for item in db[name_of_collection].find():
         all_words.append(item)

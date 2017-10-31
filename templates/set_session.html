@@ -4,8 +4,8 @@
 {% block content %}
 <body>
 <br></br>
-<ul class="nav nav-pills" style="float:right;"> <li><a href="/profile"> {{full_name}} </a></li><li><a href="/logged_out"> Log Out</a></li></ul>
-<a href="/"><img src="{{url_for('static', filename='GurbaniVocabLogo.png')}}" style="float:left;" class="logo"></a><br /><br></br>
+<a href="/"><img src="{{url_for('static', filename='GurbaniVocabLogo.png')}}" style="float:left;" class="logo"></a><br />
+<ul class="nav nav-pills" style="float:right;"> <li><a href="/profile"> {{full_name}} </a></li><li><a href="/logged_out"> Log Out</a></li></ul><br /><br></br>
 <style>
 .topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:50%;}
 button {
@@ -19,6 +19,7 @@ button {
 img.logo {max-width:20%;min-width:144px; min-height:30px}
 <br></br>
 </style>
+<br></br>
 <div class="topnav" id="myTopnav" border="1" style="background-color:#f7cd6a;">
     <a href="/"><b> Home </b></a>
     <a href="/setsession"><b> Choose a List </b></a>
@@ -34,7 +35,7 @@ img.logo {max-width:20%;min-width:144px; min-height:30px}
     {% else %} 
     style="background-color:#1a8cef" 
     {% endif %} >
-            <center><button name="current_list" value={{ ("List", n|string())|join("") }}>List {{n}}</button></center>
+            <center><button name="current_list" style="font-size:180%" value={{ ("List", n|string())|join("") }}>List {{n}}</button></center>
     </div>
     </div>
     <div class="row justify-content-around row-eq-height">
@@ -45,7 +46,7 @@ img.logo {max-width:20%;min-width:144px; min-height:30px}
     {% else %} 
     style="background-color:#1a8cef" 
     {% endif %} >
-            <center><button name="current_list" value={{ ("List", n|string())|join("") }}>List {{n}}</button></center>
+            <center><button name="current_list" style="font-size:180%" value={{ ("List", n|string())|join("") }}>List {{n}}</button></center>
         </div>
 {% endif %}
 {% endfor %}
