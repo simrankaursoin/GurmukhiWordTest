@@ -99,15 +99,15 @@ def study():
 
 @app.route("/list_info", methods=["GET"])
 def list_info():
-    lists = {}
-    all_list_numbers = ["1", "2", "3", "4", "5", "6"]
+    the_lists = {}
+    all_list_numbers = [1, 2, 3, 4, 5, 6]
     for item in all_list_numbers:
-        list_name = "list" + item
-        lists[item] = []
+        list_name = "list" + str(item)
+        the_lists[item] = []
         for word in db[list_name].find():
-            lists[item].append(word)
-            print(word["definition"])
+            the_lists[item].append(word)
     full_name = retrieve_teacher_info(session)["full_name"]
+    lists = collections.OrderedDict(the_lists)
     return render_template("list_info.html", lists=lists, full_name=full_name)
 
 
