@@ -133,6 +133,11 @@ def progress():
     # doc is the user's document in the db
     user_info = retrieve_user_info(session)
     doc = user_info["doc"]
+    try:
+        session["current_list"].lower()
+    except:
+        return render_template("error_choose_list.html",
+                                   full_name=user_info["full_name"])
     current_list = session["current_list"].lower()
     db.users.update({"username": session["username"]},
                     {"$set": {"last_accessed":
