@@ -3,29 +3,37 @@ from mongo_interface import make_database
 import random
 db = make_database()
 
-
-def make_lists(session, name_of_collection):
-    # name_of_collection is a variable based on the session[current_list]
-    # corresponds to the name of the collection in the mongo db
-    list_of_words = []
-    list_of_definitions = []
-    for item in db[name_of_collection].find():
-        list_of_words.append(item["word"])
-        list_of_definitions.append(item["definition"])
-    # create a list called list_of_words based on db words from list
-    # create a list called list_of_definitions based on db defs from list
-    # allows appending/deleting/easy-access (unlike the db)
-    db.users.update({"username": session["username"]},
-                    {'$set': {"list_of_words": list_of_words}})
-    db.users.update({"username": session["username"]},
-                    {'$set': {"list_of_definitions": list_of_definitions}})
-
-
 def CreateMongoList(session, name):
     db.users.update({"username": session["username"]},
                     {"$set": {name: {"correct": 0, "wrong": 0,
                                      "correct_words": [],
                                      "wrong_words": []}}})
+
+def create_lists_from_db(user_info, session, ObjectId):
+    teacher = user_info["teacher"]
+    teacher_docs = db[teacher].find()
+    list_name = session["current_list"]
+    list_ids = []
+    for doc in teacher_docs:
+        for item in doc:
+            if item == "_id":
+                continue
+            elif item == list_name:
+                for ids in doc[item]:
+                    list_ids.append(ids)
+            else:
+                continue
+    list_of_words = []
+    list_of_definitions = []
+    study= []
+    for word_id in list_ids:
+        word_doc = db.masterlist.find_one({"_id": ObjectId(word_id)})
+        study.append(word_id)
+        list_of_words.append(word_doc["word"])
+        list_of_definitions.append(word_doc["definition"])
+    return({"list_of_words": tuple(list_of_words),
+            "list_of_definitions": tuple(list_of_definitions),
+            "study": study})
 
 
 def UpdateSession_Form(session, request):
@@ -36,12 +44,13 @@ def UpdateSession_Form(session, request):
     session["gender"] = request.form.get("gender")
 
 
-def less_than_four(name, list_of_words, list_of_definitions):
+def less_than_four(name, user_info, session, ObjectId, list_of_words, list_of_definitions):
     list2 = []
     list_of_ops = []
     list_of_options = []
-    for item in db[name].find():
-        if item["definition"] not in list_of_definitions:
+    list_of_defs = create_lists_from_db(user_info, session, ObjectId)["list_of_definitions"]
+    for item in list_of_defs:
+        if item not in list_of_definitions:
             list2.append(item["definition"])
     not_nothing = True
     while not_nothing:
@@ -71,6 +80,7 @@ def UpdateCorrect(correct_word, name, username, word_index):
     db.users.update({"username": username},
                     {"$set": {name: list_doc}})
     full_doc = db[name].find_one({"word": correct_word})
+    print(full_doc["quote_ggs"])
     quote_ggs = full_doc["quote_ggs"].split()
     list_of_words = db.users.find_one({"username": username})["list_of_words"]
     list_of_words.pop(word_index)
@@ -115,10 +125,11 @@ def retrieve_user_info(session):
     f_name = doc["first_name"].title()
     l_name = doc["last_name"].title()
     gender = session["gender"].title()
+    teacher = doc["teacher"]
     full_name = '{} {}'.format(f_name.split(" ")[0], l_name)
     return {"username": username, "doc": doc, "full_name": full_name,
             "gender": gender, "email": email, "f_name": f_name,
-            "l_name": l_name}
+            "l_name": l_name, "teacher":teacher}
 
 
 def retrieve_teacher_info(session):

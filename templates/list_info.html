@@ -5,7 +5,7 @@
 {% block content %}
 <br></br>
 <style>
-.topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:33.33333%;}
+.topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:25%;}
 img.two {width: 100%;}
 img.logo {max-width:20%;min-width:144px; min-height:30px}
 </style>
@@ -20,30 +20,25 @@ img.logo {max-width:20%;min-width:144px; min-height:30px}
     <a href="/"><b> Home </b></a>
     <a href="/my_classes"><b> My Classes </b></a>
     <a href="/list_info"><b> List Information </b></a>
+    <a href="/make_a_list"><b> Make a List </b></a>
 </div>
 <center><u><h2> List Information </h2></u></center>
-
-{% for lis in lists %}
-</table>
-    </center>
-    <h3> List {{lis}} </h3>
-    <center>
-        <table style="width:93%;background-color:white;" border="1">
-        <tr>
-            <th>Word</th>
-            <th>Transliteration</th> 
-            <th>Definition</th>
-        </tr>
-    {% for item in lists[lis] %}
+{% for item in lists %}
+        <h2 style="color:#033784;">{{item}}</h2>
+        <table>
             <tr>
-                <td>{{item.word}} </td>
-                <td>{{item.transliteration}} </td>
-                <td>{{item.definition}} </td>
+                <center><th>Word</th></center>
+                <center><th>Transliteration</th></center>
+                <center><th>Definition</th></center>
             </tr>
-        
-{%endfor%}
-</table>
-{%endfor%}
-
+        {% for word in lists[item] %}
+            <tr>
+                <td>{{word.word}}</td>
+                <td>{{word.transliteration}}</td>
+                <td>{{word.definition}}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endfor %}
 {% endblock %}
 </body>

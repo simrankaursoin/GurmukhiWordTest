@@ -3,11 +3,11 @@
 from mongo_interface import make_database
 from bson.objectid import ObjectId  
 from flask import flash, request, Flask, render_template, redirect, session
-from helper import make_lists, retrieve_user_info, reset_sessions
+from helper import retrieve_user_info, reset_sessions
 from helper import make_options, check_answers, calculate_percent_accuracy
 from helper import UpdateSession, UpdateSession_Form, UpdateCorrect
 from helper import UpdateWrong, less_than_four, CreateMongoList
-from helper import retrieve_teacher_info, make_progress_report
+from helper import retrieve_teacher_info, make_progress_report, create_lists_from_db
 from helper import check_if_user_chose_list
 from passlib.hash import pbkdf2_sha512
 import collections
@@ -47,27 +47,30 @@ def main():
 def set_session():
     if request.method == "GET":
         user_info = retrieve_user_info(session)
+        full_name = user_info["full_name"]
         db.users.update({"username": session["username"]},
                         {"$set": {"last_accessed":
                                   arrow.utcnow().format('YYYY-MM-DD')}})
-        # if choosing list for the first time, don't show quiz/study in nav bar
-        #       >> set_session2.html
-        if len(user_info["doc"]["list_of_words"]) > 0:
-            template = "set_session2.html"
-        # else, go to set_session.html
-        else:
-            template = "set_session.html"
-        full_name = user_info["full_name"]
-        return render_template(template,
+        list_names = []
+        for list_doc in db[user_info["teacher"]].find():
+            for list_name in list_doc:
+                if list_name == "_id":
+                    continue
+                else:
+                    list_names.append(list_name)
+        return render_template("setsession.html",
+                               list_names=list_names,
                                full_name=full_name)
+        
     elif request.method == "POST":
-        # once the user has selected a list, set session[current_list]s
         session["current_list"] = request.form.get("current_list").strip()
-        # clear lists of words/defs (in case they had previously chosen a list)
-        name_of_collection = str(session["current_list"]).lower()
-        # make lists of words/defs according to current list
-        make_lists(session, name_of_collection)
-        # redirect user to confirmation page
+        user_info = retrieve_user_info(session)
+        list_of_words = create_lists_from_db(user_info, session, ObjectId)["list_of_words"]
+        list_of_definitions = create_lists_from_db(user_info, session, ObjectId)["list_of_definitions"]
+        db.users.update({"username": user_info["username"]},
+                          {"$set": {"list_of_words": tuple(list_of_words)}})
+        db.users.update({"username": user_info["username"]},
+                          {"$set": {"list_of_definitions": list_of_definitions}})
         return redirect("/list_selected", 303)
 
 
@@ -81,33 +84,31 @@ def study():
     db.users.update({"username": session["username"]},
                     {"$set": {"last_accessed":
                               arrow.utcnow().format('YYYY-MM-DD')}})
-    try:
-        name = session["current_list"].lower()
-    except KeyError:
-        return render_template("error_choose_list.html",
-                                full_name=full_name)
-    name_of_collection = str(session["current_list"]).lower()
-    # if user has chosen a list, create all_words based on vocab list in db
-    for item in db[name_of_collection].find():
-        all_words.append(item)
-    # name is the list number
-    name = session["current_list"]
-    name = name[-1]
+    document = db.users.find_one({"username": user_info["username"]})
+    if len(document["list_of_words"]) < 1:
+        return render_template("error_choose_list", full_name=full_name)
+    else:
+        all_words = create_lists_from_db(user_info, session, ObjectId)["study"]
+        name = session["current_list"]
     return render_template("study.html", name=name,
                            full_name=full_name, all_words=all_words)
 
 
 @app.route("/list_info", methods=["GET"])
 def list_info():
-    the_lists = {}
-    all_list_numbers = [1, 2, 3, 4, 5, 6]
-    for item in all_list_numbers:
-        list_name = "list" + str(item)
-        the_lists[item] = []
-        for word in db[list_name].find():
-            the_lists[item].append(word)
+    lists = {}
+    teacher_info = retrieve_teacher_info(session)
+    for doc in db[teacher_info["username"]].find():
+        for list_name in doc:
+            if list_name == "_id":
+                continue
+            else:
+                list_of_words = []
+                for an_id in doc[list_name]:
+                    word = db.masterlist.find_one({"_id": ObjectId(an_id)})
+                    list_of_words.append(word)
+                lists[list_name] = list_of_words
     full_name = retrieve_teacher_info(session)["full_name"]
-    lists = collections.OrderedDict(the_lists)
     return render_template("list_info.html", lists=lists, full_name=full_name)
 
 
@@ -126,18 +127,13 @@ def list_selected():
     return render_template("list_selected.html",
                            name=name, full_name=full_name)
 
-
+# -------------------------------------------------------------------------------------------------------------------
 @app.route("/progress", methods=["GET"])
 def progress():
     no_questions = False
     # doc is the user's document in the db
     user_info = retrieve_user_info(session)
     doc = user_info["doc"]
-    try:
-        session["current_list"].lower()
-    except:
-        return render_template("error_choose_list.html",
-                                   full_name=user_info["full_name"])
     current_list = session["current_list"].lower()
     db.users.update({"username": session["username"]},
                     {"$set": {"last_accessed":
@@ -183,7 +179,7 @@ def quiz():
     list_of_words = doc["list_of_words"]
     if request.method == "GET":
         try:
-            name = session["current_list"].lower()
+            name = session["current_list"]
         except KeyError:
             return render_template("error_choose_list.html",
                                    full_name=full_name)
@@ -191,15 +187,14 @@ def quiz():
         if (len(list_of_defs) < 1 and len(list_of_words)) > 0:
             full_doc = db.users.find_one({"username": session["username"]})
             percent_accuracy = calculate_percent_accuracy(full_doc, name)[0]
-            return render_template("finished.html", name=name[-1],
+            return render_template("finished.html", name=name,
                                    full_name=full_name,
                                    percent_accuracy=percent_accuracy)
         # list of definitions has less than 4 items left
         elif len(list_of_defs) < 4:
             # less_than_four returns list_of_options
             #       >> also updates correct values/lists for later reference
-            make_choices = less_than_four(name, list_of_words, list_of_defs)
-            print(make_choices)
+            make_choices = less_than_four(name, user_info, session, ObjectId, list_of_words, list_of_defs)
             list_of_options = make_choices["list_of_options"]
             db.users.update({"username": session["username"]},
                             {'$set': {"list_of_words":
@@ -214,12 +209,12 @@ def quiz():
                                          - 1))
             correct_word = doc["list_of_words"][word_index]
             correct_def = doc["list_of_definitions"][word_index]
-            list_of_options = make_options(user_info["doc"]["list_of_words"],
+            list_of_options = make_options(doc["list_of_words"],
                                            doc["list_of_definitions"],
                                            correct_def)
         return render_template("question.html", correct_word=correct_word,
                                list_of_options=list_of_options,
-                               name_of_lis=name[-1], full_name=full_name)
+                               name_of_lis=name, full_name=full_name)
     elif request.method == "POST":
         name = session["current_list"].lower()
         username = session["username"]
@@ -229,7 +224,7 @@ def quiz():
             return render_template("correct.html", correct_word=correct_word,
                                    correct_def=correct_def, username=username,
                                    quote_ggs=info["quote_ggs"],
-                                   name_of_lis=name[-1], full_name=full_name,
+                                   name_of_lis=name, full_name=full_name,
                                    correct_translit=info["correct_translit"])
         else:
             # if user is wrong, update mongo and lists of words/defs
@@ -237,7 +232,7 @@ def quiz():
                                word_index, session)
             return render_template("incorrect.html", correct_word=correct_word,
                                    correct_def=correct_def,
-                                   full_name=full_name, name_of_lis=name[-1],
+                                   full_name=full_name, name_of_lis=name,
                                    quote_ggs=info["quote_ggs"],
                                    correct_translit=info["correct_translit"])
 
@@ -305,9 +300,11 @@ def delete_class():
     else:
         if request.form.get("yes/no") == "Yes":
             db.users.update({"username": username}, {"$set":
-                                                     {"class_name": None}})
+                                                     {"class_name": "default"}})
             db.users.update({"username": username}, {"$set":
-                                                     {"class_code": None}})
+                                                     {"class_code": "default"}})
+            db.users.update({"username": username}, {"$set":
+                                                     {"teacher": "default"}})
             flash("You have officially un-enrolled from ", class_name)
             return redirect("/profile", 303)
         else:
@@ -441,7 +438,7 @@ def profile_teacher():
                            email=email, username=username)
 
 
-'''
+
 @app.route("/make_a_list", methods=["GET", "POST"])
 def make_a_list():
     if request.method == "GET":
@@ -470,7 +467,7 @@ def make_a_list():
         return render_template("list_confirmation.html",
                                words=words,
                                list_name=list_name)
-'''
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -742,9 +739,9 @@ def signup():
                                  "gender": new_stuff["gender"],
                                  "list_of_words": [],
                                  "list_of_definitions": [],
-                                 "class_name": None,
-                                 "class_code": None,
-                                 "teacher_username": None,
+                                 "class_name": "default",
+                                 "class_code": "default",
+                                 "teacher": "default",
                                  "last_accessed":
                                  arrow.utcnow().format('YYYY-MM-DD')
                                  })
@@ -807,11 +804,13 @@ def profile():
                 stats[item] = doc[item]
             except (IndexError, ValueError):
                 continue
-    class_code = doc["class_code"]
-    class_name = doc["class_name"]
-    if class_code is None:
+    if doc["class_code"] is "default":
         teacher_name = None
+        class_code = None
+        class_name = None
     else:
+        class_code = doc["class_code"]
+        class_name = doc["class_name"]
         for teacher_mongodoc in db.teachers.find():
             for item in teacher_mongodoc:
                 if item == class_name and teacher_mongodoc[item] == class_code:
@@ -861,7 +860,7 @@ def enroll_in_class():
                     db.users.update({"username": session["username"]},
                                     {'$set': {"class_name": attribute}})
                     db.users.update({"username": session["username"]},
-                                    {'$set': {"teacher_username": teacher["username"]}})
+                                    {'$set': {"teacher": teacher["username"]}})
                     return redirect("/profile", 303)
                 else:
                     continue
