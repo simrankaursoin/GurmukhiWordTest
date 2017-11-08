@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 # app.py
 from mongo_interface import make_database
-from bson.objectid import ObjectId  
+from bson.objectid import ObjectId
 from flask import flash, request, Flask, render_template, redirect, session
-from helper import retrieve_user_info, reset_sessions
-from helper import make_options, check_answers, calculate_percent_accuracy
+from helper import RetrieveUserInfo, ResetSession
+from helper import MakeOptions, check_answers, CalculatePercentAccuracy
 from helper import UpdateSession, UpdateSession_Form, UpdateCorrect
-from helper import UpdateWrong, less_than_four, CreateMongoList
-from helper import retrieve_teacher_info, make_progress_report, create_lists_from_db
-from helper import check_if_user_chose_list
+from helper import UpdateWrong, LessThanFour, CreateMongoList
+from helper import RetrieveTeacherInfo, MakeProgressReport, CreateListsFromDb
+from helper import CheckIfUserChoseList, UpdateTeacherLastAccessed
+from helper import UpdateUserLastAccessed
 from passlib.hash import pbkdf2_sha512
 import collections
 import arrow
@@ -21,6 +22,14 @@ db = make_database()
 
 @app.route("/", methods=["GET"])
 def main():
+    '''
+    check if user is logged in
+         not logged in --> homepage
+         logged in as teacher --> homepage_teacher
+    check these in CheckIfUserChoseList function
+         logged in and chosen list --> homepage2
+         logged in but not chosen list --> homepage3
+    '''
     try:
         session["email"]
         if session["email"] is None:
@@ -29,28 +38,31 @@ def main():
         return render_template("homepage.html")
     try:
         if session["user_type"] == "Teacher":
-            db.teachers.update({"username": session["username"]},
-                               {"$set": {"last_accessed":
-                                         arrow.utcnow().format('YYYY-MM-DD')}})
-            full_name = retrieve_teacher_info(session)["full_name"]
+            UpdateTeacherLastAccessed(session, arrow)
+            full_name = RetrieveTeacherInfo(session)["full_name"]
             return render_template("homepage_teacher.html",
                                    full_name=full_name)
     except KeyError:
-        full_name = check_if_user_chose_list(session, arrow)["full_name"]
-        template = check_if_user_chose_list(session, arrow)["template"]
-    full_name = check_if_user_chose_list(session, arrow)["full_name"]
-    template = check_if_user_chose_list(session, arrow)["template"]
+        full_name = CheckIfUserChoseList(session, arrow)["full_name"]
+        template = CheckIfUserChoseList(session, arrow)["template"]
+    full_name = CheckIfUserChoseList(session, arrow)["full_name"]
+    template = CheckIfUserChoseList(session, arrow)["template"]
     return render_template(template, full_name=full_name)
 
 
 @app.route("/setsession", methods=["GET", "POST"])
 def set_session():
+    """
+    retrieves user information from session.
+    updates last_accessed in db (so I know how often accounts are used)
+    get names of lists
+        for those w/o teachers --> default lists(default collection)
+        for those w/ teachers -----> custom lists(teacher-username collection)
+    """
     if request.method == "GET":
-        user_info = retrieve_user_info(session)
+        user_info = RetrieveUserInfo(session)
         full_name = user_info["full_name"]
-        db.users.update({"username": session["username"]},
-                        {"$set": {"last_accessed":
-                                  arrow.utcnow().format('YYYY-MM-DD')}})
+        UpdateUserLastAccessed(session, arrow)
         list_names = []
         for list_doc in db[user_info["teacher"]].find():
             for list_name in list_doc:
@@ -61,34 +73,44 @@ def set_session():
         return render_template("setsession.html",
                                list_names=list_names,
                                full_name=full_name)
-        
     elif request.method == "POST":
-        session["current_list"] = request.form.get("current_list").strip()
-        user_info = retrieve_user_info(session)
-        list_of_words = create_lists_from_db(user_info, session, ObjectId)["list_of_words"]
-        list_of_definitions = create_lists_from_db(user_info, session, ObjectId)["list_of_definitions"]
+        """
+        gets the name of the list the user clicked on
+        sets the session["current_list"] accordingly
+        creates list_of_words and list_of_definitions and updates db
+        redirects to confirmation page
+        """
+        session["current_list"] = request.form.get("current_list")
+        user_info = RetrieveUserInfo(session)
+        list_of_words = CreateListsFromDb(user_info, session,
+                                          ObjectId)["list_of_words"]
+        list_of_definitions = CreateListsFromDb(user_info, session,
+                                                ObjectId)["list_of_definitions"]
         db.users.update({"username": user_info["username"]},
-                          {"$set": {"list_of_words": tuple(list_of_words)}})
+                        {"$set": {"list_of_words": tuple(list_of_words)}})
         db.users.update({"username": user_info["username"]},
-                          {"$set": {"list_of_definitions": list_of_definitions}})
+                        {"$set": {"list_of_definitions": list_of_definitions}})
         return redirect("/list_selected", 303)
 
 
 @app.route("/study", methods=["GET"])
 def study():
-    user_info = retrieve_user_info(session)
+    """
+    retrieves user info
+    gets list name from session["current_list"]
+    CreateListsFromDb
+        goes to db.masterlist to find the words that correlate with each id
+    displays in table format
+    """
+    user_info = RetrieveUserInfo(session)
     full_name = user_info["full_name"]
     all_words = []
-    # if the list_of_words is empty, user hasn't chosen a list
-    #         >> redirect to error page
-    db.users.update({"username": session["username"]},
-                    {"$set": {"last_accessed":
-                              arrow.utcnow().format('YYYY-MM-DD')}})
+    UpdateUserLastAccessed(session, arrow)
     document = db.users.find_one({"username": user_info["username"]})
     if len(document["list_of_words"]) < 1:
         return render_template("error_choose_list", full_name=full_name)
     else:
-        all_words = create_lists_from_db(user_info, session, ObjectId)["study"]
+        all_words = CreateListsFromDb(user_info, session, ObjectId)["study"]
         name = session["current_list"]
     return render_template("study.html", name=name,
                            full_name=full_name, all_words=all_words)
@@ -96,8 +118,16 @@ def study():
 
 @app.route("/list_info", methods=["GET"])
 def list_info():
+    """
+    gets the names of all the lists the teachers have created
+        lists are docs in db.teacherusername.find()
+    gets ids per list & finds the words that correlate in masterlist
+    compiles into a dictionary
+        {listname: {word_doc, word_doc}}
+    displays all lists so teachers can see
+    """
     lists = {}
-    teacher_info = retrieve_teacher_info(session)
+    teacher_info = RetrieveTeacherInfo(session)
     for doc in db[teacher_info["username"]].find():
         for list_name in doc:
             if list_name == "_id":
@@ -108,44 +138,43 @@ def list_info():
                     word = db.masterlist.find_one({"_id": ObjectId(an_id)})
                     list_of_words.append(word)
                 lists[list_name] = list_of_words
-    full_name = retrieve_teacher_info(session)["full_name"]
+    full_name = RetrieveTeacherInfo(session)["full_name"]
     return render_template("list_info.html", lists=lists, full_name=full_name)
 
 
 @app.route("/list_selected", methods=["GET"])
 def list_selected():
-    full_name = retrieve_user_info(session)["full_name"]
+    '''
+    name is the name of the vocab list
+    if list does not exist in user_doc, the user has not accessed it before
+        >> initialize list in user doc with values equal to 0
+    '''
+    full_name = RetrieveUserInfo(session)["full_name"]
     name = session["current_list"].lower()
     doc = db.users.find_one({"username": session["username"]})
-    # name is the name of the vocab list
-    # if list does not exist in user_doc, the user has not accessed it before
-    #           >> initialize list in user doc with values equal to 0
     if name not in doc:
         CreateMongoList(session, name)
-        # reset name to just the list number
-    name = name[-1]
+    name = name
     return render_template("list_selected.html",
                            name=name, full_name=full_name)
 
-# -------------------------------------------------------------------------------------------------------------------
+
 @app.route("/progress", methods=["GET"])
 def progress():
     no_questions = False
     # doc is the user's document in the db
-    user_info = retrieve_user_info(session)
+    user_info = RetrieveUserInfo(session)
     doc = user_info["doc"]
     current_list = session["current_list"].lower()
-    db.users.update({"username": session["username"]},
-                    {"$set": {"last_accessed":
-                              arrow.utcnow().format('YYYY-MM-DD')}})
+    UpdateUserLastAccessed(session, arrow)
     # if the current list in doc, user has answered questions from the list
     if current_list in doc:
         correct_words = list(set(doc[current_list]["correct_words"]))
         wrong_words = list(set(doc[current_list]["wrong_words"]))
         # get the list of wrong words and list of correct words (minus repeats)
         # calculate percent accuracy and percent inaccuracy
-        percent_accuracy = calculate_percent_accuracy(doc, current_list)[0]
-        percent_inaccuracy = calculate_percent_accuracy(doc, current_list)[1]
+        percent_accuracy = CalculatePercentAccuracy(doc, current_list)[0]
+        percent_inaccuracy = CalculatePercentAccuracy(doc, current_list)[1]
         if percent_accuracy == 0 and percent_inaccuracy == 0:
             no_questions = True
     # if list is not in doc, user hasn't answered any questions yet
@@ -172,7 +201,7 @@ def progress():
 @app.route("/quiz", methods=["GET", "POST"])
 def quiz():
     global correct_def, correct_word, word_index
-    user_info = retrieve_user_info(session)
+    user_info = RetrieveUserInfo(session)
     full_name = user_info["full_name"]
     doc = user_info["doc"]
     list_of_defs = doc["list_of_definitions"]
@@ -186,15 +215,17 @@ def quiz():
         # list of defs is empty but list of words isn't, user has finished list
         if (len(list_of_defs) < 1 and len(list_of_words)) > 0:
             full_doc = db.users.find_one({"username": session["username"]})
-            percent_accuracy = calculate_percent_accuracy(full_doc, name)[0]
+            percent_accuracy = CalculatePercentAccuracy(full_doc, name)[0]
             return render_template("finished.html", name=name,
                                    full_name=full_name,
                                    percent_accuracy=percent_accuracy)
         # list of definitions has less than 4 items left
         elif len(list_of_defs) < 4:
-            # less_than_four returns list_of_options
+            # LessThanFour returns list_of_options
             #       >> also updates correct values/lists for later reference
-            make_choices = less_than_four(name, user_info, session, ObjectId, list_of_words, list_of_defs)
+            make_choices = LessThanFour(name, user_info, session,
+                                        ObjectId, list_of_words,
+                                        list_of_defs)
             list_of_options = make_choices["list_of_options"]
             db.users.update({"username": session["username"]},
                             {'$set': {"list_of_words":
@@ -209,19 +240,20 @@ def quiz():
                                          - 1))
             correct_word = doc["list_of_words"][word_index]
             correct_def = doc["list_of_definitions"][word_index]
-            list_of_options = make_options(doc["list_of_words"],
-                                           doc["list_of_definitions"],
-                                           correct_def)
+            list_of_options = MakeOptions(doc["list_of_words"],
+                                          doc["list_of_definitions"],
+                                          correct_def)
         return render_template("question.html", correct_word=correct_word,
                                list_of_options=list_of_options,
                                name_of_lis=name, full_name=full_name)
     elif request.method == "POST":
         name = session["current_list"].lower()
         username = session["username"]
-        teacher = retrieve_user_info(session)["teacher"]
+        teacher = RetrieveUserInfo(session)["teacher"]
         if request.form.get("options") == correct_def:
             # if user is correct, update mongo and lists of words/defs
-            info = UpdateCorrect(correct_word, teacher, name, username, word_index)
+            info = UpdateCorrect(correct_word, teacher,
+                                 name, username, word_index)
             quote_ggs = info["quote_ggs"].split(" ")
             return render_template("correct.html", correct_word=correct_word,
                                    correct_def=correct_def, username=username,
@@ -230,7 +262,8 @@ def quiz():
                                    correct_translit=info["correct_translit"])
         else:
             # if user is wrong, update mongo and lists of words/defs
-            info = UpdateWrong(correct_word, teacher, name, username, word_index)
+            info = UpdateWrong(correct_word, teacher, name,
+                               username, word_index)
             quote_ggs = info["quote_ggs"].split(" ")
             return render_template("incorrect.html", correct_word=correct_word,
                                    correct_def=correct_def,
@@ -278,7 +311,7 @@ def my_classes():
                         continue
             sorted_data = collections.OrderedDict(sorted(student_data.items()))
             students[item][student_name] = sorted_data
-    full_name = retrieve_teacher_info(session)["full_name"]
+    full_name = RetrieveTeacherInfo(session)["full_name"]
     return render_template("my_classes.html",
                            classes=classes, students=students,
                            full_name=full_name)
@@ -286,7 +319,7 @@ def my_classes():
 
 @app.route("/delete_class", methods=["GET", "POST"])
 def delete_class():
-    full_name = retrieve_user_info(session)["full_name"]
+    full_name = RetrieveUserInfo(session)["full_name"]
     username = session["username"]
     mongo_doc = db.users.find_one({"username": username})
     class_name = mongo_doc["class_name"]
@@ -302,11 +335,14 @@ def delete_class():
     else:
         if request.form.get("yes/no") == "Yes":
             db.users.update({"username": username}, {"$set":
-                                                     {"class_name": "default"}})
+                                                     {"class_name":
+                                                      "default"}})
             db.users.update({"username": username}, {"$set":
-                                                     {"class_code": "default"}})
+                                                     {"class_code":
+                                                      "default"}})
             db.users.update({"username": username}, {"$set":
-                                                     {"teacher": "default"}})
+                                                     {"teacher":
+                                                      "default"}})
             flash("You have officially un-enrolled from ", class_name)
             return redirect("/profile", 303)
         else:
@@ -317,7 +353,7 @@ def delete_class():
 def edit_info_teacher():
     if request.method == "GET":
         other_genders = ["Male", "Female", "Other"]
-        user_info = retrieve_teacher_info(session)
+        user_info = RetrieveTeacherInfo(session)
         other_genders.remove(user_info["gender"])
         return render_template("edit_info.html",
                                user=user_info["username"],
@@ -394,7 +430,7 @@ def edit_info_teacher():
 @app.route("/add_class", methods=["GET", "POST"])
 def add_class():
     if request.method == "GET":
-        full_name = retrieve_teacher_info(session)["full_name"]
+        full_name = RetrieveTeacherInfo(session)["full_name"]
         return render_template("add_class.html", full_name=full_name)
     else:
         for teacher in db.teachers.find():
@@ -403,7 +439,7 @@ def add_class():
                     flash("Class Name is taken")
                     class_name = ""
                     class_code = request.form.get("class_code")
-                    full_name = retrieve_teacher_info(session)["full_name"]
+                    full_name = RetrieveTeacherInfo(session)["full_name"]
                     return render_template("add_class2.html",
                                            class_name=class_name,
                                            class_code=class_code,
@@ -412,7 +448,7 @@ def add_class():
                     flash("Class Code already taken")
                     class_name = request.form.get("class_name")
                     class_code = ""
-                    full_name = retrieve_teacher_info(session)["full_name"]
+                    full_name = RetrieveTeacherInfo(session)["full_name"]
                     return render_template("add_class2.html",
                                            class_name=class_name,
                                            class_code=class_code,
@@ -428,35 +464,45 @@ def add_class():
 
 @app.route("/profile_teacher", methods=["GET", "POST"])
 def profile_teacher():
-    full_name = retrieve_teacher_info(session)["full_name"]
-    username = retrieve_teacher_info(session)["username"]
-    email = retrieve_teacher_info(session)["email"]
-    gender = retrieve_teacher_info(session)["gender"]
-    db.teachers.update({"username": session["username"]},
-                       {"$set": {"last_accessed":
-                                 arrow.utcnow().format('YYYY-MM-DD')}})
+    '''
+    retrieves teacher information and displays
+    '''
+    full_name = RetrieveTeacherInfo(session)["full_name"]
+    username = RetrieveTeacherInfo(session)["username"]
+    email = RetrieveTeacherInfo(session)["email"]
+    gender = RetrieveTeacherInfo(session)["gender"]
+    UpdateTeacherLastAccessed(session, arrow)
     return render_template("profile_teacher.html",
                            full_name=full_name, gender=gender,
                            email=email, username=username)
 
 
-
 @app.route("/make_a_list", methods=["GET", "POST"])
 def make_a_list():
     if request.method == "GET":
+        ''' displays all words from masterlist '''
         masterlist = []
         doc = db.masterlist.find()
         for word in doc:
             masterlist.append(word)
-        full_name = retrieve_teacher_info(session)["full_name"]
+        full_name = RetrieveTeacherInfo(session)["full_name"]
         return render_template("make_a_list.html",
                                masterlist=masterlist,
                                full_name=full_name)
     else:
-        full_name = retrieve_teacher_info(session)["full_name"]
+        '''
+        gets ids of all selected words and compiles into list
+        adds doc to db.teacherusername
+            {"_id": -----,
+             "Listname": [list_of_ids]
+            }
+        displays entire word list and name for viewing
+        '''
+        full_name = RetrieveTeacherInfo(session)["full_name"]
         list_ids = request.form.getlist('word')
         list_name = request.form.get("list_name")
-        db[retrieve_teacher_info(session)["username"]].insert({list_name: list_ids})
+        db[RetrieveTeacherInfo(session)["username"]].insert({list_name:
+                                                             list_ids})
         words = []
         for word_id in list_ids:
             list_of_words = db.masterlist.find({"_id": ObjectId(word_id)})
@@ -492,10 +538,7 @@ def login():
                                     doc["password"]):
                 UpdateSession(session, username, doc)
                 flash("Successful login")
-                db.users.update({"username": session["username"]},
-                                {"$set":
-                                 {"last_accessed":
-                                  arrow.utcnow().format('YYYY-MM-DD')}})
+                UpdateUserLastAccessed(session, arrow)
                 return redirect("/setsession", 303)
             else:
                 flash("Wrong password")
@@ -507,10 +550,7 @@ def login():
                                     teacher_doc["password"]):
                 UpdateSession(session, username, teacher_doc)
                 session["user_type"] = "Teacher"
-                db.teachers.update({"username": session["username"]},
-                                   {"$set":
-                                    {"last_accessed":
-                                     arrow.utcnow().format('YYYY-MM-DD')}})
+                UpdateTeacherLastAccessed(session, arrow)
                 flash("Successful login")
                 return redirect("/", 303)
             else:
@@ -588,7 +628,7 @@ def edit_info():
     if request.method == "GET":
         # if just accessing page, fill in values with existing information
         other_genders = ["Male", "Female", "Other"]
-        user_info = retrieve_user_info(session)
+        user_info = RetrieveUserInfo(session)
         other_genders.remove(user_info["gender"])
         return render_template("edit_info.html",
                                user=user_info["username"],
@@ -778,7 +818,7 @@ def logged_out():
         return render_template("logoutconfirmation.html")
     else:
         if request.form.get("yesorno") == "Yes":
-            reset_sessions(session)
+            ResetSession(session)
             return render_template("logged_out.html")
         else:
             return redirect("/profile", 303)
@@ -791,11 +831,9 @@ def design():
 
 @app.route("/profile", methods=["GET"])
 def profile():
-    doc = retrieve_user_info(session)["doc"]
-    user_info = retrieve_user_info(session)
-    db.users.update({"username": session["username"]},
-                    {"$set":
-                     {"last_accessed": arrow.utcnow().format('YYYY-MM-DD')}})
+    doc = RetrieveUserInfo(session)["doc"]
+    user_info = RetrieveUserInfo(session)
+    UpdateUserLastAccessed(session, arrow)
     # for each query in the document, if it is a list, add it to stats
     stats = {}
     for item in doc:
@@ -817,7 +855,6 @@ def profile():
         for teacher_mongodoc in db.teachers.find():
             for item in teacher_mongodoc:
                 if item == class_name and teacher_mongodoc[item] == class_code:
-                    print(teacher_mongodoc)
                     teacher_fname = teacher_mongodoc["first_name"]
                     teacher_lname = teacher_mongodoc["last_name"]
                 else:
@@ -831,7 +868,7 @@ def profile():
     if len(stats) == 0:
         session["od"] = {}
     else:
-        make_progress_report(session, stats, collections)
+        MakeProgressReport(session, stats, collections)
     if len(doc["list_of_words"]) < 1:
         template = "profile_2.html"
     else:
@@ -848,10 +885,8 @@ def profile():
 @app.route("/enroll_in_class", methods=["GET", "POST"])
 def enroll_in_class():
     if request.method == "GET":
-        db.users.update({"username": session["username"]},
-                        {"$set": {"last_accessed":
-                                  arrow.utcnow().format('YYYY-MM-DD')}})
-        full_name = retrieve_user_info(session)["full_name"]
+        UpdateUserLastAccessed(session, arrow)
+        full_name = RetrieveUserInfo(session)["full_name"]
         return render_template("enroll_in_class.html", full_name=full_name)
     else:
         class_code = request.form.get("class_code")
@@ -874,8 +909,7 @@ def enroll_in_class():
 
 @app.route("/MyProgressReport", methods=["GET"])
 def print_from_profile():
-    full_name = retrieve_user_info(session)["full_name"]
-    # FIX THIS IN FUTURE. DONT AUTOMATICALLY SET EASTERN STANDARD TIME
+    full_name = RetrieveUserInfo(session)["full_name"]
     current_time = arrow.utcnow().to("US/Eastern")
     current_time = current_time.format('MM/DD/YYYY; h:mm A')
     return render_template("print_from_profile.html", od=session["od"],

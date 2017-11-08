@@ -3,13 +3,15 @@ from mongo_interface import make_database
 import random
 db = make_database()
 
+
 def CreateMongoList(session, name):
     db.users.update({"username": session["username"]},
                     {"$set": {name: {"correct": 0, "wrong": 0,
                                      "correct_words": [],
                                      "wrong_words": []}}})
 
-def create_lists_from_db(user_info, session, ObjectId):
+
+def CreateListsFromDb(user_info, session, ObjectId):
     teacher = user_info["teacher"]
     teacher_docs = db[teacher].find()
     list_name = session["current_list"]
@@ -25,7 +27,7 @@ def create_lists_from_db(user_info, session, ObjectId):
                 continue
     list_of_words = []
     list_of_definitions = []
-    study= []
+    study = []
     for word_id in list_ids:
         word_doc = db.masterlist.find_one({"_id": ObjectId(word_id)})
         study.append(word_doc)
@@ -44,11 +46,14 @@ def UpdateSession_Form(session, request):
     session["gender"] = request.form.get("gender")
 
 
-def less_than_four(name, user_info, session, ObjectId, list_of_words, list_of_definitions):
+def LessThanFour(name, user_info, session, ObjectId,
+                 list_of_words, list_of_definitions):
     list2 = []
     list_of_ops = []
     list_of_options = []
-    list_of_defs = create_lists_from_db(user_info, session, ObjectId)["list_of_definitions"]
+    list_of_defs = CreateListsFromDb(user_info,
+                                     session,
+                                     ObjectId)["list_of_definitions"]
     for item in list_of_defs:
         if item not in list_of_definitions:
             list2.append(item["definition"])
@@ -95,6 +100,18 @@ def UpdateCorrect(correct_word, teachername, listname, username, word_index):
     return {"quote_ggs": quote_ggs, "correct_translit": correct_translit}
 
 
+def UpdateTeacherLastAccessed(session, arrow):
+    db.teachers.update({"username": session["username"]},
+                       {"$set": {"last_accessed":
+                                 arrow.utcnow().format('YYYY-MM-DD')}})
+
+
+def UpdateUserLastAccessed(session, arrow):
+    db.users.update({"username": session["username"]},
+                    {"$set": {"last_accessed":
+                              arrow.utcnow().format('YYYY-MM-DD')}})
+
+
 def UpdateWrong(correct_word, teachername, listname, username, word_index):
     list_doc = db.users.find_one({"username": username})[listname]
     list_doc["wrong"] += 1
@@ -117,7 +134,7 @@ def UpdateSession(session, username, doc):
     session["email"] = email
 
 
-def retrieve_user_info(session):
+def RetrieveUserInfo(session):
     username = session["username"]
     doc = db.users.find_one({"username": username})
     email = doc["email"]
@@ -128,10 +145,10 @@ def retrieve_user_info(session):
     full_name = '{} {}'.format(f_name.split(" ")[0], l_name)
     return {"username": username, "doc": doc, "full_name": full_name,
             "gender": gender, "email": email, "f_name": f_name,
-            "l_name": l_name, "teacher":teacher}
+            "l_name": l_name, "teacher": teacher}
 
 
-def retrieve_teacher_info(session):
+def RetrieveTeacherInfo(session):
     username = session["username"]
     doc = db.teachers.find_one({"username": username})
     email = doc["email"]
@@ -144,19 +161,19 @@ def retrieve_teacher_info(session):
             "l_name": l_name}
 
 
-def check_if_user_chose_list(session, arrow):
-    if len(retrieve_user_info(session)["doc"]["list_of_words"]) > 0:
+def CheckIfUserChoseList(session, arrow):
+    if len(RetrieveUserInfo(session)["doc"]["list_of_words"]) > 0:
             template = "homepage_2.html"
     else:
         template = "homepage_3.html"
-    full_name = retrieve_user_info(session)["full_name"]
+    full_name = RetrieveUserInfo(session)["full_name"]
     db.users.update({"username": session["username"]},
                     {"$set": {"last_accessed":
                               arrow.utcnow().format('YYYY-MM-DD')}})
     return {"full_name": full_name, "template": template}
 
 
-def make_progress_report(session, stats, collections):
+def MakeProgressReport(session, stats, collections):
     progress = {}
     for lis in stats:
         num_questions = (stats[lis]["correct"]+stats[lis]["wrong"])
@@ -177,7 +194,7 @@ def make_progress_report(session, stats, collections):
             session["od"] = collections.OrderedDict(sorted(progress.items()))
 
 
-def reset_sessions(session):
+def ResetSession(session):
     session["username"] = None
     session["email"] = None
     session["first_name"] = None
@@ -186,7 +203,7 @@ def reset_sessions(session):
     session["user_type"] = None
 
 
-def check_answers(request, flash, session, need_to_flash):
+def CheckAnswers(request, flash, session, need_to_flash):
     errors = False
     stuff = {"username": request.form.get("user").split(" ")[0],
              "email": request.form.get("email").split(" ")[0],
@@ -224,7 +241,7 @@ def check_answers(request, flash, session, need_to_flash):
     return {"errors": errors, "new_stuff": stuff}
 
 
-def calculate_percent_accuracy(full_doc, name):
+def CalculatePercentAccuracy(full_doc, name):
     right = full_doc[name]["correct"]
     wrong = full_doc[name]["wrong"]
     if right+wrong == 0:
@@ -236,7 +253,7 @@ def calculate_percent_accuracy(full_doc, name):
     return [percent_accuracy, percent_inaccuracy]
 
 
-def make_options(list_of_words, list_of_definitions, correct_def):
+def MakeOptions(list_of_words, list_of_definitions, correct_def):
     not_the_same = False
     while not not_the_same:
         wrong_one = random.choice(list_of_definitions)
