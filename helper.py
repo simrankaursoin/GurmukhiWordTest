@@ -28,7 +28,7 @@ def create_lists_from_db(user_info, session, ObjectId):
     study= []
     for word_id in list_ids:
         word_doc = db.masterlist.find_one({"_id": ObjectId(word_id)})
-        study.append(word_id)
+        study.append(word_doc)
         list_of_words.append(word_doc["word"])
         list_of_definitions.append(word_doc["definition"])
     return({"list_of_words": tuple(list_of_words),
@@ -73,15 +73,14 @@ def less_than_four(name, user_info, session, ObjectId, list_of_words, list_of_de
             "correct_def": correct_def, "word_index": word_index}
 
 
-def UpdateCorrect(correct_word, name, username, word_index):
-    list_doc = db.users.find_one({"username": username})[name]
+def UpdateCorrect(correct_word, teachername, listname, username, word_index):
+    list_doc = db.users.find_one({"username": username})[listname]
     list_doc["correct"] += 1
     list_doc["correct_words"].append(correct_word)
     db.users.update({"username": username},
-                    {"$set": {name: list_doc}})
-    full_doc = db[name].find_one({"word": correct_word})
-    print(full_doc["quote_ggs"])
-    quote_ggs = full_doc["quote_ggs"].split()
+                    {"$set": {listname: list_doc}})
+    full_doc = db.masterlist.find_one({"word": correct_word})
+    quote_ggs = full_doc["quote_ggs"]
     list_of_words = db.users.find_one({"username": username})["list_of_words"]
     list_of_words.pop(word_index)
     list_of_definitions = db.users.find_one(
@@ -96,14 +95,14 @@ def UpdateCorrect(correct_word, name, username, word_index):
     return {"quote_ggs": quote_ggs, "correct_translit": correct_translit}
 
 
-def UpdateWrong(correct_word, name, username, word_index, session):
-    list_doc = db.users.find_one({"username": username})[name]
+def UpdateWrong(correct_word, teachername, listname, username, word_index):
+    list_doc = db.users.find_one({"username": username})[listname]
     list_doc["wrong"] += 1
     list_doc["wrong_words"].append(correct_word)
     db.users.update({"username": username},
-                    {"$set": {name: list_doc}})
-    full_doc = db[name].find_one({"word": correct_word})
-    quote_ggs = full_doc["quote_ggs"].split()
+                    {"$set": {listname: list_doc}})
+    full_doc = db.masterlist.find_one({"word": correct_word})
+    quote_ggs = full_doc["quote_ggs"]
     correct_translit = full_doc["transliteration"]
     return {"quote_ggs": quote_ggs, "correct_translit": correct_translit}
 

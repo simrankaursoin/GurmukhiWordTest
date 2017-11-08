@@ -218,22 +218,24 @@ def quiz():
     elif request.method == "POST":
         name = session["current_list"].lower()
         username = session["username"]
+        teacher = retrieve_user_info(session)["teacher"]
         if request.form.get("options") == correct_def:
             # if user is correct, update mongo and lists of words/defs
-            info = UpdateCorrect(correct_word, name, username, word_index)
+            info = UpdateCorrect(correct_word, teacher, name, username, word_index)
+            quote_ggs = info["quote_ggs"].split(" ")
             return render_template("correct.html", correct_word=correct_word,
                                    correct_def=correct_def, username=username,
-                                   quote_ggs=info["quote_ggs"],
+                                   quote_ggs=quote_ggs,
                                    name_of_lis=name, full_name=full_name,
                                    correct_translit=info["correct_translit"])
         else:
             # if user is wrong, update mongo and lists of words/defs
-            info = UpdateWrong(correct_word, name, username,
-                               word_index, session)
+            info = UpdateWrong(correct_word, teacher, name, username, word_index)
+            quote_ggs = info["quote_ggs"].split(" ")
             return render_template("incorrect.html", correct_word=correct_word,
                                    correct_def=correct_def,
                                    full_name=full_name, name_of_lis=name,
-                                   quote_ggs=info["quote_ggs"],
+                                   quote_ggs=quote_ggs,
                                    correct_translit=info["correct_translit"])
 
 
@@ -804,7 +806,8 @@ def profile():
                 stats[item] = doc[item]
             except (IndexError, ValueError):
                 continue
-    if doc["class_code"] is "default":
+    if doc["class_code"] == "default":
+        print("DEFAULT")
         teacher_name = None
         class_code = None
         class_name = None
@@ -814,6 +817,7 @@ def profile():
         for teacher_mongodoc in db.teachers.find():
             for item in teacher_mongodoc:
                 if item == class_name and teacher_mongodoc[item] == class_code:
+                    print(teacher_mongodoc)
                     teacher_fname = teacher_mongodoc["first_name"]
                     teacher_lname = teacher_mongodoc["last_name"]
                 else:
