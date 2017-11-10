@@ -202,6 +202,8 @@ def NotaList():
             "security_word", "teacher", "first_name",
             "last_name", "last_accessed", "password",
             "class_name", "class_code", "username"]
+
+
 def ResetSession(session):
     session["username"] = None
     session["email"] = None

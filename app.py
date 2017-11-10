@@ -361,7 +361,7 @@ def delete_class():
 @app.route("/edit_info_teacher", methods=["GET", "POST"])
 def edit_info_teacher():
     if request.method == "GET":
-        """ 
+        """
         Shows form with current information filled in
         Teacher can edit any information that needs changing
         """
@@ -380,9 +380,9 @@ def edit_info_teacher():
         """
         doc is a compilation of all info from every teacher in the db
         then, checkAnswers makes sure that everything is valid and filled in
-        new usernames are cross-referenced with doc to make sure they arent taken
+        new usernames cross-referenced with doc to make sure they arent taken
         if check answers returns True, it means there is something invalid
-            --> redirects back to editinfo with blank spaces in every invalid section
+            --> redirects back to page with blank spaces in each invalid box
         if checkAnswers is false, everything is valid
             --> new_stuff is the new info that the user has entered
             --> database is updated
@@ -457,7 +457,7 @@ def add_class():
         return render_template("add_class.html", full_name=full_name)
     else:
         '''
-        cross-reference with all class names & codes to make sure it isn't taken
+        cross-reference with all class names/codes to make sure it isn't taken
         if taken
             --> redirect to add_class2
             --> (only the piece that is taken is blank. Other is filled in)
