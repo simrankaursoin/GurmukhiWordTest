@@ -3,13 +3,13 @@
 from mongo_interface import make_database
 from bson.objectid import ObjectId
 from flask import flash, request, Flask, render_template, redirect, session
-from helper import RetrieveUserInfo, ResetSession
+from helper import RetrieveUserInfo, ResetSession, GetTeacherListNames
 from helper import MakeOptions,  CheckAnswers, CalculatePercentAccuracy
 from helper import UpdateSession, UpdateSession_Form, UpdateCorrect
 from helper import UpdateWrong, LessThanFour, CreateMongoList
 from helper import RetrieveTeacherInfo, MakeProgressReport, CreateListsFromDb
 from helper import CheckIfUserChoseList, UpdateTeacherLastAccessed
-from helper import UpdateUserLastAccessed, GetTeacherListNames
+from helper import UpdateUserLastAccessed
 from passlib.hash import pbkdf2_sha512
 import arrow
 import random
@@ -54,21 +54,24 @@ def set_session():
     """
     retrieves user information from session.
     updates last_accessed in db (so I know how often accounts are used)
-    get names of lists
-        for those w/o teachers --> default lists(default collection)
-        for those w/ teachers -----> custom lists(teacher-username collection)
+    get names of lists to display
+    if list not chosen yet, don't display "quiz" or "study" (causes error)
+        --> setsession2
+    else
+        --> setsession
     """
     if request.method == "GET":
         user_info = RetrieveUserInfo(session)
         full_name = user_info["full_name"]
         UpdateUserLastAccessed(session, arrow)
+        list_info = GetTeacherListNames(user_info["teacher"])
         list_names = []
-        for list_doc in db[user_info["teacher"]].find():
-            for list_name in list_doc:
-                if list_name == "_id":
+        for item in list_info:
+            for name in item:
+                if name == "_id":
                     continue
                 else:
-                    list_names.append(list_name)
+                    list_names.append(name)
         if len(user_info["doc"]["list_of_words"]) < 1:
             template = "setsession2.html"
         else:
@@ -108,15 +111,13 @@ def study():
     """
     user_info = RetrieveUserInfo(session)
     full_name = user_info["full_name"]
-    all_words = []
     UpdateUserLastAccessed(session, arrow)
     document = db.users.find_one({"username": user_info["username"]})
     if len(document["list_of_words"]) < 1:
         return render_template("error_choose_list", full_name=full_name)
     else:
         all_words = CreateListsFromDb(user_info, session, ObjectId)["study"]
-        name = session["current_list"]
-    return render_template("study.html", name=name,
+    return render_template("study.html", name=session["current_list"],
                            full_name=full_name, all_words=all_words)
 
 
@@ -186,10 +187,7 @@ def progress():
         # set no_questions = True so the browser can handle accordingly
         no_questions = True
         # set all values to blanks (so that the return statement doesn't crash)
-        correct_words = ""
-        wrong_words = ""
-        percent_accuracy = ""
-        percent_inaccuracy = ""
+        correct_words, wrong_words, percent_accuracy, percent_inaccuracy = ""
     # reset current_list to just the list number
     current_list = session["current_list"][-1]
     return render_template("progress.html",
