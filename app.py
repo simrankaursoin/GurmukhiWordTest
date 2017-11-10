@@ -516,8 +516,20 @@ def profile_teacher():
 @app.route("/make_a_list", methods=["GET", "POST"])
 def make_a_list():
     if request.method == "GET":
-        ''' displays all words from masterlist '''
+        ''' displays all words from masterlist with checkboxes next to each'''
         masterlist = []
+        # I could make the masterlist a dict
+        # for each word, I would make the value a boolean. 
+            # if false, the word has not been used before
+            # if true, the word has been used in another list by this teacher
+        # that way, the teacher wouldnt accidentally reuse a word
+        # could make the key a tuple of all the lists the teacher has used this word in 
+            # --> teacher can see where it has been used before
+        # alternatively, I could just remove it from the list if it has been used before
+        # however, what if the teacher wants to reuse it?
+        # maybe redirect to a page that lets teacher choose if they want already-used words to be removed?
+        # ignore the problem and hope teachers just remember?
+        
         doc = db.masterlist.find()
         for word in doc:
             masterlist.append(word)
