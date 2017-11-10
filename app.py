@@ -367,6 +367,10 @@ def delete_class():
 @app.route("/edit_info_teacher", methods=["GET", "POST"])
 def edit_info_teacher():
     if request.method == "GET":
+        """ 
+        Shows form with current information filled in
+        Teacher can edit any information that needs changing
+        """
         other_genders = ["Male", "Female", "Other"]
         user_info = RetrieveTeacherInfo(session)
         other_genders.remove(user_info["gender"])
@@ -379,6 +383,17 @@ def edit_info_teacher():
                                gender=user_info["gender"],
                                other_genders=other_genders)
     elif request.method == "POST":
+        """
+        doc is a compilation of all info from every teacher in the db
+        then, checkAnswers makes sure that everything is valid and filled in
+        new usernames are cross-referenced with doc to make sure they arent taken
+        if check answers returns True, it means there is something invalid
+            --> redirects back to editinfo with blank spaces in every invalid section
+        if checkAnswers is false, everything is valid
+            --> new_stuff is the new info that the user has entered
+            --> database is updated
+            --> redirects back to /profile
+        """
         doc = {}
         for teacher in db.teachers.find():
             for item in teacher:
@@ -428,8 +443,6 @@ def edit_info_teacher():
             UpdateSession_Form(session, request)
             flash("Profile updated")
             return redirect("/profile_teacher", 303)
-        # if check answers returns True, the user has made a mistake
-        # reroute to edit_info so user can fix answer(s)
         else:
             other_genders = ["Male", "Female", "Other"]
             other_genders.remove(new_stuff["gender"])
@@ -449,6 +462,15 @@ def add_class():
         full_name = RetrieveTeacherInfo(session)["full_name"]
         return render_template("add_class.html", full_name=full_name)
     else:
+        '''
+        cross-reference with all class names & codes to make sure it isn't taken
+        if taken
+            --> redirect to add_class2
+            --> (only the piece that is taken is blank. Other is filled in)
+        if not taken
+            --> redirects to my_classes
+            --> flashes confirmation message
+        '''
         for teacher in db.teachers.find():
             for item in teacher:
                 if item == request.form.get("class_name"):
@@ -933,10 +955,13 @@ def enroll_in_class():
                                     {'$set': {"class_name": attribute}})
                     db.users.update(username_query,
                                     {'$set': {"teacher": teacher["username"]}})
+        # empty the list of words and defs
+            # when redirects to /profile, it wont show quiz or study in navbar
                     db.users.update(username_query,
                                     {'$set': {"list_of_words": []}})
                     db.users.update(username_query,
                                     {'$set': {"list_of_definitions": []}})
+        # remove progress of all lists that aren't created by this teacher.
                     teacher_lists = GetTeacherListNames(teacher["username"])
                     for item in doc:
                         if item in stuff_that_isnt_a_list:

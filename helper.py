@@ -30,13 +30,6 @@ def CheckAnswers(request, flash, session, need_to_flash):
         stuff["username"] = ""
         stuff["c_user"] = ""
         errors = True
-    elif ((stuff["username"] != session["username"]) and
-          db.users.find_one({"username": stuff["username"]}) is not None):
-        if need_to_flash:
-            flash("Username already taken")
-        stuff["username"] = ""
-        stuff["c_user"] = ""
-        errors = True
     elif "@" not in list(request.form.get("email").strip()):
         if need_to_flash:
             flash("Please enter a valid email")
