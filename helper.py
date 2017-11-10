@@ -16,7 +16,7 @@ def CalculatePercentAccuracy(full_doc, name):
     return [percent_accuracy, percent_inaccuracy]
 
 
-def CheckAnswers(request, flash, session, need_to_flash):
+def CheckAnswers(request, flash, session, need_to_flash, doc):
     errors = False
     stuff = {"username": request.form.get("user").split(" ")[0],
              "email": request.form.get("email").split(" ")[0],
@@ -196,6 +196,12 @@ def MakeProgressReport(session, stats):
             session["progress_report"] = progress
 
 
+def NotaList():
+    return ["_id", "gender", "list_of_words",
+            "list_of_definitions", "email",
+            "security_word", "teacher", "first_name",
+            "last_name", "last_accessed", "password",
+            "class_name", "class_code", "username"]
 def ResetSession(session):
     session["username"] = None
     session["email"] = None
