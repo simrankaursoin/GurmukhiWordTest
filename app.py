@@ -87,8 +87,9 @@ def set_session():
         user_info = RetrieveUserInfo(session)
         list_of_words = CreateListsFromDb(user_info, session,
                                           ObjectId)["list_of_words"]
-        list_of_definitions = CreateListsFromDb(user_info, session,
-                                                ObjectId)["list_of_definitions"]
+        list_of_definitions = CreateListsFromDb(user_info,
+                                                ObjectId,
+                                                session)["list_of_definitions"]
         db.users.update({"username": user_info["username"]},
                         {"$set": {"list_of_words": tuple(list_of_words)}})
         db.users.update({"username": user_info["username"]},
@@ -340,9 +341,9 @@ def delete_class():
             db.users.update(username_query, {"$set": {"teacher":
                                                       "default"}})
             db.users.update(username_query,
-                                    {'$set': {"list_of_words": []}})
+                            {'$set': {"list_of_words": []}})
             db.users.update(username_query,
-                                    {'$set': {"list_of_definitions": []}})
+                            {'$set': {"list_of_definitions": []}})
             teacher_lists = GetTeacherListNames("default")
             stuff_that_isnt_a_list = ["_id", "gender", "list_of_words",
                                       "list_of_definitions", "email",
@@ -355,7 +356,8 @@ def delete_class():
                         elif item in teacher_lists:
                             continue
                         else:
-                            db.users.update(username_query, {"$unset" : {item: ""}})
+                            db.users.update(username_query,
+                                            {"$unset": {item: ""}})
             flash("You have officially un-enrolled from ", class_name)
             return redirect("/profile", 303)
         else:
@@ -381,7 +383,8 @@ def edit_info_teacher():
         for teacher in db.teachers.find():
             for item in teacher:
                 doc[item] = teacher[item]
-        new_stuff =  CheckAnswers(request, flash, session, False)["new_stuff"]
+        new_stuff = CheckAnswers(request,
+                                 flash, session, False)["new_stuff"]
         if session["username"] != new_stuff["username"]:
             if session["username"] in doc.values():
                 flash("Username taken")
@@ -410,7 +413,7 @@ def edit_info_teacher():
                                        l_name=new_stuff["l_name"],
                                        gender=new_stuff["gender"],
                                        other_genders=other_genders)
-        if not  CheckAnswers(request, flash, session, True)["errors"]:
+        if not CheckAnswers(request, flash, session, True)["errors"]:
             username_query = {"username": session["username"]}
             things_to_update = ["email", "username", "gender"]
             for i in things_to_update:
@@ -595,13 +598,13 @@ def sign_up_teacher():
         return render_template("sign_up_teacher.html")
     elif request.method == "POST":
         UpdateSession_Form(session, request)
-        new_stuff =  CheckAnswers(request, flash, session, False)["new_stuff"]
+        new_stuff = CheckAnswers(request, flash, session, False)["new_stuff"]
         pass_word = pbkdf2_sha512.hash(request.form.get("pass").strip())
         c_pass = request.form.get("c_pass").strip()
         security_word = request.form.get("security_word").strip()
         # if  CheckAnswers is False, user has not made any mistakes
         # insert document in db
-        if not  CheckAnswers(request, flash, session, True)["errors"]:
+        if not CheckAnswers(request, flash, session, True)["errors"]:
             db.teachers.insert_one({"username": new_stuff["username"],
                                     "password": pass_word,
                                     "security_word": request.form.get
@@ -658,7 +661,7 @@ def edit_info():
         # check answers makes incorrect value(s) blank > user knows what to fix
         # new stuff is equal to a dict of all variables
         #     (whether variables are blank or equal to user responses)
-        new_stuff =  CheckAnswers(request, flash, session, False)["new_stuff"]
+        new_stuff = CheckAnswers(request, flash, session, False)["new_stuff"]
         doc = {}
         for user in db.users.find():
             for item in user:
@@ -692,7 +695,7 @@ def edit_info():
                                        gender=new_stuff["gender"],
                                        other_genders=other_genders)
         # if  CheckAnswers[errors] is false, no user has not made any errors
-        if not  CheckAnswers(request, flash, session, True)["errors"]:
+        if not CheckAnswers(request, flash, session, True)["errors"]:
             # username_query is the query for the first part of db.update
             username_query = {"username": session["username"]}
             # things to update is the list of things to update (for loop)
@@ -780,13 +783,13 @@ def signup():
         return render_template("sign_up.html")
     elif request.method == "POST":
         UpdateSession_Form(session, request)
-        new_stuff =  CheckAnswers(request, flash, session, False)["new_stuff"]
+        new_stuff = CheckAnswers(request, flash, session, False)["new_stuff"]
         pass_word = pbkdf2_sha512.hash(request.form.get("pass").strip())
         c_pass = request.form.get("c_pass").strip()
         security_word = request.form.get("security_word").strip()
         # if  CheckAnswers is False, user has not made any mistakes
         # insert document in db
-        if not  CheckAnswers(request, flash, session, True)["errors"]:
+        if not CheckAnswers(request, flash, session, True)["errors"]:
             db.users.insert_one({"username": new_stuff["username"],
                                  "password": pass_word,
                                  "security_word": request.form.get
@@ -899,8 +902,10 @@ def profile():
                            username=user_info["username"],
                            full_name=user_info["full_name"],
                            gender=user_info["gender"],
-                           od=session["progress_report"], class_code=class_code,
-                           class_name=class_name, teacher_name=teacher_name)
+                           od=session["progress_report"],
+                           class_code=class_code,
+                           class_name=class_name,
+                           teacher_name=teacher_name)
 
 
 @app.route("/enroll_in_class", methods=["GET", "POST"])
@@ -939,7 +944,8 @@ def enroll_in_class():
                         elif item in teacher_lists:
                             continue
                         else:
-                            db.users.update(username_query, {"$unset" : {item: ""}})
+                            db.users.update(username_query,
+                                            {"$unset": {item: ""}})
                     return redirect("/profile", 303)
                 else:
                     continue
@@ -952,7 +958,8 @@ def print_from_profile():
     full_name = RetrieveUserInfo(session)["full_name"]
     current_time = arrow.utcnow().to("US/Eastern")
     current_time = current_time.format('MM/DD/YYYY; h:mm A')
-    return render_template("print_from_profile.html", od=session["progress_report"],
+    return render_template("print_from_profile.html",
+                           od=session["progress_report"],
                            full_name=full_name, current_time=current_time)
 
 
