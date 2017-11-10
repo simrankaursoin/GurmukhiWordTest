@@ -339,6 +339,10 @@ def delete_class():
                                                       "default"}})
             db.users.update(username_query, {"$set": {"teacher":
                                                       "default"}})
+            db.users.update(username_query,
+                                    {'$set': {"list_of_words": []}})
+            db.users.update(username_query,
+                                    {'$set': {"list_of_definitions": []}})
             teacher_lists = GetTeacherListNames("default")
             stuff_that_isnt_a_list = ["_id", "gender", "list_of_words",
                                       "list_of_definitions", "email",
@@ -660,7 +664,7 @@ def edit_info():
             for item in user:
                 doc[item] = user[item]
         if session["username"] != new_stuff["username"]:
-            if session["username"] in doc.values():
+            if new_stuff["username"] in doc.values():
                 flash("Username taken")
                 other_genders = ["Male", "Female", "Other"]
                 other_genders.remove(new_stuff["gender"])
@@ -676,7 +680,7 @@ def edit_info():
             for item in teacher:
                 doc[item] = teacher[item]
         if session["username"] != new_stuff["username"]:
-            if session["username"] in doc.values():
+            if new_stuff["username"] in doc.values():
                 flash("Username taken")
                 other_genders = ["Male", "Female", "Other"]
                 other_genders.remove(new_stuff["gender"])
@@ -716,7 +720,7 @@ def edit_info():
             other_genders = ["Male", "Female", "Other"]
             other_genders.remove(new_stuff["gender"])
             return render_template("edit_info.html",
-                                   user=new_stuff["user"],
+                                   user=new_stuff["username"],
                                    email=new_stuff["email"],
                                    f_name=new_stuff["f_name"],
                                    l_name=new_stuff["l_name"],
@@ -924,6 +928,10 @@ def enroll_in_class():
                                     {'$set': {"class_name": attribute}})
                     db.users.update(username_query,
                                     {'$set': {"teacher": teacher["username"]}})
+                    db.users.update(username_query,
+                                    {'$set': {"list_of_words": []}})
+                    db.users.update(username_query,
+                                    {'$set': {"list_of_definitions": []}})
                     teacher_lists = GetTeacherListNames(teacher["username"])
                     for item in doc:
                         if item in stuff_that_isnt_a_list:
