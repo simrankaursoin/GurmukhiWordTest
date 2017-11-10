@@ -54,7 +54,7 @@ img.logo {max-width:20%;min-width:144px; min-height:30px}
                 You should start practicing!
             {% else %}
                 {% for vocab_lis in od %}
-                    <u><font style="font-size:120%;">List {{vocab_lis}}:</font></u> <br />
+                    <u><font style="font-size:120%;">{{vocab_lis}}:</font></u> <br />
                     <blockquote>Percentage Accuracy: {{od[vocab_lis]["percent_accuracy"]}}% <br />
                     <div class="progress progress-striped active" style="width:70%;">
                         <div class="progress-bar progress-bar-success" style="width: {{od[vocab_lis]["percent_accuracy"]}}%"></div>

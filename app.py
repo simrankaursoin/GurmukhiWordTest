@@ -4,14 +4,13 @@ from mongo_interface import make_database
 from bson.objectid import ObjectId
 from flask import flash, request, Flask, render_template, redirect, session
 from helper import RetrieveUserInfo, ResetSession
-from helper import MakeOptions, check_answers, CalculatePercentAccuracy
+from helper import MakeOptions,  CheckAnswers, CalculatePercentAccuracy
 from helper import UpdateSession, UpdateSession_Form, UpdateCorrect
 from helper import UpdateWrong, LessThanFour, CreateMongoList
 from helper import RetrieveTeacherInfo, MakeProgressReport, CreateListsFromDb
 from helper import CheckIfUserChoseList, UpdateTeacherLastAccessed
-from helper import UpdateUserLastAccessed
+from helper import UpdateUserLastAccessed, GetTeacherListNames
 from passlib.hash import pbkdf2_sha512
-import collections
 import arrow
 import random
 import secure
@@ -70,7 +69,11 @@ def set_session():
                     continue
                 else:
                     list_names.append(list_name)
-        return render_template("setsession.html",
+        if len(user_info["doc"]["list_of_words"]) < 1:
+            template = "setsession2.html"
+        else:
+            template = "setsession.html"
+        return render_template(template,
                                list_names=list_names,
                                full_name=full_name)
     elif request.method == "POST":
@@ -150,7 +153,7 @@ def list_selected():
         >> initialize list in user doc with values equal to 0
     '''
     full_name = RetrieveUserInfo(session)["full_name"]
-    name = session["current_list"].lower()
+    name = session["current_list"]
     doc = db.users.find_one({"username": session["username"]})
     if name not in doc:
         CreateMongoList(session, name)
@@ -165,7 +168,7 @@ def progress():
     # doc is the user's document in the db
     user_info = RetrieveUserInfo(session)
     doc = user_info["doc"]
-    current_list = session["current_list"].lower()
+    current_list = session["current_list"]
     UpdateUserLastAccessed(session, arrow)
     # if the current list in doc, user has answered questions from the list
     if current_list in doc:
@@ -247,7 +250,7 @@ def quiz():
                                list_of_options=list_of_options,
                                name_of_lis=name, full_name=full_name)
     elif request.method == "POST":
-        name = session["current_list"].lower()
+        name = session["current_list"]
         username = session["username"]
         teacher = RetrieveUserInfo(session)["teacher"]
         if request.form.get("options") == correct_def:
@@ -287,6 +290,7 @@ def my_classes():
         else:
             classes[item] = mongo_doc[item]
     students = {}
+    my_lists = GetTeacherListNames(username)
     for item in classes:
         students[item] = {}
         for student in db.users.find({"class_name": item}):
@@ -295,21 +299,15 @@ def my_classes():
             student_name = '{} {}'.format(f_name.split(" ")[0], l_name)
             student_data = {}
             for thing in student:
-                name_of_item = list(str(thing))
-                if name_of_item[0:4] == list("list"):
-                    try:
-                        int(name_of_item[4])
-                        percent_accuracy = int((student[thing]["correct"] /
-                                               (student[thing]["correct"] +
-                                                student[thing]["wrong"]))*100)
-                        number_questions = (student[thing]["correct"] +
-                                            student[thing]["wrong"])
-                        list_name = name_of_item[4]
-                        student_data[list_name] = (percent_accuracy,
-                                                   number_questions)
-                    except (IndexError, ValueError, ZeroDivisionError):
-                        continue
-            sorted_data = collections.OrderedDict(sorted(student_data.items()))
+                if thing in my_lists:
+                    percent_accuracy = int((student[thing]["correct"] /
+                                           (student[thing]["correct"] +
+                                            student[thing]["wrong"]))*100)
+                    number_questions = (student[thing]["correct"] +
+                                        student[thing]["wrong"])
+                    student_data[thing] = (percent_accuracy,
+                                           number_questions)
+            sorted_data = student_data
             students[item][student_name] = sorted_data
     full_name = RetrieveTeacherInfo(session)["full_name"]
     return render_template("my_classes.html",
@@ -333,16 +331,27 @@ def delete_class():
                                    full_name=full_name,
                                    class_name=class_name)
     else:
+        username_query = {"username": username}
         if request.form.get("yes/no") == "Yes":
-            db.users.update({"username": username}, {"$set":
-                                                     {"class_name":
+            db.users.update(username_query, {"$set": {"class_name":
                                                       "default"}})
-            db.users.update({"username": username}, {"$set":
-                                                     {"class_code":
+            db.users.update(username_query, {"$set": {"class_code":
                                                       "default"}})
-            db.users.update({"username": username}, {"$set":
-                                                     {"teacher":
+            db.users.update(username_query, {"$set": {"teacher":
                                                       "default"}})
+            teacher_lists = GetTeacherListNames("default")
+            stuff_that_isnt_a_list = ["_id", "gender", "list_of_words",
+                                      "list_of_definitions", "email",
+                                      "security_word", "teacher", "first_name",
+                                      "last_name", "last_accessed", "password",
+                                      "class_name", "class_code", "username"]
+            for item in mongo_doc:
+                        if item in stuff_that_isnt_a_list:
+                            continue
+                        elif item in teacher_lists:
+                            continue
+                        else:
+                            db.users.update(username_query, {"$unset" : {item: ""}})
             flash("You have officially un-enrolled from ", class_name)
             return redirect("/profile", 303)
         else:
@@ -368,7 +377,7 @@ def edit_info_teacher():
         for teacher in db.teachers.find():
             for item in teacher:
                 doc[item] = teacher[item]
-        new_stuff = check_answers(request, flash, session, False)["new_stuff"]
+        new_stuff =  CheckAnswers(request, flash, session, False)["new_stuff"]
         if session["username"] != new_stuff["username"]:
             if session["username"] in doc.values():
                 flash("Username taken")
@@ -397,7 +406,7 @@ def edit_info_teacher():
                                        l_name=new_stuff["l_name"],
                                        gender=new_stuff["gender"],
                                        other_genders=other_genders)
-        if not check_answers(request, flash, session, True)["errors"]:
+        if not  CheckAnswers(request, flash, session, True)["errors"]:
             username_query = {"username": session["username"]}
             things_to_update = ["email", "username", "gender"]
             for i in things_to_update:
@@ -501,6 +510,9 @@ def make_a_list():
         full_name = RetrieveTeacherInfo(session)["full_name"]
         list_ids = request.form.getlist('word')
         list_name = request.form.get("list_name")
+        if len(list_ids) < 5:
+            flash("Must select at least 5 words")
+            return redirect("/make_a_list", 303)
         db[RetrieveTeacherInfo(session)["username"]].insert({list_name:
                                                              list_ids})
         words = []
@@ -579,13 +591,13 @@ def sign_up_teacher():
         return render_template("sign_up_teacher.html")
     elif request.method == "POST":
         UpdateSession_Form(session, request)
-        new_stuff = check_answers(request, flash, session, False)["new_stuff"]
+        new_stuff =  CheckAnswers(request, flash, session, False)["new_stuff"]
         pass_word = pbkdf2_sha512.hash(request.form.get("pass").strip())
         c_pass = request.form.get("c_pass").strip()
         security_word = request.form.get("security_word").strip()
-        # if check_answers is False, user has not made any mistakes
+        # if  CheckAnswers is False, user has not made any mistakes
         # insert document in db
-        if not check_answers(request, flash, session, True)["errors"]:
+        if not  CheckAnswers(request, flash, session, True)["errors"]:
             db.teachers.insert_one({"username": new_stuff["username"],
                                     "password": pass_word,
                                     "security_word": request.form.get
@@ -642,7 +654,7 @@ def edit_info():
         # check answers makes incorrect value(s) blank > user knows what to fix
         # new stuff is equal to a dict of all variables
         #     (whether variables are blank or equal to user responses)
-        new_stuff = check_answers(request, flash, session, False)["new_stuff"]
+        new_stuff =  CheckAnswers(request, flash, session, False)["new_stuff"]
         doc = {}
         for user in db.users.find():
             for item in user:
@@ -675,8 +687,8 @@ def edit_info():
                                        l_name=new_stuff["l_name"],
                                        gender=new_stuff["gender"],
                                        other_genders=other_genders)
-        # if check_answers[errors] is false, no user has not made any errors
-        if not check_answers(request, flash, session, True)["errors"]:
+        # if  CheckAnswers[errors] is false, no user has not made any errors
+        if not  CheckAnswers(request, flash, session, True)["errors"]:
             # username_query is the query for the first part of db.update
             username_query = {"username": session["username"]}
             # things to update is the list of things to update (for loop)
@@ -764,13 +776,13 @@ def signup():
         return render_template("sign_up.html")
     elif request.method == "POST":
         UpdateSession_Form(session, request)
-        new_stuff = check_answers(request, flash, session, False)["new_stuff"]
+        new_stuff =  CheckAnswers(request, flash, session, False)["new_stuff"]
         pass_word = pbkdf2_sha512.hash(request.form.get("pass").strip())
         c_pass = request.form.get("c_pass").strip()
         security_word = request.form.get("security_word").strip()
-        # if check_answers is False, user has not made any mistakes
+        # if  CheckAnswers is False, user has not made any mistakes
         # insert document in db
-        if not check_answers(request, flash, session, True)["errors"]:
+        if not  CheckAnswers(request, flash, session, True)["errors"]:
             db.users.insert_one({"username": new_stuff["username"],
                                  "password": pass_word,
                                  "security_word": request.form.get
@@ -821,7 +833,10 @@ def logged_out():
             ResetSession(session)
             return render_template("logged_out.html")
         else:
-            return redirect("/profile", 303)
+            if session["user_type"] == "Teacher":
+                return redirect("/profile_teacher", 303)
+            else:
+                return redirect("/profile", 303)
 
 
 @app.route("/design", methods=["GET"])
@@ -836,19 +851,21 @@ def profile():
     UpdateUserLastAccessed(session, arrow)
     # for each query in the document, if it is a list, add it to stats
     stats = {}
-    for item in doc:
-        name_of_item = list(str(item))
-        if name_of_item[0:4] == list("list"):
-            try:
-                int(name_of_item[4])
-                stats[item] = doc[item]
-            except (IndexError, ValueError):
+    teacher = doc["teacher"]
+    teacher_stuff = []
+    for document in db[teacher].find():
+        for listname in document:
+            if listname == "_id":
                 continue
+            else:
+                teacher_stuff.append(listname)
+    for item in doc:
+        if item in teacher_stuff:
+            stats[item] = doc[item]
+        else:
+            continue
     if doc["class_code"] == "default":
-        print("DEFAULT")
-        teacher_name = None
-        class_code = None
-        class_name = None
+        teacher_name = class_code = class_name = None
     else:
         class_code = doc["class_code"]
         class_name = doc["class_name"]
@@ -866,9 +883,9 @@ def profile():
     #   get the correct_words and incorrect_words (minus repeats)
     #   set equal to progress[list_numbxer]
     if len(stats) == 0:
-        session["od"] = {}
+        session["progress_report"] = {}
     else:
-        MakeProgressReport(session, stats, collections)
+        MakeProgressReport(session, stats)
     if len(doc["list_of_words"]) < 1:
         template = "profile_2.html"
     else:
@@ -878,7 +895,7 @@ def profile():
                            username=user_info["username"],
                            full_name=user_info["full_name"],
                            gender=user_info["gender"],
-                           od=session["od"], class_code=class_code,
+                           od=session["progress_report"], class_code=class_code,
                            class_name=class_name, teacher_name=teacher_name)
 
 
@@ -889,17 +906,32 @@ def enroll_in_class():
         full_name = RetrieveUserInfo(session)["full_name"]
         return render_template("enroll_in_class.html", full_name=full_name)
     else:
+        doc = RetrieveUserInfo(session)["doc"]
+        stuff_that_isnt_a_list = ["_id", "gender", "list_of_words",
+                                  "list_of_definitions", "email",
+                                  "security_word", "teacher", "first_name",
+                                  "last_name", "last_accessed", "password",
+                                  "class_name", "class_code", "username"]
         class_code = request.form.get("class_code")
+        username_query = {"username": session["username"]}
         for teacher in db.teachers.find():
             for attribute in teacher:
                 if teacher[attribute] == class_code:
                     flash("You have enrolled in '"+attribute+"'")
-                    db.users.update({"username": session["username"]},
+                    db.users.update(username_query,
                                     {'$set': {"class_code": class_code}})
-                    db.users.update({"username": session["username"]},
+                    db.users.update(username_query,
                                     {'$set': {"class_name": attribute}})
-                    db.users.update({"username": session["username"]},
+                    db.users.update(username_query,
                                     {'$set': {"teacher": teacher["username"]}})
+                    teacher_lists = GetTeacherListNames(teacher["username"])
+                    for item in doc:
+                        if item in stuff_that_isnt_a_list:
+                            continue
+                        elif item in teacher_lists:
+                            continue
+                        else:
+                            db.users.update(username_query, {"$unset" : {item: ""}})
                     return redirect("/profile", 303)
                 else:
                     continue
@@ -912,7 +944,7 @@ def print_from_profile():
     full_name = RetrieveUserInfo(session)["full_name"]
     current_time = arrow.utcnow().to("US/Eastern")
     current_time = current_time.format('MM/DD/YYYY; h:mm A')
-    return render_template("print_from_profile.html", od=session["od"],
+    return render_template("print_from_profile.html", od=session["progress_report"],
                            full_name=full_name, current_time=current_time)
 
 

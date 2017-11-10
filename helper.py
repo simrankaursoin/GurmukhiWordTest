@@ -56,7 +56,7 @@ def LessThanFour(name, user_info, session, ObjectId,
                                      ObjectId)["list_of_definitions"]
     for item in list_of_defs:
         if item not in list_of_definitions:
-            list2.append(item["definition"])
+            list2.append(item)
     not_nothing = True
     while not_nothing:
         word_index = random.randint(0, (len(list_of_words)-1))
@@ -173,25 +173,38 @@ def CheckIfUserChoseList(session, arrow):
     return {"full_name": full_name, "template": template}
 
 
-def MakeProgressReport(session, stats, collections):
+def MakeProgressReport(session, stats):
     progress = {}
     for lis in stats:
         num_questions = (stats[lis]["correct"]+stats[lis]["wrong"])
         if num_questions == 0:
-            session["od"] = {}
+            session["progress_report"] = {}
         else:
             percent_accuracy = int((stats[lis]["correct"] / num_questions)*100)
             percent_inaccuracy = 100 - percent_accuracy
-            correct_words = list(set(stats[lis]["correct_words"]))
-            wrong_words = list(set(stats[lis]["wrong_words"]))
-            progress[list(lis)[-1]] = {"percent_accuracy": percent_accuracy,
+            correct_words = stats[lis]["correct_words"]
+            wrong_words = stats[lis]["wrong_words"]
+            correct_words = tuple(correct_words)
+            wrong_words = tuple(wrong_words)
+            progress[lis] = {"percent_accuracy": percent_accuracy,
                                        "percent_inaccuracy":
                                            percent_inaccuracy,
                                        "total_questions": num_questions,
                                        "correct_words": correct_words,
                                        "wrong_words": wrong_words}
             # od is the numerically ordered version of progress
-            session["od"] = collections.OrderedDict(sorted(progress.items()))
+            session["progress_report"] = progress
+
+
+def GetTeacherListNames(username):
+    teacher_lists = []
+    for item in db[username].find():
+        for listname in item:
+            if listname == "_id":
+                continue
+            else:
+                teacher_lists.append(item)
+    return teacher_lists
 
 
 def ResetSession(session):
@@ -199,7 +212,7 @@ def ResetSession(session):
     session["email"] = None
     session["first_name"] = None
     session["last_name"] = None
-    session["od"] = None
+    session["progress_report"] = None
     session["user_type"] = None
 
 

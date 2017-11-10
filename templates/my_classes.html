@@ -35,7 +35,7 @@ img.logo {max-width:20%;min-width:144px; min-height:30px}
         <strong>Class Code:</strong> {{classes[item]}}<br />
         <strong>Students Enrolled: </strong>
         {% if students[item]|length < 1 %}
-            None
+            <i> No Students Currently Enrolled </i>
         {% else %}
         <ul>
         {% for student in students[item] %}
@@ -44,7 +44,7 @@ img.logo {max-width:20%;min-width:144px; min-height:30px}
                 <button data-toggle="collapse" data-target="#demo{{number}}" style="font-size:60%;">View Report</button>
                     <div id="demo{{number}}" class="collapse">
                     <blockquote>{% for vocab_list in students[item][student] %}
-                        List {{vocab_list}} : {{students[item][student][vocab_list][0]}}% ;  Questions Answered: {{students[item][student][vocab_list][1]}}<br />
+                        {{vocab_list}} : {{students[item][student][vocab_list][0]}}% ;  Questions Answered: {{students[item][student][vocab_list][1]}}<br />
                     {% endfor %}</bloquote>
                     </div>
                 </li>
