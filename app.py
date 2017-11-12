@@ -91,12 +91,11 @@ def set_session():
         list_of_words = CreateListsFromDb(user_info, session,
                                           ObjectId)["list_of_words"]
         list_of_definitions = CreateListsFromDb(user_info,
-                                                ObjectId,
-                                                session)["list_of_definitions"]
+                                                session, ObjectId)["list_of_definitions"]
         db.users.update({"username": user_info["username"]},
                         {"$set": {"list_of_words": tuple(list_of_words)}})
         db.users.update({"username": user_info["username"]},
-                        {"$set": {"list_of_definitions": list_of_definitions}})
+                        {"$set": {"list_of_definitions": tuple(list_of_definitions)}})
         return redirect("/list_selected", 303)
 
 
