@@ -1,0 +1,21 @@
+{% extends "_base.html" %}
+{% block title %}Error: You must log in!{% endblock %}
+
+{% block content %}
+<body>
+<br></br>
+<a href="/"><img src="{{url_for('static', filename='GurbaniVocabLogo.png')}}" style="float:left;" class="logo"></a><br />
+<style>
+img.logo {max-width:20%;min-width:144px; min-height:30px}
+.topnav a {float: left;display: block; text-align: center;padding: 14px 16px;text-decoration: none;font-size: 17px;width:50%;}
+</style>
+<br></br>
+<div class="topnav" id="myTopnav" border="1" style="background-color:#f7cd6a;">
+    <a href="/"><b> Home </b></a>
+    <a href="/setsession"><b> Choose a List </b></a>
+</div>
+<h2> Please log in before attempting to access this page! </h2>
+
+</body>
+
+{% endblock %}

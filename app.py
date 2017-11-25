@@ -11,12 +11,44 @@ from helper import RetrieveTeacherInfo, MakeProgressReport, CreateListsFromDb
 from helper import CheckIfUserChoseList, UpdateTeacherLastAccessed
 from helper import UpdateUserLastAccessed, NotaList
 from passlib.hash import pbkdf2_sha512
+from functools import wraps
 import arrow
 import random
 import secure
 app = Flask(__name__)
 app.secret_key = secure.APP_SECRET_KEY
 db = make_database()
+
+def login_required(f):
+    '''
+    View decorator that ensures a logged-in user is in the session, redirecting
+    to the login page otherwise.
+    '''
+    @wraps(f)
+    def inner(*a, **kw):
+        try:
+            session["email"]
+            if session["email"] is None:
+                return render_template("login_required.html")
+            return f(*a, **kw)
+        except:
+            return render_template("login_required.html")
+    return inner
+
+def teacher_access(f):
+    '''
+    View decorator that ensures a logged-in user is in the session, redirecting
+    to the login page otherwise.
+    '''
+    @wraps(f)
+    def inner(*a, **kw):
+        try:
+            session["user_type"] == "Teacher"
+            return f(*a, **kw)
+        except:
+            full_name = RetrieveUserInfo(session)["full_name"]
+            return render_template("teacher_access.html", full_name=full_name)
+    return inner
 
 
 @app.route("/", methods=["GET"])
@@ -50,6 +82,7 @@ def main():
 
 
 @app.route("/setsession", methods=["GET", "POST"])
+@login_required
 def set_session():
     """
     retrieves user information from session.
@@ -88,21 +121,23 @@ def set_session():
         """
         session["current_list"] = request.form.get("current_list")
         user_info = RetrieveUserInfo(session)
+        username_query = {"username": user_info["username"]}
         list_of_words = CreateListsFromDb(user_info, session,
                                           ObjectId)["list_of_words"]
         list_of_definitions = CreateListsFromDb(user_info,
                                                 session,
                                                 ObjectId
                                                 )["list_of_definitions"]
-        db.users.update({"username": user_info["username"]},
+        db.users.update(username_query,
                         {"$set": {"list_of_words": tuple(list_of_words)}})
-        db.users.update({"username": user_info["username"]},
+        db.users.update(username_query,
                         {"$set": {"list_of_definitions":
                                   tuple(list_of_definitions)}})
         return redirect("/list_selected", 303)
 
 
 @app.route("/study", methods=["GET"])
+@login_required
 def study():
     """
     retrieves user info
@@ -124,6 +159,8 @@ def study():
 
 
 @app.route("/list_info", methods=["GET"])
+@login_required
+@teacher_access
 def list_info():
     """
     gets the names of all the lists the teachers have created
@@ -150,6 +187,7 @@ def list_info():
 
 
 @app.route("/list_selected", methods=["GET"])
+@login_required
 def list_selected():
     '''
     name is the name of the vocab list
@@ -167,6 +205,7 @@ def list_selected():
 
 
 @app.route("/progress", methods=["GET"])
+@login_required
 def progress():
     no_questions = False
     # doc is the user's document in the db
@@ -203,6 +242,7 @@ def progress():
 
 
 @app.route("/quiz", methods=["GET", "POST"])
+@login_required
 def quiz():
     global correct_def, correct_word, word_index
     user_info = RetrieveUserInfo(session)
@@ -277,6 +317,8 @@ def quiz():
 
 
 @app.route("/my_classes", methods=["GET"])
+@login_required
+@teacher_access
 def my_classes():
     username = session["username"]
     mongo_doc = db.teachers.find_one({"username": username})
@@ -317,6 +359,7 @@ def my_classes():
 
 
 @app.route("/delete_class", methods=["GET", "POST"])
+@login_required
 def delete_class():
     full_name = RetrieveUserInfo(session)["full_name"]
     username = session["username"]
@@ -361,6 +404,8 @@ def delete_class():
 
 
 @app.route("/edit_info_teacher", methods=["GET", "POST"])
+@login_required
+@teacher_access
 def edit_info_teacher():
     if request.method == "GET":
         """
@@ -453,6 +498,8 @@ def edit_info_teacher():
 
 
 @app.route("/add_class", methods=["GET", "POST"])
+@login_required
+@teacher_access
 def add_class():
     if request.method == "GET":
         full_name = RetrieveTeacherInfo(session)["full_name"]
@@ -497,6 +544,8 @@ def add_class():
 
 
 @app.route("/profile_teacher", methods=["GET", "POST"])
+@login_required
+@teacher_access
 def profile_teacher():
     '''
     retrieves teacher information and displays
@@ -512,6 +561,8 @@ def profile_teacher():
 
 
 @app.route("/make_a_list", methods=["GET", "POST"])
+@login_required
+@teacher_access
 def make_a_list():
     if request.method == "GET":
         ''' displays all words from masterlist with checkboxes next to each'''
@@ -662,6 +713,7 @@ def sign_up_teacher():
 
 
 @app.route("/edit_info", methods=["GET", "POST"])
+@login_required
 def edit_info():
     if request.method == "GET":
         # if just accessing page, fill in values with existing information
@@ -871,6 +923,7 @@ def design():
 
 
 @app.route("/profile", methods=["GET"])
+@login_required
 def profile():
     doc = RetrieveUserInfo(session)["doc"]
     user_info = RetrieveUserInfo(session)
@@ -928,6 +981,7 @@ def profile():
 
 
 @app.route("/enroll_in_class", methods=["GET", "POST"])
+@login_required
 def enroll_in_class():
     if request.method == "GET":
         UpdateUserLastAccessed(session, arrow)
@@ -972,6 +1026,7 @@ def enroll_in_class():
 
 
 @app.route("/MyProgressReport", methods=["GET"])
+@login_required
 def print_from_profile():
     full_name = RetrieveUserInfo(session)["full_name"]
     current_time = arrow.utcnow().to("US/Eastern")
