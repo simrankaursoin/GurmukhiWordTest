@@ -4,6 +4,37 @@ import random
 db = make_database()
 
 
+def AddUser(new_stuff, arrow, pass_word, request):
+    db.users.insert_one({"username": new_stuff["username"],
+                         "password": pass_word,
+                         "security_word": request.form.get
+                         ("security_word").strip(),
+                         "email": new_stuff["email"],
+                         "first_name": new_stuff["f_name"],
+                         "last_name": new_stuff["l_name"],
+                         "gender": new_stuff["gender"],
+                         "list_of_words": [],
+                         "list_of_definitions": [],
+                         "class_name": "default",
+                         "class_code": "default",
+                         "teacher": "default",
+                         "last_accessed":
+                         arrow.utcnow().format('YYYY-MM-DD')
+                         })
+
+                                
+def AddTeacher(arrow, new_stuff, pass_word, request):
+    db.teachers.insert_one({"username": new_stuff["username"],
+                            "password": pass_word,
+                            "security_word": request.form.get
+                            ("security_word").strip(),
+                            "email": new_stuff["email"],
+                            "first_name": new_stuff["f_name"],
+                            "last_name": new_stuff["l_name"],
+                            "gender": new_stuff["gender"],
+                            "last_accessed":
+                            arrow.utcnow().format('YYYY-MM-DD')
+                            })                                
 def CalculatePercentAccuracy(full_doc, name):
     right = full_doc[name]["correct"]
     wrong = full_doc[name]["wrong"]
@@ -16,8 +47,17 @@ def CalculatePercentAccuracy(full_doc, name):
     return [percent_accuracy, percent_inaccuracy]
 
 
-def CheckAnswers(request, flash, session, need_to_flash, doc):
+def CheckAnswers(request, session, need_to_flash):
     errors = False
+    message = ""
+    users = []
+    teachers = []
+    for doc in db.users.find():
+        for i in doc:
+            users.append(doc[i])
+    for doc in db.teachers.find():
+        for i in doc:
+            teachers.append(doc[i])
     stuff = {"username": request.form.get("user").split(" ")[0],
              "email": request.form.get("email").split(" ")[0],
              "c_user": request.form.get("c_user").split(" ")[0],
@@ -26,25 +66,37 @@ def CheckAnswers(request, flash, session, need_to_flash, doc):
              "l_name": request.form.get("l_name").split(" ")[0]}
     if request.form.get("user").strip() != request.form.get("c_user").strip():
         if need_to_flash:
-            flash("Please ensure that username is validated correctly.")
+            message = "Please ensure that username is validated correctly."
+        stuff["username"] = ""
+        stuff["c_user"] = ""
+        errors = True
+    elif request.form.get("user").strip() in users:
+        if need_to_flash:
+            message = "Username taken"
+        stuff["username"] = ""
+        stuff["c_user"] = ""
+        errors = True
+    elif request.form.get("user").strip() in teachers:
+        if need_to_flash:
+            message = "Username taken"
         stuff["username"] = ""
         stuff["c_user"] = ""
         errors = True
     elif "@" not in list(request.form.get("email").strip()):
         if need_to_flash:
-            flash("Please enter a valid email")
+            message = "Please enter a valid email"
         stuff["email"] = ""
         errors = True
     elif "." not in request.form.get("email").strip().split("@")[1]:
         if need_to_flash:
-            flash("Please enter a valid email")
+            message = "Please enter a valid email"
         stuff["email"] = ""
         errors = True
     elif request.form.get("gender") is None:
         if need_to_flash:
-            flash("Please select gender")
+            message = "Please select gender"
         errors = True
-    return {"errors": errors, "new_stuff": stuff}
+    return {"errors": errors, "new_stuff": stuff, "message": message}
 
 
 def CheckIfUserChoseList(session, arrow):
@@ -279,14 +331,23 @@ def UpdateSession_Form(session, request):
     session["last_name"] = request.form.get("l_name").strip()
     session["gender"] = request.form.get("gender")
 
+def UpdateTeacherDoc(username_query, attribute, replacement):
+    db.users.update(username_query,
+                    {'$set': {attribute: replacement}})
+                    
 
-def UpdateTeacherLastAccessed(session, arrow):
+
+def UpdateTeacherLastAcc(session, arrow):
     db.teachers.update({"username": session["username"]},
                        {"$set": {"last_accessed":
                                  arrow.utcnow().format('YYYY-MM-DD')}})
 
 
-def UpdateUserLastAccessed(session, arrow):
+def UpdateUserDoc(username_query, attribute, replacement):
+    db.users.update(username_query,
+                    {'$set': {attribute: replacement}})
+    
+def UpdateUserLastAcc(session, arrow):
     db.users.update({"username": session["username"]},
                     {"$set": {"last_accessed":
                               arrow.utcnow().format('YYYY-MM-DD')}})

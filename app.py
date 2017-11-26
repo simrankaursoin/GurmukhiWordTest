@@ -3,13 +3,13 @@
 from mongo_interface import make_database
 from bson.objectid import ObjectId
 from flask import flash, request, Flask, render_template, redirect, session
-from helper import RetrieveUserInfo, ResetSession, GetTeacherListNames
-from helper import MakeOptions,  CheckAnswers, CalculatePercentAccuracy
-from helper import UpdateSession, UpdateSession_Form, UpdateCorrect
-from helper import UpdateWrong, LessThanFour, CreateMongoList
-from helper import RetrieveTeacherInfo, MakeProgressReport, CreateListsFromDb
-from helper import CheckIfUserChoseList, UpdateTeacherLastAccessed
-from helper import UpdateUserLastAccessed, NotaList
+from helper import (
+    RetrieveUserInfo, ResetSession, GetTeacherListNames, MakeOptions, AddUser,
+    CheckAnswers, CalculatePercentAccuracy, UpdateSession, UpdateSession_Form,
+    UpdateCorrect, UpdateWrong, LessThanFour, CreateMongoList, UpdateUserDoc,
+    RetrieveTeacherInfo, MakeProgressReport, CreateListsFromDb, AddTeacher,
+    CheckIfUserChoseList, UpdateTeacherLastAcc, UpdateTeacherDoc, NotaList,
+    UpdateUserLastAcc)
 from passlib.hash import pbkdf2_sha512
 from functools import wraps
 import arrow
@@ -69,7 +69,7 @@ def main():
         return render_template("homepage.html")
     try:
         if session["user_type"] == "Teacher":
-            UpdateTeacherLastAccessed(session, arrow)
+            UpdateTeacherLastAcc(session, arrow)
             full_name = RetrieveTeacherInfo(session)["full_name"]
             return render_template("homepage_teacher.html",
                                    full_name=full_name)
@@ -96,7 +96,7 @@ def set_session():
     if request.method == "GET":
         user_info = RetrieveUserInfo(session)
         full_name = user_info["full_name"]
-        UpdateUserLastAccessed(session, arrow)
+        UpdateUserLastAcc(session, arrow)
         list_info = GetTeacherListNames(user_info["teacher"])
         list_names = []
         for item in list_info:
@@ -128,11 +128,8 @@ def set_session():
                                                 session,
                                                 ObjectId
                                                 )["list_of_definitions"]
-        db.users.update(username_query,
-                        {"$set": {"list_of_words": tuple(list_of_words)}})
-        db.users.update(username_query,
-                        {"$set": {"list_of_definitions":
-                                  tuple(list_of_definitions)}})
+        UpdateUserDoc(username_query, "list_of_words", tuple(list_of_words))
+        UpdateUserDoc(username_query, "list_of_definitions", tuple(list_of_definitions))
         return redirect("/list_selected", 303)
 
 
@@ -148,7 +145,7 @@ def study():
     """
     user_info = RetrieveUserInfo(session)
     full_name = user_info["full_name"]
-    UpdateUserLastAccessed(session, arrow)
+    UpdateUserLastAcc(session, arrow)
     document = db.users.find_one({"username": user_info["username"]})
     if len(document["list_of_words"]) < 1:
         return render_template("error_choose_list", full_name=full_name)
@@ -212,7 +209,7 @@ def progress():
     user_info = RetrieveUserInfo(session)
     doc = user_info["doc"]
     current_list = session["current_list"]
-    UpdateUserLastAccessed(session, arrow)
+    UpdateUserLastAcc(session, arrow)
     # if the current list in doc, user has answered questions from the list
     if current_list in doc:
         correct_words = list(set(doc[current_list]["correct_words"]))
@@ -271,9 +268,7 @@ def quiz():
                                         ObjectId, list_of_words,
                                         list_of_defs)
             list_of_options = make_choices["list_of_options"]
-            db.users.update({"username": session["username"]},
-                            {'$set': {"list_of_words":
-                                      make_choices["list_of_words"]}})
+            UpdateUserDoc({"username": session["username"]}, "list_of_words", make_choices["list_of_words"])
             correct_word = make_choices["correct_word"]
             correct_def = make_choices["correct_def"]
             word_index = make_choices["word_index"]
@@ -377,16 +372,11 @@ def delete_class():
     else:
         username_query = {"username": username}
         if request.form.get("yes/no") == "Yes":
-            db.users.update(username_query, {"$set": {"class_name":
-                                                      "default"}})
-            db.users.update(username_query, {"$set": {"class_code":
-                                                      "default"}})
-            db.users.update(username_query, {"$set": {"teacher":
-                                                      "default"}})
-            db.users.update(username_query,
-                            {'$set': {"list_of_words": []}})
-            db.users.update(username_query,
-                            {'$set': {"list_of_definitions": []}})
+            UpdateUserDoc(username_query, "class_name", "default")
+            UpdateUserDoc(username_query, "class_code", "default")
+            UpdateUserDoc(username_query, "teacher", "default")
+            UpdateUserDoc(username_query, "list_of_words", [])
+            UpdateUserDoc(username_query, "list_of_definitions", [])
             teacher_lists = GetTeacherListNames("default")
             stuff_that_isnt_a_list = NotaList()
             for item in mongo_doc:
@@ -404,8 +394,6 @@ def delete_class():
 
 
 @app.route("/edit_info_teacher", methods=["GET", "POST"])
-@login_required
-@teacher_access
 def edit_info_teacher():
     if request.method == "GET":
         """
@@ -415,14 +403,16 @@ def edit_info_teacher():
         other_genders = ["Male", "Female", "Other"]
         user_info = RetrieveTeacherInfo(session)
         other_genders.remove(user_info["gender"])
-        return render_template("edit_info.html",
+        message = ""
+        return render_template("edit_info_teacher.html",
                                user=user_info["username"],
                                c_user=user_info["username"],
                                email=user_info["email"],
                                f_name=user_info["f_name"].split(" ")[0],
                                l_name=user_info["l_name"].split(" ")[0],
                                gender=user_info["gender"],
-                               other_genders=other_genders)
+                               other_genders=other_genders,
+                               message=message)
     elif request.method == "POST":
         """
         doc is a compilation of all info from every teacher in the db
@@ -435,52 +425,15 @@ def edit_info_teacher():
             --> database is updated
             --> redirects back to /profile
         """
-        doc = {}
-        for teacher in db.teachers.find():
-            for item in teacher:
-                doc[item] = teacher[item]
-        new_stuff = CheckAnswers(request,
-                                 flash, session, False)["new_stuff"]
-        if session["username"] != new_stuff["username"]:
-            if session["username"] in doc.values():
-                flash("Username taken")
-                other_genders = ["Male", "Female", "Other"]
-                other_genders.remove(new_stuff["gender"])
-                return render_template("/edit_info.html",
-                                       user="", c_user="",
-                                       email=new_stuff["email"],
-                                       f_name=new_stuff["f_name"],
-                                       l_name=new_stuff["l_name"],
-                                       gender=new_stuff["gender"],
-                                       other_genders=other_genders)
-        doc = {}
-        for user in db.users.find():
-            for item in user:
-                doc[item] = user[item]
-        if session["username"] != new_stuff["username"]:
-            if session["username"] in doc.values():
-                flash("Username taken")
-                other_genders = ["Male", "Female", "Other"]
-                other_genders.remove(new_stuff["gender"])
-                return render_template("/edit_info.html",
-                                       user="", c_user="",
-                                       email=new_stuff["email"],
-                                       f_name=new_stuff["f_name"],
-                                       l_name=new_stuff["l_name"],
-                                       gender=new_stuff["gender"],
-                                       other_genders=other_genders)
-        if not CheckAnswers(request, flash, session, True)["errors"]:
+        new_stuff = CheckAnswers(request, session, False)["new_stuff"]
+        message = CheckAnswers(request, session, False)["message"]
+        if not CheckAnswers(request, session, True)["errors"]:
             username_query = {"username": session["username"]}
             things_to_update = ["email", "username", "gender"]
             for i in things_to_update:
-                db.teachers.update(username_query, {'$set':
-                                                    {i: new_stuff[i]}})
-            db.teachers.update(username_query, {'$set':
-                                                {"first_name":
-                                                 new_stuff["f_name"]}})
-            db.teachers.update(username_query, {'$set':
-                                                {"last_name":
-                                                 new_stuff["l_name"]}})
+                UpdateTeacherDoc(username_query, i, new_stuff[i])
+            UpdateTeacherDoc(username_query, "first_name", new_stuff["f_name"])
+            UpdateTeacherDoc(username_query, "last_name", new_stuff["l_name"])
             UpdateSession_Form(session, request)
             flash("Profile updated")
             return redirect("/profile_teacher", 303)
@@ -494,7 +447,8 @@ def edit_info_teacher():
                                    l_name=new_stuff["l_name"],
                                    c_user=new_stuff["c_user"],
                                    gender=new_stuff["gender"],
-                                   other_genders=other_genders)
+                                   other_genders=other_genders,
+                                   message=message)
 
 
 @app.route("/add_class", methods=["GET", "POST"])
@@ -554,7 +508,7 @@ def profile_teacher():
     username = RetrieveTeacherInfo(session)["username"]
     email = RetrieveTeacherInfo(session)["email"]
     gender = RetrieveTeacherInfo(session)["gender"]
-    UpdateTeacherLastAccessed(session, arrow)
+    UpdateTeacherLastAcc(session, arrow)
     return render_template("profile_teacher.html",
                            full_name=full_name, gender=gender,
                            email=email, username=username)
@@ -627,7 +581,7 @@ def login():
                                     doc["password"]):
                 UpdateSession(session, username, doc)
                 flash("Successful login")
-                UpdateUserLastAccessed(session, arrow)
+                UpdateUserLastAcc(session, arrow)
                 return redirect("/setsession", 303)
             else:
                 flash("Wrong password")
@@ -639,7 +593,7 @@ def login():
                                     teacher_doc["password"]):
                 UpdateSession(session, username, teacher_doc)
                 session["user_type"] = "Teacher"
-                UpdateTeacherLastAccessed(session, arrow)
+                UpdateTeacherLastAcc(session, arrow)
                 flash("Successful login")
                 return redirect("/", 303)
             else:
@@ -668,24 +622,14 @@ def sign_up_teacher():
         return render_template("sign_up_teacher.html")
     elif request.method == "POST":
         UpdateSession_Form(session, request)
-        new_stuff = CheckAnswers(request, flash, session, False)["new_stuff"]
+        new_stuff = CheckAnswers(request, session, False)["new_stuff"]
         pass_word = pbkdf2_sha512.hash(request.form.get("pass").strip())
         c_pass = request.form.get("c_pass").strip()
         security_word = request.form.get("security_word").strip()
         # if  CheckAnswers is False, user has not made any mistakes
         # insert document in db
-        if not CheckAnswers(request, flash, session, True)["errors"]:
-            db.teachers.insert_one({"username": new_stuff["username"],
-                                    "password": pass_word,
-                                    "security_word": request.form.get
-                                    ("security_word").strip(),
-                                    "email": new_stuff["email"],
-                                    "first_name": new_stuff["f_name"],
-                                    "last_name": new_stuff["l_name"],
-                                    "gender": new_stuff["gender"],
-                                    "last_accessed":
-                                    arrow.utcnow().format('YYYY-MM-DD')
-                                    })
+        if not CheckAnswers(request, session, True)["errors"]:
+            AddTeacher(arrow, new_stuff, pass_word, request)
             # update the session with newly created db
             UpdateSession_Form(session, request)
             session["user_type"] = "Teacher"
@@ -694,11 +638,12 @@ def sign_up_teacher():
         # if password doesnt match up, as user to retype them
         elif (request.form.get("pass").strip() !=
               request.form.get("c_pass").strip()):
-            flash("Please retype the password/confirmed password")
+            message = "Please retype the password/confirmed password"
             pass_word = ""
             c_pass = ""
         other_genders = ["Male", "Female", "Other"]
         other_genders.remove(new_stuff["gender"])
+        message = CheckAnswers(request, session, True)["message"]
         return render_template("sign_up_teacher2.html",
                                user=new_stuff["username"],
                                pass_word=pass_word,
@@ -709,17 +654,18 @@ def sign_up_teacher():
                                c_pass=c_pass,
                                c_user=new_stuff["c_user"],
                                gender=new_stuff["gender"],
-                               other_genders=other_genders)
+                               other_genders=other_genders,
+                               message=message)
 
 
 @app.route("/edit_info", methods=["GET", "POST"])
-@login_required
 def edit_info():
     if request.method == "GET":
         # if just accessing page, fill in values with existing information
         other_genders = ["Male", "Female", "Other"]
         user_info = RetrieveUserInfo(session)
         other_genders.remove(user_info["gender"])
+        message = ""
         return render_template("edit_info.html",
                                user=user_info["username"],
                                c_user=user_info["username"],
@@ -727,70 +673,33 @@ def edit_info():
                                f_name=user_info["f_name"].split(" ")[0],
                                l_name=user_info["l_name"].split(" ")[0],
                                gender=user_info["gender"],
-                               other_genders=other_genders)
+                               other_genders=other_genders,
+                               message=message)
     elif request.method == "POST":
         # check answers makes incorrect value(s) blank > user knows what to fix
         # new stuff is equal to a dict of all variables
         #     (whether variables are blank or equal to user responses)
-        new_stuff = CheckAnswers(request, flash, session, False)["new_stuff"]
-        doc = {}
-        for user in db.users.find():
-            for item in user:
-                doc[item] = user[item]
-        if session["username"] != new_stuff["username"]:
-            if new_stuff["username"] in doc.values():
-                flash("Username taken")
-                other_genders = ["Male", "Female", "Other"]
-                other_genders.remove(new_stuff["gender"])
-                return render_template("/edit_info.html",
-                                       user="", c_user="",
-                                       email=new_stuff["email"],
-                                       f_name=new_stuff["f_name"],
-                                       l_name=new_stuff["l_name"],
-                                       gender=new_stuff["gender"],
-                                       other_genders=other_genders)
-        doc = {}
-        for teacher in db.teachers.find():
-            for item in teacher:
-                doc[item] = teacher[item]
-        if session["username"] != new_stuff["username"]:
-            if new_stuff["username"] in doc.values():
-                flash("Username taken")
-                other_genders = ["Male", "Female", "Other"]
-                other_genders.remove(new_stuff["gender"])
-                return render_template("/edit_info.html",
-                                       user="", c_user="",
-                                       email=new_stuff["email"],
-                                       f_name=new_stuff["f_name"],
-                                       l_name=new_stuff["l_name"],
-                                       gender=new_stuff["gender"],
-                                       other_genders=other_genders)
+        new_stuff = CheckAnswers(request,session, False)["new_stuff"]
         # if  CheckAnswers[errors] is false, no user has not made any errors
-        if not CheckAnswers(request, flash, session, True)["errors"]:
+        if not CheckAnswers(request, session, True)["errors"]:
             # username_query is the query for the first part of db.update
             username_query = {"username": session["username"]}
             # things to update is the list of things to update (for loop)
             things_to_update = ["email", "gender"]
             for i in things_to_update:
-                db.users.update(username_query, {'$set':
-                                                 {i: new_stuff[i]}})
+                UpdateUserDoc(username_query, i, new_stuff[i])
             # first/last/user names have different variable/db names
             #         >> they are outside of loop
-            db.users.update(username_query, {'$set':
-                                             {"username":
-                                              new_stuff["username"]}})
-            db.users.update(username_query, {'$set':
-                                             {"first_name":
-                                              new_stuff["f_name"]}})
-            db.users.update(username_query, {'$set':
-                                             {"last_name":
-                                              new_stuff["l_name"]}})
+            UpdateUserDoc(username_query, "username", new_stuff["username"])
+            UpdateUserDoc(username_query, "first_name", new_stuff["f_name"])
+            UpdateUserDoc(username_query, "last_name", new_stuff["l_name"])
             UpdateSession_Form(session, request)
             flash("Profile updated")
             return redirect("/profile", 303)
         # if check answers returns True, the user has made a mistake
         # reroute to edit_info so user can fix answer(s)
         else:
+            message = CheckAnswers(request, session, True)["message"]
             other_genders = ["Male", "Female", "Other"]
             other_genders.remove(new_stuff["gender"])
             return render_template("edit_info.html",
@@ -800,7 +709,8 @@ def edit_info():
                                    l_name=new_stuff["l_name"],
                                    c_user=new_stuff["c_user"],
                                    gender=new_stuff["gender"],
-                                   other_genders=other_genders)
+                                   other_genders=other_genders,
+                                   message=message)
 
 
 @app.route("/security", methods=["GET", "POST"])
@@ -854,29 +764,14 @@ def signup():
         return render_template("sign_up.html")
     elif request.method == "POST":
         UpdateSession_Form(session, request)
-        new_stuff = CheckAnswers(request, flash, session, False)["new_stuff"]
+        new_stuff = CheckAnswers(request, session, False)["new_stuff"]
         pass_word = pbkdf2_sha512.hash(request.form.get("pass").strip())
         c_pass = request.form.get("c_pass").strip()
         security_word = request.form.get("security_word").strip()
         # if  CheckAnswers is False, user has not made any mistakes
         # insert document in db
-        if not CheckAnswers(request, flash, session, True)["errors"]:
-            db.users.insert_one({"username": new_stuff["username"],
-                                 "password": pass_word,
-                                 "security_word": request.form.get
-                                 ("security_word").strip(),
-                                 "email": new_stuff["email"],
-                                 "first_name": new_stuff["f_name"],
-                                 "last_name": new_stuff["l_name"],
-                                 "gender": new_stuff["gender"],
-                                 "list_of_words": [],
-                                 "list_of_definitions": [],
-                                 "class_name": "default",
-                                 "class_code": "default",
-                                 "teacher": "default",
-                                 "last_accessed":
-                                 arrow.utcnow().format('YYYY-MM-DD')
-                                 })
+        if not CheckAnswers(request, session, True)["errors"]:
+            AddUser(new_stuff, arrow, pass_word, request)
             # update the session with newly created db
             UpdateSession_Form(session, request)
             flash("Profile created")
@@ -884,11 +779,12 @@ def signup():
         # if password doesnt match up, as user to retype them
         elif (request.form.get("pass").strip() !=
               request.form.get("c_pass").strip()):
-            flash("Please retype the password/confirmed password")
+            message = "Please retype the password/confirmed password"
             pass_word = ""
             c_pass = ""
         other_genders = ["Male", "Female", "Other"]
         other_genders.remove(new_stuff["gender"])
+        message = CheckAnswers(request, session, True)["message"]
         return render_template("sign_up2.html",
                                user=new_stuff["username"],
                                pass_word=pass_word,
@@ -899,7 +795,8 @@ def signup():
                                c_pass=c_pass,
                                c_user=new_stuff["c_user"],
                                gender=new_stuff["gender"],
-                               other_genders=other_genders)
+                               other_genders=other_genders,
+                               message=message)
 
 
 @app.route("/logged_out", methods=["GET", "POST"])
@@ -927,7 +824,7 @@ def design():
 def profile():
     doc = RetrieveUserInfo(session)["doc"]
     user_info = RetrieveUserInfo(session)
-    UpdateUserLastAccessed(session, arrow)
+    UpdateUserLastAcc(session, arrow)
     # for each query in the document, if it is a list, add it to stats
     stats = {}
     teacher = doc["teacher"]
@@ -984,7 +881,7 @@ def profile():
 @login_required
 def enroll_in_class():
     if request.method == "GET":
-        UpdateUserLastAccessed(session, arrow)
+        UpdateUserLastAcc(session, arrow)
         full_name = RetrieveUserInfo(session)["full_name"]
         return render_template("enroll_in_class.html", full_name=full_name)
     else:
@@ -996,18 +893,13 @@ def enroll_in_class():
             for attribute in teacher:
                 if teacher[attribute] == class_code:
                     flash("You have enrolled in '"+attribute+"'")
-                    db.users.update(username_query,
-                                    {'$set': {"class_code": class_code}})
-                    db.users.update(username_query,
-                                    {'$set': {"class_name": attribute}})
-                    db.users.update(username_query,
-                                    {'$set': {"teacher": teacher["username"]}})
+                    UpdateUserDoc(username_query, "class_code", class_code)
+                    UpdateUserDoc(username_query, "class_name", attribute)
+                    UpdateUserDoc(username_query, "teacher", teacher["username"])
         # empty the list of words and defs
             # when redirects to /profile, it wont show quiz or study in navbar
-                    db.users.update(username_query,
-                                    {'$set': {"list_of_words": []}})
-                    db.users.update(username_query,
-                                    {'$set': {"list_of_definitions": []}})
+                    UpdateUserDoc(username_query, "list_of_words", [])
+                    UpdateUserDoc(username_query, "list_of_definitions", [])
         # remove progress of all lists that aren't created by this teacher.
                     teacher_lists = GetTeacherListNames(teacher["username"])
                     for item in doc:
@@ -1029,8 +921,7 @@ def enroll_in_class():
 @login_required
 def print_from_profile():
     full_name = RetrieveUserInfo(session)["full_name"]
-    current_time = arrow.utcnow().to("US/Eastern")
-    current_time = current_time.format('MM/DD/YYYY; h:mm A')
+    current_time = arrow.utcnow().to("US/Eastern").format('MM/DD/YYYY; h:mm A')
     return render_template("print_from_profile.html",
                            od=session["progress_report"],
                            full_name=full_name, current_time=current_time)

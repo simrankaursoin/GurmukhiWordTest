@@ -4,12 +4,13 @@
 {% block content %}
 <body>
 <br></br>
-<ul class="nav nav-pills" style="float:right;"> <li><a href="/profile"> {{full_name}} </a></li><li><a href="/login"> Log In</a></li></ul>
+<ul class="nav nav-pills" style="float:right;"> <li><a href="/login"> Log In</a></li></ul>
 <a href="/"><img src="{{url_for('static', filename='GurbaniVocabLogo.png')}}" style="float:left;" class="logo"></a><br /><br></br>
 <style>
 img.logo {max-width:20%;min-width:144px; min-height:30px}
 </style>
 <center><h2> Sign-Up (Student) </h2> </center>
+<font style="color: red; font-size:130%;"><b> {{message}} </b></font>
 <form action="" method="POST" class="form-horizontal">
   <label for="inputFirstName" class="col-md-3 control-label">First Name: </label>
     <input type="text" name="f_name" id="inputFirstName" value="{{f_name}}" required><br></br>
