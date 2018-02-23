@@ -32,7 +32,7 @@ img.logo {max-width:20%;min-width:144px; min-height:30px}
   <div>
  <h2 style="color:#033784;font-size:180%; font-family:Geneva;"><strong> Classes:</strong></h2>
   {% if class_name %}
-  <form action="/delete_class">
+  <form action="/delete_class" method="get">
  <blockquote><font style="font-size:130%;"><u><strong>{{class_name}}</u> 
  <input type="Submit" value="Delete" style="font-size:49%;">
  </strong></font><br />

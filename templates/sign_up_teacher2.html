@@ -19,7 +19,7 @@ img.logo {max-width:20%;min-width:144px; min-height:30px}
   <label for="inputUser" class="col-md-3 control-label">Username: </label>
     <input type="text" id="inputUser" name="user" value="{{user}}" required><br></br>
   <label for="inputCUser" class="col-md-3 control-label">Confirm Username: </label>
-    <input type="text" id="inputCUser" name="c_user" value="{{c_pass}}" required><br></br>
+    <input type="text" id="inputCUser" name="c_user" value="{{c_user}}" required><br></br>
   <label for="inputPass" class="col-md-3 control-label">Password: </label>
     <input type="password" id="inputPass" name="pass" pattern=".{8,}"  value="{{pass_word}}" required title="8 characters minimum"><br></br>
   <label for="inputCPass" class="col-md-3 control-label">Confirm Password: </label>
@@ -33,6 +33,7 @@ img.logo {max-width:20%;min-width:144px; min-height:30px}
     {% for item in other_genders %}
     <INPUT TYPE="radio" name="gender" value="{{item}}"> {{item}}
     {%endfor%}
+    <br></br>
 <input class="btn btn-info" type="submit" value="Submit">
 </form>
 </body>

@@ -22,7 +22,7 @@ def AddUser(new_stuff, arrow, pass_word, request):
                          arrow.utcnow().format('YYYY-MM-DD')
                          })
 
-                                
+
 def AddTeacher(arrow, new_stuff, pass_word, request):
     db.teachers.insert_one({"username": new_stuff["username"],
                             "password": pass_word,
@@ -34,7 +34,9 @@ def AddTeacher(arrow, new_stuff, pass_word, request):
                             "gender": new_stuff["gender"],
                             "last_accessed":
                             arrow.utcnow().format('YYYY-MM-DD')
-                            })                                
+                            })
+
+
 def CalculatePercentAccuracy(full_doc, name):
     right = full_doc[name]["correct"]
     wrong = full_doc[name]["wrong"]
@@ -53,11 +55,15 @@ def CheckAnswers(request, session, need_to_flash):
     users = []
     teachers = []
     for doc in db.users.find():
-        for i in doc:
-            users.append(doc[i])
+        if doc["username"] == session["username"]:
+            continue
+        else:
+            users.append(doc["username"])
     for doc in db.teachers.find():
-        for i in doc:
-            teachers.append(doc[i])
+        if doc["username"] == session["username"]:
+            continue
+        else:
+            teachers.append(doc["username"])
     stuff = {"username": request.form.get("user").split(" ")[0],
              "email": request.form.get("email").split(" ")[0],
              "c_user": request.form.get("c_user").split(" ")[0],
@@ -149,10 +155,10 @@ def GetTeacherListNames(username):
     teacher_lists = []
     for item in db[username].find():
         for listname in item:
-            if listname == "_id":
+            if listname == '_id':
                 continue
             else:
-                teacher_lists.append(item)
+                teacher_lists.append(listname)
     return teacher_lists
 
 
@@ -263,6 +269,7 @@ def ResetSession(session):
     session["last_name"] = None
     session["progress_report"] = None
     session["user_type"] = None
+    session["gender"] = None
 
 
 def RetrieveTeacherInfo(session):
@@ -331,10 +338,10 @@ def UpdateSession_Form(session, request):
     session["last_name"] = request.form.get("l_name").strip()
     session["gender"] = request.form.get("gender")
 
+
 def UpdateTeacherDoc(username_query, attribute, replacement):
-    db.users.update(username_query,
+    db.teachers.update(username_query,
                     {'$set': {attribute: replacement}})
-                    
 
 
 def UpdateTeacherLastAcc(session, arrow):
@@ -346,7 +353,8 @@ def UpdateTeacherLastAcc(session, arrow):
 def UpdateUserDoc(username_query, attribute, replacement):
     db.users.update(username_query,
                     {'$set': {attribute: replacement}})
-    
+
+
 def UpdateUserLastAcc(session, arrow):
     db.users.update({"username": session["username"]},
                     {"$set": {"last_accessed":

@@ -19,6 +19,7 @@ app = Flask(__name__)
 app.secret_key = secure.APP_SECRET_KEY
 db = make_database()
 
+
 def login_required(f):
     '''
     View decorator that ensures a logged-in user is in the session, redirecting
@@ -27,13 +28,14 @@ def login_required(f):
     @wraps(f)
     def inner(*a, **kw):
         try:
-            session["email"]
             if session["email"] is None:
                 return render_template("login_required.html")
-            return f(*a, **kw)
+            else:
+                return f(*a, **kw)
         except:
             return render_template("login_required.html")
     return inner
+
 
 def teacher_access(f):
     '''
@@ -61,14 +63,18 @@ def main():
          logged in and chosen list --> homepage2
          logged in but not chosen list --> homepage3
     '''
+    print(session)
     try:
         session["email"]
         if session["email"] is None:
+            flash("Please be aware: all accounts created before April 1st have been deleted due to the update. You may need to create a new account and re-enroll in classes")
             return render_template("homepage.html")
     except KeyError:
+        flash("Please be aware: all accounts created before April 1st have been deleted due to the update. You may need to create a new account and re-enroll in classes")
         return render_template("homepage.html")
     try:
         if session["user_type"] == "Teacher":
+            print(session)
             UpdateTeacherLastAcc(session, arrow)
             full_name = RetrieveTeacherInfo(session)["full_name"]
             return render_template("homepage_teacher.html",
@@ -78,6 +84,7 @@ def main():
         template = CheckIfUserChoseList(session, arrow)["template"]
     full_name = CheckIfUserChoseList(session, arrow)["full_name"]
     template = CheckIfUserChoseList(session, arrow)["template"]
+    flash("Please be aware: all accounts created before April 1st have been deleted due to the update. You may need to create a new account and re-enroll in classes")
     return render_template(template, full_name=full_name)
 
 
@@ -99,12 +106,11 @@ def set_session():
         UpdateUserLastAcc(session, arrow)
         list_info = GetTeacherListNames(user_info["teacher"])
         list_names = []
-        for item in list_info:
-            for name in item:
-                if name == "_id":
-                    continue
-                else:
-                    list_names.append(name)
+        for name in list_info:
+            if name == "_id":
+                continue
+            else:
+                list_names.append(name)
         if len(user_info["doc"]["list_of_words"]) < 1:
             template = "setsession2.html"
         else:
@@ -129,7 +135,8 @@ def set_session():
                                                 ObjectId
                                                 )["list_of_definitions"]
         UpdateUserDoc(username_query, "list_of_words", tuple(list_of_words))
-        UpdateUserDoc(username_query, "list_of_definitions", tuple(list_of_definitions))
+        UpdateUserDoc(username_query, "list_of_definitions",
+                      tuple(list_of_definitions))
         return redirect("/list_selected", 303)
 
 
@@ -268,7 +275,8 @@ def quiz():
                                         ObjectId, list_of_words,
                                         list_of_defs)
             list_of_options = make_choices["list_of_options"]
-            UpdateUserDoc({"username": session["username"]}, "list_of_words", make_choices["list_of_words"])
+            UpdateUserDoc({"username": session["username"]},
+                          "list_of_words", make_choices["list_of_words"])
             correct_word = make_choices["correct_word"]
             correct_def = make_choices["correct_def"]
             word_index = make_choices["word_index"]
@@ -338,13 +346,13 @@ def my_classes():
             student_data = {}
             for thing in student:
                 if thing in my_lists:
-                    percent_accuracy = int((student[thing]["correct"] /
-                                           (student[thing]["correct"] +
-                                            student[thing]["wrong"]))*100)
-                    number_questions = (student[thing]["correct"] +
-                                        student[thing]["wrong"])
-                    student_data[thing] = (percent_accuracy,
-                                           number_questions)
+                    total = student[thing]["correct"] + student[thing]["wrong"]
+                    if total == 0 and student[thing]["correct"] == 0:
+                        percent_accuracy = 0
+                    else:
+                        percent_accuracy = int(((student[thing]["correct"]) /
+                                            total)*100)
+                    student_data[thing] = (percent_accuracy, total)
             sorted_data = student_data
             students[item][student_name] = sorted_data
     full_name = RetrieveTeacherInfo(session)["full_name"]
@@ -425,6 +433,7 @@ def edit_info_teacher():
             --> database is updated
             --> redirects back to /profile
         """
+        original_username = session["username"]
         new_stuff = CheckAnswers(request, session, False)["new_stuff"]
         message = CheckAnswers(request, session, False)["message"]
         if not CheckAnswers(request, session, True)["errors"]:
@@ -434,8 +443,10 @@ def edit_info_teacher():
                 UpdateTeacherDoc(username_query, i, new_stuff[i])
             UpdateTeacherDoc(username_query, "first_name", new_stuff["f_name"])
             UpdateTeacherDoc(username_query, "last_name", new_stuff["l_name"])
+            db[original_username].rename(new_stuff["username"])
             UpdateSession_Form(session, request)
             flash("Profile updated")
+            print(session)
             return redirect("/profile_teacher", 303)
         else:
             other_genders = ["Male", "Female", "Other"]
@@ -644,9 +655,10 @@ def sign_up_teacher():
         other_genders = ["Male", "Female", "Other"]
         other_genders.remove(new_stuff["gender"])
         message = CheckAnswers(request, session, True)["message"]
+        ResetSession(session)
         return render_template("sign_up_teacher2.html",
                                user=new_stuff["username"],
-                               pass_word=pass_word,
+                               pass_word=c_pass,
                                email=new_stuff["email"],
                                security_word=security_word,
                                f_name=new_stuff["f_name"],
@@ -679,7 +691,7 @@ def edit_info():
         # check answers makes incorrect value(s) blank > user knows what to fix
         # new stuff is equal to a dict of all variables
         #     (whether variables are blank or equal to user responses)
-        new_stuff = CheckAnswers(request,session, False)["new_stuff"]
+        new_stuff = CheckAnswers(request, session, False)["new_stuff"]
         # if  CheckAnswers[errors] is false, no user has not made any errors
         if not CheckAnswers(request, session, True)["errors"]:
             # username_query is the query for the first part of db.update
@@ -785,9 +797,10 @@ def signup():
         other_genders = ["Male", "Female", "Other"]
         other_genders.remove(new_stuff["gender"])
         message = CheckAnswers(request, session, True)["message"]
+        ResetSession(session)
         return render_template("sign_up2.html",
                                user=new_stuff["username"],
-                               pass_word=pass_word,
+                               pass_word=c_pass,
                                email=new_stuff["email"],
                                security_word=security_word,
                                f_name=new_stuff["f_name"],
@@ -895,7 +908,8 @@ def enroll_in_class():
                     flash("You have enrolled in '"+attribute+"'")
                     UpdateUserDoc(username_query, "class_code", class_code)
                     UpdateUserDoc(username_query, "class_name", attribute)
-                    UpdateUserDoc(username_query, "teacher", teacher["username"])
+                    UpdateUserDoc(username_query, "teacher",
+                                  teacher["username"])
         # empty the list of words and defs
             # when redirects to /profile, it wont show quiz or study in navbar
                     UpdateUserDoc(username_query, "list_of_words", [])
