@@ -2,7 +2,7 @@
 # app.py
 from mongo_interface import make_database
 from bson.objectid import ObjectId
-from flask import flash, request, Flask, render_template, redirect, session
+from flask import flash, request, Flask, render_template, redirect, session, url_for
 from helper import (
     RetrieveUserInfo, ResetSession, GetTeacherListNames, MakeOptions, AddUser,
     CheckAnswers, CalculatePercentAccuracy, UpdateSession, UpdateSession_Form,
@@ -19,7 +19,6 @@ app = Flask(__name__)
 app.secret_key = secure.APP_SECRET_KEY
 db = make_database()
 
-
 def login_required(f):
     '''
     View decorator that ensures a logged-in user is in the session, redirecting
@@ -28,7 +27,7 @@ def login_required(f):
     @wraps(f)
     def inner(*a, **kw):
         try:
-            if session["email"] is None:
+            if session['email'] is None:
                 return render_template("login_required.html")
             else:
                 return f(*a, **kw)
@@ -44,12 +43,11 @@ def teacher_access(f):
     '''
     @wraps(f)
     def inner(*a, **kw):
-        try:
-            session["user_type"] == "Teacher"
+        if session["user_type"] == "Teacher":
             return f(*a, **kw)
-        except:
+        else:
             full_name = RetrieveUserInfo(session)["full_name"]
-            return render_template("teacher_access.html", full_name=full_name)
+            return render_template("teacher_access.html", full_name=full_name) 
     return inner
 
 
@@ -63,7 +61,6 @@ def main():
          logged in and chosen list --> homepage2
          logged in but not chosen list --> homepage3
     '''
-    print(session)
     try:
         session["email"]
         if session["email"] is None:
@@ -74,7 +71,6 @@ def main():
         return render_template("homepage.html")
     try:
         if session["user_type"] == "Teacher":
-            print(session)
             UpdateTeacherLastAcc(session, arrow)
             full_name = RetrieveTeacherInfo(session)["full_name"]
             return render_template("homepage_teacher.html",
@@ -162,7 +158,7 @@ def study():
                            full_name=full_name, all_words=all_words)
 
 
-@app.route("/list_info", methods=["GET"])
+@app.route("/list_info", methods=["GET", "POST"])
 @login_required
 @teacher_access
 def list_info():
@@ -174,20 +170,28 @@ def list_info():
         {listname: {word_doc, word_doc}}
     displays all lists so teachers can see
     """
-    lists = {}
-    teacher_info = RetrieveTeacherInfo(session)
-    for doc in db[teacher_info["username"]].find():
-        for list_name in doc:
-            if list_name == "_id":
-                continue
-            else:
-                list_of_words = []
-                for an_id in doc[list_name]:
-                    word = db.masterlist.find_one({"_id": ObjectId(an_id)})
-                    list_of_words.append(word)
-                lists[list_name] = list_of_words
-    full_name = RetrieveTeacherInfo(session)["full_name"]
-    return render_template("list_info.html", lists=lists, full_name=full_name)
+    if request.method == "GET":
+        lists = {}
+        teacher_info = RetrieveTeacherInfo(session)
+        for doc in db[teacher_info["username"]].find():
+            for list_name in doc:
+                if list_name == "_id":
+                    continue
+                else:
+                    list_of_words = []
+                    for an_id in doc[list_name]:
+                        word = db.masterlist.find_one({"_id": ObjectId(an_id)})
+                        list_of_words.append(word)
+                    lists[list_name] = list_of_words
+        full_name = RetrieveTeacherInfo(session)["full_name"]
+        return render_template("list_info.html", lists=lists, full_name=full_name)
+    elif request.method == "POST":
+        list_name = request.form.get("delete")
+        list_name = (list_name.split(" "))
+        list_name.pop(0)
+        list_name = " ".join(list_name)
+        full_name = RetrieveTeacherInfo(session)["full_name"]
+        return redirect(url_for("delete_list", list_name=list_name), 303)
 
 
 @app.route("/list_selected", methods=["GET"])
@@ -446,7 +450,6 @@ def edit_info_teacher():
             db[original_username].rename(new_stuff["username"])
             UpdateSession_Form(session, request)
             flash("Profile updated")
-            print(session)
             return redirect("/profile_teacher", 303)
         else:
             other_genders = ["Male", "Female", "Other"]
@@ -942,5 +945,4 @@ def print_from_profile():
 
 
 if __name__ == "__main__":
-    app.config['PROPAGATE_EXCEPTIONS'] = True
     app.run()
